@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Mazzo</title>
+    <link rel="stylesheet" href="../styles/card.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            line-height: 1.5;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            padding: 0.6rem 1rem;
+            cursor: pointer;
+        }
+
+        #output {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Test mazzo</h1>
+    <p>Questa pagina prova i metodi del mazzo.</p>
+
+    <div class="controls">
+        <button id="shuffleBtn">Shuffle</button>
+        <button id="drawBtn">Draw 5 carte</button>
+    </div>
+
+    <div id="output"></div>
+
+    <script type="module">
+        let DeckClass = null;
+
+        try {
+            const module = await import('../core/Deck.js');
+            DeckClass = module.Deck;
+        } catch (error) {
+            console.warn('Import del modulo non riuscita, uso un fallback inline.', error);
+
+            class Card {
+                constructor(suit, value) {
+                    this.suit = suit;
+                    this.value = value;
+                    this.id = Card.nextId++;
+                    this.imagePath = this.getImagePath();
+                }
+
+                getImageName() {
+                    if (this.value === 8) {
+                        return 'fante';
+                    }
+
+                    if (this.value === 9) {
+                        return 'cavallo';
+                    }
+
+                    if (this.value === 10) {
+                        return 're';
+                    }
+
+                    return String(this.value);
+                }
+
+                getImagePath() {
+                    const imageFile = `${this.suit}_${this.getImageName()}.jpg`;
+                    return new URL(`../img/carte_piacentine/${imageFile}`, import.meta.url).href;
+                }
+            }
+
+            Card.nextId = 1;
+
+            class Deck {
+                constructor() {
+                    this.cards = this.createDeck();
+                    this.remaining = this.cards.length;
+                }
+
+                createDeck() {
+                    const suits = ['coppe', 'denari', 'bastoni', 'spade'];
+                    const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                    const deck = [];
+
+                    for (const suit of suits) {
+                        for (const value of values) {
+                            deck.push(new Card(suit, value));
+                        }
+                    }
+
+                    return deck;
+                }
+
+                shuffle() {
+                    for (let index = this.cards.length - 1; index > 0; index -= 1) {
+                        const randomIndex = Math.floor(Math.random() * (index + 1));
+                        [this.cards[index], this.cards[randomIndex]] = [this.cards[randomIndex], this.cards[index]];
+                    }
+                }
+
+                draw(count = 1) {
+                    const drawnCards = [];
+                    const availableCount = Math.min(count, this.cards.length);
+
+                    for (let index = 0; index < availableCount; index += 1) {
+                        drawnCards.push(this.cards.shift());
+                    }
+
+                    this.remaining = this.cards.length;
+                    return drawnCards;
+                }
+            }
+
+            DeckClass = Deck;
+        }
+
+        const deck = new DeckClass();
+        const output = document.getElementById('output');
+
+        const renderCardList = (cards) => {
+            return cards.map((card) => `
+                <div class="card-item">
+                    <img class="card-image" src="${card.imagePath}" alt="${card.value} di ${card.suit}" />
+                </div>
+            `).join('');
+        };
+
+        const renderState = (drawnCards = []) => {
+            const remainingCardsMarkup = renderCardList(deck.cards);
+            const drawnCardsMarkup = drawnCards.length
+                ? `
+                    <div class="deck-summary">Carte pescate: ${drawnCards.length}</div>
+                    <div class="card-list">${renderCardList(drawnCards)}</div>
+                `
+                : '';
+
+            output.innerHTML = `
+                <div class="deck-summary">Carte rimanenti: ${deck.remaining}</div>
+                <div class="card-list">${remainingCardsMarkup}</div>
+                ${drawnCardsMarkup}
+            `;
+        };
+
+        document.getElementById('shuffleBtn').addEventListener('click', () => {
+            deck.shuffle();
+            renderState();
+        });
+
+        document.getElementById('drawBtn').addEventListener('click', () => {
+            const drawnCards = deck.draw(5);
+            renderState(drawnCards);
+        });
+
+        renderState();
+    </script>
+</body>
+
+</html>
