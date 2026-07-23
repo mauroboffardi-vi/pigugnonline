@@ -64,6 +64,7 @@ body {
     flex-direction: column;
     justify-content: flex-start;
     position: relative;
+    overflow: hidden;
 }
 
 .player-area.top {
@@ -100,6 +101,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
 }
 
 .player-area.right {
@@ -383,3 +385,6 @@ body {
 .player-area.bottom .card-image.small {
     width: 78px;
 }
+
+/* flying / played card visuals */
+/* flying/played card visuals moved to src/styles/animation.css */

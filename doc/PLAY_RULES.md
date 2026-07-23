@@ -1,4 +1,4 @@
-Regole e punteggio
+tenere. Regole e punteggio
 Si gioca con un mazzo da 40 carte, normalmente in 4 o 5 giocatori. Secondo alcuni, il vero pigugno si gioca solo in 4 e a coppie.
 
 Per segnare i punti si traccia una croce e si assegna un ramo a ogni giocatore, per ogni busca si traccia una linea verso destra, ogni cinque busche si congiungono le linee e si passa a segnare le busche sul secondo piano.
@@ -12,3 +12,6 @@ Lo scopo del gioco è fare almeno una presa (con meno punti possibile e soprattu
 Alla fine della partita chi avrà fatto più punti prenderà almeno una "busca" come chi ha preso il pigugno; fino a 17 punti si prende una busca, da 18 a 20 punti si prendono due busche, da 21 a 23 punti si prendono tre busche, a 24 punti si prendono quattro busche, a 25 punti se ne prendono cinque e così via. Se qualcuno non copre ("sta fuori") prende due busche, non si contano i punti, e chi ha preso il pigugno non prende nessuna busca. Nel caso in cui in due non coprano i due malcapitati si prendono quattro busche a testa, se in tre non coprono le busche diventano sei a testa. Se in due pareggiano le busche dei punti raddoppiano, se in tre pareggiano le busche triplicano. Se un giocatore fa 10 prese azzera le busche sullo score, gli altri tre si prendono sei busche.
 
 Chi arriva a 10 busche "va fuori", cioè continua a giocare ma da perdente. Si continua fino a quando rimane un giocatore solo, che sará il vincitore.
+
+
+

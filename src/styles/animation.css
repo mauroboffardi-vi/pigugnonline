@@ -1,0 +1,12 @@
+/* Animation-specific styles for flying and played cards */
+.flying-card {
+    border-radius: 6px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    transition: box-shadow 0.2s ease;
+    will-change: transform, left, top;
+}
+
+.played-card {
+    position: absolute;
+    pointer-events: none;
+}
