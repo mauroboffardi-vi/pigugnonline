@@ -1,4 +1,5 @@
 import { Deck } from './../core/Deck.js';
+import { CardSorter } from '../core/CardSorter.js';
 
 /**
  * Rappresenta lo stato della partita singola.
@@ -45,12 +46,7 @@ export class GameState {
         }
 
         this.players.forEach((player) => {
-            player.hand.sort((a, b) => {
-                if (a.suit === b.suit) {
-                    return a.value - b.value;
-                }
-                return this.suitOrder(a.suit) - this.suitOrder(b.suit);
-            });
+            CardSorter.sortHand(player.hand);
         });
 
         this.phase = 'playing';
@@ -62,13 +58,5 @@ export class GameState {
      * @param {string} suit - Il seme della carta.
      * @returns {number} Il valore numerico del seme.
      */
-    suitOrder(suit) {
-        const order = {
-            coppe: 0,
-            denari: 1,
-            bastoni: 2,
-            spade: 3,
-        };
-        return order[suit] ?? 0;
-    }
+    // Sorting logic extracted to src/core/CardSorter.js
 }
