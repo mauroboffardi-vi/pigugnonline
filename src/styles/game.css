@@ -1,0 +1,85 @@
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(135deg, #1d4d2b 0%, #2f7a3f 100%);
+  color: #f7f0de;
+}
+
+.table-shell {
+  min-height: 100vh;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.table-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.table-header h1 {
+  margin: 0 0 0.3rem;
+  font-size: 2rem;
+  text-transform: uppercase;
+}
+
+.table-header p {
+  margin: 0;
+  color: #dfe9d0;
+}
+
+.table {
+  position: relative;
+  min-height: 78vh;
+  border: 8px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1.25rem;
+  background: radial-gradient(circle at top, rgba(255,255,255,0.12), transparent 55%), #2f7a3f;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08), 0 18px 40px rgba(0, 0, 0, 0.25);
+  padding: 1rem;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto 1fr auto;
+  gap: 1rem;
+}
+
+.player-area {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 1rem;
+  padding: 0.75rem;
+  min-height: 140px;
+}
+
+.player-area.top {
+  grid-column: 1 / -1;
+}
+
+.player-area.left {
+  grid-row: 2 / 3;
+}
+
+.player-area.right {
+  grid-row: 2 / 3;
+}
+
+.player-area.bottom {
+  grid-column: 1 / -1;
+}
+
+.player-meta h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.player-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.card-image.small {
+  width: 70px;
+  border-width: 4px;
+  border-radius: 6px;
+}
