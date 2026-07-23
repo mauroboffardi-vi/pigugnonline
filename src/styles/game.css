@@ -1,85 +1,385 @@
 body {
-  margin: 0;
-  min-height: 100vh;
-  font-family: Arial, Helvetica, sans-serif;
-  background: linear-gradient(135deg, #1d4d2b 0%, #2f7a3f 100%);
-  color: #f7f0de;
+    margin: 0;
+    min-height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(135deg, #1d4d2b 0%, #2f7a3f 100%);
+    color: #f7f0de;
 }
 
 .table-shell {
-  min-height: 100vh;
-  padding: 1.5rem;
-  box-sizing: border-box;
+    min-height: 100vh;
+    padding: 1.5rem;
+    box-sizing: border-box;
 }
 
 .table-header {
-  text-align: center;
-  margin-bottom: 1rem;
+    text-align: center;
+    margin-bottom: 1rem;
 }
 
 .table-header h1 {
-  margin: 0 0 0.3rem;
-  font-size: 2rem;
-  text-transform: uppercase;
+    margin: 0 0 0.3rem;
+    font-size: 2rem;
+    text-transform: uppercase;
 }
 
 .table-header p {
-  margin: 0;
-  color: #dfe9d0;
+    margin: 0;
+    color: #dfe9d0;
 }
 
 .table {
-  position: relative;
-  min-height: 78vh;
-  border: 8px solid rgba(255, 255, 255, 0.18);
-  border-radius: 1.25rem;
-  background: radial-gradient(circle at top, rgba(255,255,255,0.12), transparent 55%), #2f7a3f;
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08), 0 18px 40px rgba(0, 0, 0, 0.25);
-  padding: 1rem;
-  box-sizing: border-box;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: auto 1fr auto;
-  gap: 1rem;
+    position: relative;
+    min-height: 78vh;
+    border: 8px solid rgba(255, 255, 255, 0.18);
+    border-radius: 1.25rem;
+    background: radial-gradient(circle at top, rgba(255, 255, 255, 0.12), transparent 55%), #2f7a3f;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08), 0 18px 40px rgba(0, 0, 0, 0.25);
+    padding: 1rem;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 1fr minmax(420px, 2fr) 1fr;
+    grid-template-rows: auto 1fr auto;
+    gap: 1rem;
+}
+
+/* central play area indicator (visual) */
+.table::before {
+    content: "";
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    border-radius: 1rem;
+    border: 2px dashed rgba(255, 255, 255, 0.12);
+    min-height: 220px;
+    justify-self: stretch;
 }
 
 .player-area {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 1rem;
-  padding: 0.75rem;
-  min-height: 140px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 1rem;
+    padding: 0.75rem;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    position: relative;
 }
 
 .player-area.top {
-  grid-column: 1 / -1;
+    grid-column: 2 / 3;
+    /* 1B */
+    grid-row: 1 / 2;
+    align-items: center;
+    justify-self: stretch;
+    /* expand to full width of central column */
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    min-height: 180px;
+    box-sizing: border-box;
+    overflow: hidden;
+    /* prevent stacked cards from escaping the top box */
 }
 
 .player-area.left {
-  grid-row: 2 / 3;
+    grid-column: 1 / 2;
+    /* 2A */
+    grid-row: 2 / 3;
+    align-items: flex-start;
+    justify-self: start;
+}
+
+.table-center {
+    grid-column: 2 / 3;
+    /* 2B */
+    grid-row: 2 / 3;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .player-area.right {
-  grid-row: 2 / 3;
+    grid-column: 3 / 4;
+    /* 2C */
+    grid-row: 2 / 3;
+    align-items: flex-end;
+    justify-self: end;
 }
 
 .player-area.bottom {
-  grid-column: 1 / -1;
+    grid-column: 1 / -1;
+    /* 3A - 3C */
+    grid-row: 3 / 4;
+    align-items: center;
+}
+
+/* Ensure left/right columns have enough height for 10 stacked cards and hide overflow */
+.player-area.left,
+.player-area.right {
+    min-height: 460px;
+    /* accommodate 10 cards stacked with offsets */
+    padding-top: 12px;
+    padding-bottom: 12px;
 }
 
 .player-meta h2 {
-  margin: 0 0 0.5rem;
-  font-size: 1rem;
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
 }
 
 .player-hand {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+    display: flex;
+    align-items: center;
+    position: relative;
+    min-height: 90px;
+}
+
+.player-area.top .player-hand,
+.player-area.bottom .player-hand {
+    flex-direction: row;
+    justify-content: center;
+}
+
+.player-area.left .player-hand,
+.player-area.right .player-hand {
+    flex-direction: column;
+    min-width: 92px;
+}
+
+.player-area.left .player-hand {
+    align-items: flex-start;
+}
+
+.player-area.right .player-hand {
+    align-items: flex-end;
+}
+
+.player-area.top .card-image.small,
+.player-area.bottom .card-image.small {
+    margin-left: -18px;
+}
+
+.player-area.top .card-image.small:first-child,
+.player-area.bottom .card-image.small:first-child {
+    margin-left: 0;
+}
+
+.player-area.left .card-image.small,
+.player-area.right .card-image.small {
+    margin-top: -24px;
+    margin-left: 0;
+}
+
+/* Stacked opponent hands: precise overlapping with z-index for 10 cards */
+/* Top player: horizontal overlap, each card offset by ~22px */
+.player-area.top .player-hand {
+    height: 110px;
+    position: relative;
+    width: 100%;
+    /* span full central column */
+    max-width: 920px;
+    /* avoid extreme stretching */
+}
+
+.player-area.top>.player-meta,
+.player-area.top>.player-hand {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+.player-area.top .card-item {
+    position: absolute;
+    top: 10px;
+}
+
+.player-area.top .card-item:nth-child(1) {
+    left: calc(50% - 134px + 0 * 22px);
+    z-index: 1;
+}
+
+.player-area.top .card-item:nth-child(2) {
+    left: calc(50% - 134px + 1 * 22px);
+    z-index: 2;
+}
+
+.player-area.top .card-item:nth-child(3) {
+    left: calc(50% - 134px + 2 * 22px);
+    z-index: 3;
+}
+
+.player-area.top .card-item:nth-child(4) {
+    left: calc(50% - 134px + 3 * 22px);
+    z-index: 4;
+}
+
+.player-area.top .card-item:nth-child(5) {
+    left: calc(50% - 134px + 4 * 22px);
+    z-index: 5;
+}
+
+.player-area.top .card-item:nth-child(6) {
+    left: calc(50% - 134px + 5 * 22px);
+    z-index: 6;
+}
+
+.player-area.top .card-item:nth-child(7) {
+    left: calc(50% - 134px + 6 * 22px);
+    z-index: 7;
+}
+
+.player-area.top .card-item:nth-child(8) {
+    left: calc(50% - 134px + 7 * 22px);
+    z-index: 8;
+}
+
+.player-area.top .card-item:nth-child(9) {
+    left: calc(50% - 134px + 8 * 22px);
+    z-index: 9;
+}
+
+.player-area.top .card-item:nth-child(10) {
+    left: calc(50% - 134px + 9 * 22px);
+    z-index: 10;
+}
+
+/* Left player: vertical stack, each card offset by ~22px downwards */
+.player-area.left .player-hand {
+    width: 110px;
+    position: relative;
+}
+
+.player-area.left .card-item {
+    position: absolute;
+    left: 10px;
+}
+
+.player-area.left .card-item:nth-child(1) {
+    top: 0px;
+    z-index: 1;
+}
+
+.player-area.left .card-item:nth-child(2) {
+    top: 22px;
+    z-index: 2;
+}
+
+.player-area.left .card-item:nth-child(3) {
+    top: 44px;
+    z-index: 3;
+}
+
+.player-area.left .card-item:nth-child(4) {
+    top: 66px;
+    z-index: 4;
+}
+
+.player-area.left .card-item:nth-child(5) {
+    top: 88px;
+    z-index: 5;
+}
+
+.player-area.left .card-item:nth-child(6) {
+    top: 110px;
+    z-index: 6;
+}
+
+.player-area.left .card-item:nth-child(7) {
+    top: 132px;
+    z-index: 7;
+}
+
+.player-area.left .card-item:nth-child(8) {
+    top: 154px;
+    z-index: 8;
+}
+
+.player-area.left .card-item:nth-child(9) {
+    top: 176px;
+    z-index: 9;
+}
+
+.player-area.left .card-item:nth-child(10) {
+    top: 198px;
+    z-index: 10;
+}
+
+/* Right player: vertical stack aligned to the right edge */
+.player-area.right .player-hand {
+    width: 110px;
+    position: relative;
+}
+
+.player-area.right .card-item {
+    position: absolute;
+    right: 10px;
+}
+
+.player-area.right .card-item:nth-child(1) {
+    top: 0px;
+    z-index: 1;
+}
+
+.player-area.right .card-item:nth-child(2) {
+    top: 22px;
+    z-index: 2;
+}
+
+.player-area.right .card-item:nth-child(3) {
+    top: 44px;
+    z-index: 3;
+}
+
+.player-area.right .card-item:nth-child(4) {
+    top: 66px;
+    z-index: 4;
+}
+
+.player-area.right .card-item:nth-child(5) {
+    top: 88px;
+    z-index: 5;
+}
+
+.player-area.right .card-item:nth-child(6) {
+    top: 110px;
+    z-index: 6;
+}
+
+.player-area.right .card-item:nth-child(7) {
+    top: 132px;
+    z-index: 7;
+}
+
+.player-area.right .card-item:nth-child(8) {
+    top: 154px;
+    z-index: 8;
+}
+
+.player-area.right .card-item:nth-child(9) {
+    top: 176px;
+    z-index: 9;
+}
+
+.player-area.right .card-item:nth-child(10) {
+    top: 198px;
+    z-index: 10;
+}
+
+.player-area.left .card-image.small:first-child,
+.player-area.right .card-image.small:first-child {
+    margin-top: 0;
 }
 
 .card-image.small {
-  width: 70px;
-  border-width: 4px;
-  border-radius: 6px;
+    width: 70px;
+    border-width: 4px;
+    border-radius: 6px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+}
+
+.player-area.bottom .card-image.small {
+    width: 78px;
 }
