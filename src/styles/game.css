@@ -64,7 +64,7 @@ body {
     flex-direction: column;
     justify-content: flex-start;
     position: relative;
-    overflow: hidden;
+    /* overflow: hidden; */
 }
 
 .player-area.top {
