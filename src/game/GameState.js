@@ -27,6 +27,7 @@ export class GameState {
         this.trick = [];
         this.trumpSuit = 'spade'; // Pigugno
         this.onTrickResolved = null; //  callback for trick resolution
+        this.isFirstTrick = true;
     }
 
     /**
@@ -122,38 +123,49 @@ export class GameState {
         const player = this.players.find(p => p.id === playerId);
         if (!player) return false;
 
-        console.debug(`canPlayCard(): turno ${this.trick.length} : ${player.name} sta provando a giocare ${card.value} di ${card.suit}`);
+        console.debug(
+            `canPlayCard(): turno ${this.trick.length} : ${player.name} sta provando a giocare ${card.value} di ${card.suit}`
+        );
 
-        const isPigugno = card.suit === this.trumpSuit && card.value === 8;
+        const isPigugno = card.suit === 'spade' && card.value === 8;
 
-        // Primo giocatore della mano
+        // Apertura della presa
         if (this.trick.length === 0) {
-            if (isPigugno) {
-                console.debug('click ignorato: non si può giocare il Pigugno come prima carta della mano');
+            if (this.isFirstTrick && isPigugno) {
+                console.debug('click ignorato: il Pigugno non può essere giocato in apertura della prima mano');
                 return false;
             }
+
             return true;
         }
 
         const leadingSuit = this.trick[0].card.suit;
-        const hasLeadingSuit = player.hand.some(c => c.suit === leadingSuit);
+        const cardsOfLeadingSuit = player.hand.filter(c => c.suit === leadingSuit);
+        const hasLeadingSuit = cardsOfLeadingSuit.length > 0;
 
-        // Regola speciale del Pigugno
-        if (isPigugno && leadingSuit === this.trumpSuit) {
-            const spadeInHand = player.hand.filter(c => c.suit === this.trumpSuit);
-            const hasOnlyPigugnoAsSpade =
-                spadeInHand.length === 1 &&
-                spadeInHand[0].value === 8;
-
-            if (!hasOnlyPigugnoAsSpade) {
-                console.debug('click ignorato: il Pigugno si può giocare su spade solo se è l’unica spada in mano');
-                return false;
-            }
+        // Se non hai il seme richiesto, puoi rifiutare con qualsiasi carta
+        if (!hasLeadingSuit) {
+            return true;
         }
 
-        // Obbligo di rispondere al seme
-        if (hasLeadingSuit) {
-            return card.suit === leadingSuit;
+        // Se hai il seme richiesto, devi rispondere a seme
+        if (card.suit !== leadingSuit) {
+            return false;
+        }
+
+        // Eccezione del Pigugno: solo nella prima mano, su uscita a spade,
+        // si può giocare solo se è l'unica spada disponibile
+        if (this.isFirstTrick && isPigugno && leadingSuit === 'spade') {
+            const otherSpades = cardsOfLeadingSuit.filter(
+                c => !(c.suit === 'spade' && c.value === 8)
+            );
+
+            if (otherSpades.length > 0) {
+                console.debug(
+                    'click ignorato: nella prima mano il Pigugno su spade si può giocare solo se è l’unica spada'
+                );
+                return false;
+            }
         }
 
         return true;
@@ -167,15 +179,9 @@ export class GameState {
         const resolvedTrick = [...this.trick];
         const leadingSuit = resolvedTrick[0].card.suit;
 
-        const trumpCards = resolvedTrick.filter(
-            ({ card }) => card.suit === this.trumpSuit
-        );
+        const candidates = resolvedTrick.filter(({ card }) => card.suit === leadingSuit);
 
-        const candidateCards = trumpCards.length > 0
-            ? trumpCards
-            : resolvedTrick.filter(({ card }) => card.suit === leadingSuit);
-
-        const winner = candidateCards.reduce((prev, current) =>
+        const winner = candidates.reduce((prev, current) =>
             CardSorter.compare(prev.card, current.card) > 0 ? prev : current
         );
 
@@ -189,6 +195,7 @@ export class GameState {
         }
 
         this.trick = [];
+        this.isFirstTrick = false;
 
         if (this.deck.cards.length === 0 && this.players.every(player => player.hand.length === 0)) {
             this.phase = 'gameover';
