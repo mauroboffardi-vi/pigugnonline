@@ -2,6 +2,7 @@
 import { GameState } from './GameState.js';
 import { playCard as animatePlayCard, animateTrickResolution } from './animation.js';
 import { pickRandomNames } from './PlayerNames.js';
+import { showCaptureOverlay, closeCaptureOverlay } from './CaptureOverlay.js';
 
 function createCardMarkup(card) {
   return `
@@ -136,3 +137,16 @@ async function onTrickResolved(winnerId, resolvedTrick) {
 
 gameState.onTrickResolved = onTrickResolved;
 document.addEventListener('click', handleCardClick);
+
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'view-captures') {
+    e.preventDefault();
+    openCaptureOverlay(gameState.players[0]);
+  }
+});
+
+function openCaptureOverlay(player) {
+  const capturedCards = gameState.getCapturedCards(player);
+  // This will trigger the overlay logic in CaptureOverlay.js
+  showCaptureOverlay(capturedCards);
+}

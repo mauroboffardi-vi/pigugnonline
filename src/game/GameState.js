@@ -219,7 +219,27 @@ export class GameState {
     */
     getPlayerCaptureStatus(player) {
         const capturesCount = Math.floor(player.captures.length / 4);
-        return capturesCount > 0 ? `${capturesCount} prese` : 'non ha coperto';
+
+        var peekLink = "";
+        if (player.id === this.players[0].id && capturesCount > 0) {
+            peekLink = '&nbsp;<a href="#" id="view-captures">(guarda)</a>';
+        }
+
+        switch (capturesCount) {
+            case 0: return "non ha coperto";
+            case 1: return `${capturesCount} presa` + peekLink;
+            default: return `${capturesCount} prese` + peekLink;
+        }
+    }
+
+    /**
+     * Ottiene le carte catturate da un giocatore specifico.
+     *
+     * @param {Object} player - L'oggetto del giocatore.
+     * @returns {Array} Un array di carte catturate.
+     */
+    getCapturedCards(player) {
+        return player.captures;
     }
 
     /**
