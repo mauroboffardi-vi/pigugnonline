@@ -1,58 +1,8 @@
+// src/game/single.js
+
 import { GameState } from './GameState.js';
-import { playCard } from './animation.js';
-
-const availableNames = [
-  'Babi',
-  'Bazza',
-  'Bòia',
-  'Bòia Càn',
-  'Cagna Mègra',
-  'Zént Omen',
-  'Pâg’',
-  'Mastrilli',
-  'Chiccaja',
-  'Scucmai',
-  'Beccamòrt',
-  'Pizzigòn',
-  'Ciàcol',
-  'Ciòch',
-  'Magnòn',
-  'Scarpelìn',
-  'Fumaghèn',
-  'Sgurlàtt',
-  'Zavàj',
-  'Ganàsc',
-  'Gròpp',
-  'Lungòtt',
-  'Cicciòl',
-  'Pìngol',
-  'Tira Via',
-  'Porcellìn',
-  'Ghiacc',
-  'Pèss',
-  'Pég',
-  'Sgagn',
-  'Bicarìn',
-  'Cultelìn',
-  'Càndol',
-  'Furbètt',
-  'Pavàj',
-  'Ciàpp',
-  'Sgheff',
-  'Cipria',
-  'Mirko',
-  'Il Gelataio',
-  'Daviduz',
-  'Mario',
-  'Il Dottore',
-  'Woody',
-  'Mauro',
-];
-
-function pickRandomNames(count) {
-  const shuffled = [...availableNames].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
-}
+import { playCard as animatePlayCard } from './animation.js';
+import { pickRandomNames, getAllPlayerNames } from './PlayerNames.js';
 
 function createCardMarkup(card) {
   return `
@@ -76,12 +26,11 @@ function renderPlayerArea(container, player) {
 }
 
 function renderBoard(state) {
-  // Map players to cells: index 0 = human (bottom), 1 = top (1B), 2 = left (2A), 3 = right (2C)
   const mapping = {
-    top: state.players[1],
-    left: state.players[2],
-    right: state.players[3],
     you: state.players[0],
+    left: state.players[1],
+    top: state.players[2],
+    right: state.players[3],
   };
 
   if (document.getElementById('player-top')) renderPlayerArea(document.getElementById('player-top'), mapping.top);
@@ -89,16 +38,13 @@ function renderBoard(state) {
   if (document.getElementById('player-right')) renderPlayerArea(document.getElementById('player-right'), mapping.right);
   if (document.getElementById('player-you')) renderPlayerArea(document.getElementById('player-you'), mapping.you);
 
-  // The central play area can show the current trick or be left empty for now
   const center = document.getElementById('table-center');
-  if (center) {
-    let playArea = center.querySelector('.play-area');
-    if (!playArea) {
-      playArea = document.createElement('div');
-      playArea.className = 'play-area';
-      playArea.innerHTML = '&nbsp;';
-      center.appendChild(playArea);
-    }
+  let playArea = center.querySelector('.play-area');
+  if (!playArea) {
+    playArea = document.createElement('div');
+    playArea.className = 'play-area';
+    playArea.innerHTML = '&nbsp;';
+    center.appendChild(playArea);
   }
 }
 
@@ -106,7 +52,6 @@ const gameState = new GameState(['Tu', ...pickRandomNames(3)]);
 gameState.startGame();
 renderBoard(gameState);
 
-// --- Play animation logic ---
 let playCounter = 0;
 
 function getPlayerByContainer(container) {
@@ -117,30 +62,41 @@ function getPlayerByContainer(container) {
 async function handleCardClick(e) {
   const img = e.target.closest('.card-image');
   if (!img) return;
+
   const cardId = img.dataset.cardId;
   if (!cardId) return;
 
   const container = img.closest('.player-area');
   const player = getPlayerByContainer(container);
-  if (!player) return;
+  if (!player || player.id !== gameState.currentTurn) {
+    console.debug('click ignorato: non è il tuo turno');
+    return;
+  }
 
-  // find card in player's hand
   const idx = player.hand.findIndex(c => String(c.id) === String(cardId));
   if (idx === -1) return;
 
   const card = player.hand[idx];
 
-  // play the card: animation module handles startRect, out/in and calls onPlayed
+  // Validazione PRIMA dell'animazione
+  if (!gameState.canPlayCard(card, player.id)) {
+    console.debug('click ignorato: carta non valida');
+    return;
+  }
+
   const center = document.getElementById('table-center');
-  await playCard(img, container, center, {
+
+  await animatePlayCard(img, container, center, {
     zIndex: 1000 + playCounter,
     onPlayed: () => {
-      player.hand.splice(idx, 1);
+      gameState.playCard(player.id, cardId);
       renderBoard(gameState);
     }
   });
-  playCounter += 1;
 
+  playCounter += 1;
 }
 
 document.addEventListener('click', handleCardClick);
+
+// TODO: Implement animation for resolving the trick and capturing cards.
