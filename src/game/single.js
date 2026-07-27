@@ -16,14 +16,17 @@ function createCardMarkup(card) {
   `;
 }
 
+
 function renderPlayerArea(container, player) {
   const title = player.name;
+  const captureStatus = gameState.getPlayerCaptureStatus(player);
   const cardsMarkup = player.hand.map(createCardMarkup).join('');
 
   container.dataset.playerId = player.id;
   container.innerHTML = `
     <div class="player-meta">
-      <h2>${title}</h2>
+      <span class="player-name">${title}</span>
+      <span class="player-status">${captureStatus}</span>
     </div>
     <div class="player-hand">${cardsMarkup}</div>
   `;

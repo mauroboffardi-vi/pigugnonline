@@ -212,6 +212,17 @@ export class GameState {
     }
 
     /**
+     * Restituisce la stringa di stato per il numero di presi di un giocatore.
+     *
+     * @param {Object} player - L'oggetto del giocatore.
+     * @returns {string} La stringa di stato.
+    */
+    getPlayerCaptureStatus(player) {
+        const capturesCount = Math.floor(player.captures.length / 4);
+        return capturesCount > 0 ? `${capturesCount} prese` : 'non ha coperto';
+    }
+
+    /**
      * Trova l'indice della carta nella mano del giocatore.
      *
      * @param {Object} player - L'oggetto del giocatore.
