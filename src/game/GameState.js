@@ -26,6 +26,7 @@ export class GameState {
         this.phase = 'setup';
         this.trick = [];
         this.trumpSuit = 'spade'; // Pigugno
+        this.onTrickResolved = null; //  callback for trick resolution
     }
 
     /**
@@ -161,23 +162,27 @@ export class GameState {
      * Risolve la mano corrente.
      */
     resolveTrick() {
-        const winner = this.trick.reduce((prev, current) => {
-            return CardSorter.compare(prev.card, current.card) > 0 ? prev : current;
-        });
 
-        // Move the cards to the winner's captures
-        winner.player.captures.push(...this.trick.map(t => t.card));
+        console.debug("Fine della mano.");
+        const resolvedTrick = [...this.trick];
 
-        // Clear the trick and determine the next player to start the new trick
+        const winner = resolvedTrick.reduce((prev, current) =>
+            CardSorter.compare(prev.card, current.card) > 0 ? prev : current
+        );
+
+        winner.player.captures.push(...resolvedTrick.map(t => t.card));
+        this.currentTurn = winner.player.id;
+
+        console.debug(`la presa é di ${winner.player.name}`);
+
+        if (typeof this.onTrickResolved === "function") {
+            this.onTrickResolved(winner.player.id, resolvedTrick);
+        }
+
         this.trick = [];
-        this.currentTurn = winner.player.id; // The winner starts the next trick
 
-        console.debug(`Mano vinta da ${winner.player.name}, ${winner.player.name} inizia il prossimo trucco`);
-
-        // Check if all cards have been played
         if (this.deck.cards.length === 0 && this.players.every(player => player.hand.length === 0)) {
-            this.phase = 'gameover';
-            console.log('Partita terminata!');
+            this.phase = "gameover";
         }
     }
 

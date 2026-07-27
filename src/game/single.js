@@ -1,13 +1,17 @@
 // src/game/single.js
-
 import { GameState } from './GameState.js';
-import { playCard as animatePlayCard } from './animation.js';
-import { pickRandomNames, getAllPlayerNames } from './PlayerNames.js';
+import { playCard as animatePlayCard, animateTrickResolution } from './animation.js';
+import { pickRandomNames } from './PlayerNames.js';
 
 function createCardMarkup(card) {
   return `
     <div class="card-item">
-      <img data-card-id="${card.id}" class="card-image small" src="${card.imagePath}" alt="${card.value} di ${card.suit}" />
+      <img
+        data-card-id="${card.id}"
+        class="card-image small"
+        src="${card.imagePath}"
+        alt="${card.value} di ${card.suit}"
+      />
     </div>
   `;
 }
@@ -15,8 +19,8 @@ function createCardMarkup(card) {
 function renderPlayerArea(container, player) {
   const title = player.name;
   const cardsMarkup = player.hand.map(createCardMarkup).join('');
-  container.dataset.playerId = player.id;
 
+  container.dataset.playerId = player.id;
   container.innerHTML = `
     <div class="player-meta">
       <h2>${title}</h2>
@@ -33,13 +37,19 @@ function renderBoard(state) {
     right: state.players[3],
   };
 
-  if (document.getElementById('player-top')) renderPlayerArea(document.getElementById('player-top'), mapping.top);
-  if (document.getElementById('player-left')) renderPlayerArea(document.getElementById('player-left'), mapping.left);
-  if (document.getElementById('player-right')) renderPlayerArea(document.getElementById('player-right'), mapping.right);
-  if (document.getElementById('player-you')) renderPlayerArea(document.getElementById('player-you'), mapping.you);
+  const topEl = document.getElementById('player-top');
+  const leftEl = document.getElementById('player-left');
+  const rightEl = document.getElementById('player-right');
+  const youEl = document.getElementById('player-you');
+
+  if (topEl) renderPlayerArea(topEl, mapping.top);
+  if (leftEl) renderPlayerArea(leftEl, mapping.left);
+  if (rightEl) renderPlayerArea(rightEl, mapping.right);
+  if (youEl) renderPlayerArea(youEl, mapping.you);
 
   const center = document.getElementById('table-center');
   let playArea = center.querySelector('.play-area');
+
   if (!playArea) {
     playArea = document.createElement('div');
     playArea.className = 'play-area';
@@ -53,13 +63,17 @@ gameState.startGame();
 renderBoard(gameState);
 
 let playCounter = 0;
+const cardsOnTable = new Map();
+let isResolvingTrick = false;
 
 function getPlayerByContainer(container) {
   const pid = container?.dataset?.playerId;
-  return gameState.players.find(p => String(p.id) === String(pid));
+  return gameState.players.find((p) => String(p.id) === String(pid));
 }
 
 async function handleCardClick(e) {
+  if (isResolvingTrick) return;
+
   const img = e.target.closest('.card-image');
   if (!img) return;
 
@@ -68,17 +82,17 @@ async function handleCardClick(e) {
 
   const container = img.closest('.player-area');
   const player = getPlayerByContainer(container);
+
   if (!player || player.id !== gameState.currentTurn) {
     console.debug('click ignorato: non è il tuo turno');
     return;
   }
 
-  const idx = player.hand.findIndex(c => String(c.id) === String(cardId));
+  const idx = player.hand.findIndex((c) => String(c.id) === String(cardId));
   if (idx === -1) return;
 
   const card = player.hand[idx];
 
-  // Validazione PRIMA dell'animazione
   if (!gameState.canPlayCard(card, player.id)) {
     console.debug('click ignorato: carta non valida');
     return;
@@ -86,17 +100,36 @@ async function handleCardClick(e) {
 
   const center = document.getElementById('table-center');
 
-  await animatePlayCard(img, container, center, {
+  const clone = await animatePlayCard(img, container, center, {
     zIndex: 1000 + playCounter,
-    onPlayed: () => {
+    onPlayed(clone) {
+      cardsOnTable.set(String(cardId), clone);
       gameState.playCard(player.id, cardId);
       renderBoard(gameState);
-    }
+      playCounter += 1;
+    },
   });
 
+  cardsOnTable.set(String(cardId), clone);
   playCounter += 1;
 }
 
-document.addEventListener('click', handleCardClick);
+async function onTrickResolved(winnerId, resolvedTrick) {
+  isResolvingTrick = true;
 
-// TODO: Implement animation for resolving the trick and capturing cards.
+  const center = document.getElementById('table-center');
+
+  await animateTrickResolution(center, resolvedTrick, winnerId, cardsOnTable);
+
+  resolvedTrick.forEach(({ card }) => {
+    cardsOnTable.delete(String(card.id));
+  });
+
+  playCounter = 0;
+  renderBoard(gameState);
+
+  isResolvingTrick = false;
+}
+
+gameState.onTrickResolved = onTrickResolved;
+document.addEventListener('click', handleCardClick);

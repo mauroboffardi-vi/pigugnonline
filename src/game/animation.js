@@ -125,7 +125,7 @@ export async function animateThrow(
 
         clone.style.transform = `translate(${dx}px, ${dy}px) rotate(${tiltEnd}deg)`;
 
-        onPlayed();
+        onPlayed(clone);
         return clone;
     } catch (e) {
         img.style.visibility = previousVisibility;
@@ -182,3 +182,64 @@ export async function playCard(img, container, centerElem, opts = {}) {
 
     return clone;
 }
+
+
+/**
+ * Animazione per muovere le carte vinte verso il giocatore vincitore.
+ *
+ * @param {HTMLElement} centerElem - elemento della zona centrale del tavolo
+ * @param {Object[]} trickCards - array di oggetti carta che hanno vinto la mano
+ * @param {number} winnerId - ID del giocatore vincitore
+ */
+export async function animateTrickResolution(centerElem, trickEntries, winnerId, cardsOnTable) {
+    const centerRect = centerElem.getBoundingClientRect();
+    const margin = 40;
+
+    let targetX = 0;
+    let targetY = 0;
+
+    switch (winnerId) {
+        case 0: // top
+            targetX = centerRect.left + centerRect.width / 2;
+            targetY = -window.innerHeight - margin;
+            break;
+        case 1: // left
+            targetX = -window.innerWidth - margin;
+            targetY = centerRect.top + centerRect.height / 2;
+            break;
+        case 2: // bottom
+            targetX = centerRect.left + centerRect.width / 2;
+            targetY = window.innerHeight + margin;
+            break;
+        case 3: // right
+            targetX = window.innerWidth + margin;
+            targetY = centerRect.top + centerRect.height / 2;
+            break;
+    }
+
+    const animations = trickEntries.map(({ card }, index) => {
+        const clone = cardsOnTable.get(String(card.id));
+        if (!clone) return null;
+
+        const rect = clone.getBoundingClientRect();
+        const dx = targetX - (rect.left + rect.width / 2);
+        const dy = targetY - (rect.top + rect.height / 2);
+
+        const anim = clone.animate(
+            [
+                { transform: clone.style.transform || "translate(0px, 0px)", opacity: 1 },
+                { transform: `${clone.style.transform || "translate(0px, 0px)"} translate(${dx}px, ${dy}px)`, opacity: 0.2 }
+            ],
+            {
+                duration: 700 + index * 80,
+                easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+                fill: "forwards"
+            }
+        );
+
+        return anim.finished.then(() => clone.remove());
+    }).filter(Boolean);
+
+    await Promise.all(animations);
+}
+
