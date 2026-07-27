@@ -183,14 +183,13 @@ export async function playCard(img, container, centerElem, opts = {}) {
     return clone;
 }
 
-
-/**
+/*
  * Animazione per muovere le carte vinte verso il giocatore vincitore.
  *
- * @param {HTMLElement} centerElem - elemento della zona centrale del tavolo
- * @param {Object[]} trickCards - array di oggetti carta che hanno vinto la mano
- * @param {number} winnerId - ID del giocatore vincitore
- */
+ * @param { HTMLElement } centerElem - elemento della zona centrale del tavolo
+ * @param { Object[] } trickCards - array di oggetti carta che hanno vinto la mano
+ * @param { number } winnerId - ID del giocatore vincitore
+*/
 export async function animateTrickResolution(centerElem, trickEntries, winnerId, cardsOnTable) {
     const centerRect = centerElem.getBoundingClientRect();
     const margin = 40;
@@ -201,7 +200,7 @@ export async function animateTrickResolution(centerElem, trickEntries, winnerId,
     switch (winnerId) {
         case 0: // top
             targetX = centerRect.left + centerRect.width / 2;
-            targetY = -window.innerHeight - margin;
+            targetY = window.innerHeight + margin;
             break;
         case 1: // left
             targetX = -window.innerWidth - margin;
@@ -209,7 +208,7 @@ export async function animateTrickResolution(centerElem, trickEntries, winnerId,
             break;
         case 2: // bottom
             targetX = centerRect.left + centerRect.width / 2;
-            targetY = window.innerHeight + margin;
+            targetY = - window.innerHeight - margin;
             break;
         case 3: // right
             targetX = window.innerWidth + margin;

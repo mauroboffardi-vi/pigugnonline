@@ -162,27 +162,36 @@ export class GameState {
      * Risolve la mano corrente.
      */
     resolveTrick() {
+        console.debug('Fine della mano.');
 
-        console.debug("Fine della mano.");
         const resolvedTrick = [...this.trick];
+        const leadingSuit = resolvedTrick[0].card.suit;
 
-        const winner = resolvedTrick.reduce((prev, current) =>
+        const trumpCards = resolvedTrick.filter(
+            ({ card }) => card.suit === this.trumpSuit
+        );
+
+        const candidateCards = trumpCards.length > 0
+            ? trumpCards
+            : resolvedTrick.filter(({ card }) => card.suit === leadingSuit);
+
+        const winner = candidateCards.reduce((prev, current) =>
             CardSorter.compare(prev.card, current.card) > 0 ? prev : current
         );
 
         winner.player.captures.push(...resolvedTrick.map(t => t.card));
         this.currentTurn = winner.player.id;
 
-        console.debug(`la presa é di ${winner.player.name}`);
+        console.debug(`la presa è di ${winner.player.name}`);
 
-        if (typeof this.onTrickResolved === "function") {
+        if (typeof this.onTrickResolved === 'function') {
             this.onTrickResolved(winner.player.id, resolvedTrick);
         }
 
         this.trick = [];
 
         if (this.deck.cards.length === 0 && this.players.every(player => player.hand.length === 0)) {
-            this.phase = "gameover";
+            this.phase = 'gameover';
         }
     }
 
