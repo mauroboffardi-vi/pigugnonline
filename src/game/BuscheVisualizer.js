@@ -1,100 +1,5 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-function ensureBuscheVisualizerStyles() {
-    if (document.getElementById('busche-visualizer-styles')) return;
-
-    const style = document.createElement('style');
-    style.id = 'busche-visualizer-styles';
-    style.textContent = `
-    .busche-board-cell {
-      grid-area: 1 / 1;
-      align-self: start;
-      justify-self: start;
-      padding: 8px;
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    .busche-note-slot {
-      width: min(190px, 22vw);
-      min-width: 138px;
-    }
-
-    .busche-note {
-      position: relative;
-      transform: rotate(-2.8deg);
-      transform-origin: 24px 20px;
-      filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.16));
-    }
-
-    .busche-note-pin {
-      position: absolute;
-      top: 10px;
-      left: 16px;
-      width: 12px;
-      height: 12px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 35% 35%, #fffae8 0 18%, #c53f36 22%, #922820 72%, #6f1e19 100%);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-      z-index: 2;
-    }
-
-    .busche-note-title {
-      position: absolute;
-      top: 10px;
-      left: 34px;
-      font: 700 15px 'Patrick Hand', 'Comic Sans MS', cursive;
-      color: #3d372c;
-      letter-spacing: 0.02em;
-      z-index: 2;
-    }
-
-    .busche-note-paper {
-      position: relative;
-      min-height: 176px;
-      padding: 30px 12px 10px;
-      background: linear-gradient(180deg, #f7e98b 0%, #f5e17c 100%);
-      border: 1px solid rgba(106, 88, 38, 0.24);
-      border-radius: 3px 3px 8px 3px;
-      box-shadow: inset 0 -10px 18px rgba(185, 150, 48, 0.14);
-      overflow: hidden;
-    }
-
-    .busche-note-paper::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.28), transparent 28%);
-      pointer-events: none;
-    }
-
-    .busche-note-paper::after {
-      content: '';
-      position: absolute;
-      right: 0;
-      top: 0;
-      width: 28px;
-      height: 28px;
-      background: linear-gradient(135deg, #fdf4b7 0%, #eddc79 70%);
-      clip-path: polygon(0 0, 100% 0, 100% 100%);
-      box-shadow: -1px 1px 0 rgba(120, 96, 33, 0.16);
-    }
-
-    .busche-note-svg-wrap {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1;
-    }
-
-    .busche-cross {
-      width: 100%;
-      height: 100%;
-    }
-  `;
-
-    document.head.appendChild(style);
-}
-
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
 }
@@ -246,8 +151,6 @@ function createArmLabel(group, direction, label, armLength, seedPrefix) {
     const rotate = jitter(`${seedPrefix}-label-rot`, -5, 5);
 
     const text = createText(x, y, label, {
-        'font-size': '26',
-        'font-family': 'Patrick Hand, Gloria Hallelujah, cursive',
         fill: '#25334a',
         'text-anchor': 'middle',
         'dominant-baseline': 'middle',
@@ -260,7 +163,6 @@ function createArmLabel(group, direction, label, armLength, seedPrefix) {
 
 export default class BuscheVisualizer {
     constructor(container, options = {}) {
-        ensureBuscheVisualizerStyles();
         this.container = container;
         this.options = options;
         this.state = {
@@ -358,19 +260,19 @@ export default class BuscheVisualizer {
         root.appendChild(cross);
 
         const topGroup = createArmGroup('top');
-        renderTicks(topGroup, 'up', clamp(this.state.players.top.busche, 0, 20), armLength, 'top');
+        renderBuscheMarks(topGroup, 'up', clamp(this.state.players.top.busche, 0, 20), armLength, 'top');
         createArmLabel(topGroup, 'up', this.state.players.top.label, armLength, 'top');
 
         const rightGroup = createArmGroup('right');
-        renderTicks(rightGroup, 'right', clamp(this.state.players.right.busche, 0, 20), armLength, 'right');
+        renderBuscheMarks(rightGroup, 'right', clamp(this.state.players.right.busche, 0, 20), armLength, 'right');
         createArmLabel(rightGroup, 'right', this.state.players.right.label, armLength, 'right');
 
         const bottomGroup = createArmGroup('bottom');
-        renderTicks(bottomGroup, 'down', clamp(this.state.players.bottom.busche, 0, 20), armLength, 'bottom');
+        renderBuscheMarks(bottomGroup, 'down', clamp(this.state.players.bottom.busche, 0, 20), armLength, 'bottom');
         createArmLabel(bottomGroup, 'down', this.state.players.bottom.label, armLength, 'bottom');
 
         const leftGroup = createArmGroup('left');
-        renderTicks(leftGroup, 'left', clamp(this.state.players.left.busche, 0, 20), armLength, 'left');
+        renderBuscheMarks(leftGroup, 'left', clamp(this.state.players.left.busche, 0, 20), armLength, 'left');
         createArmLabel(leftGroup, 'left', this.state.players.left.label, armLength, 'left');
 
         root.appendChild(topGroup);
@@ -381,4 +283,112 @@ export default class BuscheVisualizer {
         svg.appendChild(root);
         this.svgWrap.appendChild(svg);
     }
+}
+
+
+function renderBuscheMarks(group, direction, count, armLength, seedPrefix) {
+    const gap = 13;
+    const start = 22;
+    const dotRadius = 2.7;
+    const barLengthBase = dotRadius * 6;
+
+    for (let i = 0; i < count; i += 1) {
+        const step = i + 1;
+        const pos = start + (i * gap);
+        if (pos > armLength - 10) break;
+
+        const isMilestone = step % 5 === 0;
+        const mark = createSvgEl('g', {
+            'data-busca-index': String(i),
+            'data-busca-value': String(step),
+            'data-busca-milestone': isMilestone ? 'true' : 'false',
+        });
+
+        if (direction === 'up' || direction === 'down') {
+            const y = direction === 'up' ? -pos : pos;
+            if (isMilestone) {
+                renderBuscheBar(mark, 0, y, 'vertical', `${seedPrefix}-${step}`, barLengthBase);
+            } else {
+                renderBuscheDot(mark, 0, y, `${seedPrefix}-${step}`, dotRadius);
+            }
+        } else {
+            const x = direction === 'left' ? -pos : pos;
+            if (isMilestone) {
+                renderBuscheBar(mark, x, 0, 'horizontal', `${seedPrefix}-${step}`, barLengthBase);
+            } else {
+                renderBuscheDot(mark, x, 0, `${seedPrefix}-${step}`, dotRadius);
+            }
+        }
+
+        group.appendChild(mark);
+    }
+}
+
+function renderBuscheDot(group, cx, cy, seedPrefix, radius) {
+    const dx1 = jitter(`${seedPrefix}-dx1`, -0.6, 0.6);
+    const dy1 = jitter(`${seedPrefix}-dy1`, -0.6, 0.6);
+    const dx2 = jitter(`${seedPrefix}-dx2`, -0.6, 0.6);
+    const dy2 = jitter(`${seedPrefix}-dy2`, -0.6, 0.6);
+    const r1 = radius + jitter(`${seedPrefix}-r1`, -0.35, 0.35);
+    const r2 = radius + jitter(`${seedPrefix}-r2`, -0.45, 0.45);
+
+    const c1 = createSvgEl('circle', {
+        cx: cx + dx1,
+        cy: cy + dy1,
+        r: r1,
+        fill: 'none',
+        stroke: '#25334a',
+        'stroke-width': '1.7',
+        'stroke-linecap': 'round',
+        filter: 'url(#busche-roughen)',
+        opacity: '0.95',
+    });
+
+    const c2 = createSvgEl('circle', {
+        cx: cx + dx2,
+        cy: cy + dy2,
+        r: r2,
+        fill: 'none',
+        stroke: '#25334a',
+        'stroke-width': '1.15',
+        'stroke-linecap': 'round',
+        filter: 'url(#busche-roughen)',
+        opacity: '0.75',
+    });
+
+    group.appendChild(c1);
+    group.appendChild(c2);
+}
+
+function renderBuscheBar(group, cx, cy, orientation, seedPrefix, baseLength) {
+    const wobble = jitter(`${seedPrefix}-wobble`, -1.2, 1.2);
+    const tilt = jitter(`${seedPrefix}-tilt`, -6, 6);
+    const length = baseLength + jitter(`${seedPrefix}-len`, -2.5, 2.5);
+
+    let x1;
+    let y1;
+    let x2;
+    let y2;
+
+    if (orientation === 'vertical') {
+        x1 = cx + wobble;
+        y1 = cy - length / 2;
+        x2 = cx + wobble;
+        y2 = cy + length / 2;
+    } else {
+        x1 = cx - length / 2;
+        y1 = cy + wobble;
+        x2 = cx + length / 2;
+        y2 = cy + wobble;
+    }
+
+    const line = createStroke(x1, y1, x2, y2, {
+        stroke: '#25334a',
+        'stroke-width': '2.6',
+        'stroke-linecap': 'round',
+        transform: `rotate(${tilt} ${cx} ${cy})`,
+        filter: 'url(#busche-roughen)',
+    });
+
+    group.appendChild(line);
 }

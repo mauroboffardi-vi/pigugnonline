@@ -627,16 +627,14 @@ function pulseLatestBuscaTick(buscheVisualizer, arm, count) {
     const index = count - 1;
     if (index < 0) return;
 
-    const line = buscheVisualizer.getTickElement(arm, index);
-    if (!line) return;
+    const mark = buscheVisualizer.getTickElement(arm, index);
+    if (!mark) return;
 
-    const baseTransform = line.getAttribute('transform') || '';
-
-    line.animate(
+    mark.animate(
         [
-            { opacity: 0.15, transform: `${baseTransform} scale(0.35)` },
-            { opacity: 1, transform: `${baseTransform} scale(1.45)`, offset: 0.72 },
-            { opacity: 1, transform: `${baseTransform} scale(1)` },
+            { opacity: 0.15, transform: 'scale(0.35)' },
+            { opacity: 1, transform: 'scale(1.45)', offset: 0.72 },
+            { opacity: 1, transform: 'scale(1)' },
         ],
         {
             duration: 280,
