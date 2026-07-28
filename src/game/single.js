@@ -2,6 +2,7 @@
 import { GameState } from './GameState.js';
 import { pickRandomNames } from './PlayerNames.js';
 import { showCaptureOverlay, closeCaptureOverlay } from './CaptureOverlay.js';
+import { showGameOverOverlay } from './GameOverOverlay.js';
 import {
   playCard as animatePlayCard,
   animateTrickResolution,

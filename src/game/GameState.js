@@ -415,3 +415,48 @@ export class GameState {
         return player.hand.findIndex(c => c.id.toString() === cardId.toString());
     }
 }
+
+/**
+ * controlla se la partita sia terminata
+ */
+checkGameOver() {
+    // Un giocatore è fuori se ha 10 o più busche
+    const eliminated = this.players.filter(p => p.busche >= 10);
+    const remaining = this.players.filter(p => p.busche < 10);
+
+    // Se ci sono meno di 2 giocatori fuori, la partita continua
+    if (eliminated.length < 2) {
+        return { isGameOver: false };
+    }
+
+    let winners = [];
+    let isDoubleVictory = false;
+    let message = "";
+
+    // CASO SPECIALE 1: 3 giocatori fuori
+    if (eliminated.length === 3) {
+        winners = remaining; // 1 solo giocatore rimasto dentro
+        isDoubleVictory = true;
+        message = `DOPPIA vittoria per ${winners[0].name}!`;
+    }
+    // CASO SPECIALE 2: Tutti e 4 i giocatori fuori
+    else if (eliminated.length === 4) {
+        // Ordiniamo tutti i giocatori per numero di busche crescenti
+        const sorted = [...this.players].sort((a, b) => a.busche - b.busche);
+        // Prendiamo i due con il minor numero di busche
+        winners = [sorted[0], sorted[1]];
+        message = `la vittoria va a ${winners[0].name} e ${winners[1].name}`;
+    }
+    // CASO STANDARD: 2 giocatori fuori
+    else if (eliminated.length === 2) {
+        winners = remaining; // I 2 giocatori sotto le 10 busche
+        message = `la vittoria va a ${winners[0].name} e ${winners[1].name}`;
+    }
+
+    return {
+        isGameOver: true,
+        winners: winners,
+        isDoubleVictory: isDoubleVictory,
+        message: message
+    };
+}
