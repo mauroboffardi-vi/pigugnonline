@@ -448,7 +448,7 @@ async function animatePlayerBusche(playerSummary) {
     buscheEl.innerHTML = '';
 
     for (let i = 0; i < playerSummary.buscheEarned; i++) {
-        await sleep(750);
+        await sleep(250);
 
         const dot = document.createElement('span');
         dot.className = 'busca-dot';
@@ -611,12 +611,14 @@ export async function animateBuscheVisualizerIncrement(summary, gameState, busch
     buscheVisualizer.state = snapshot;
     buscheVisualizer.render();
 
-    for (const entry of increments) {
-        for (let i = 1; i <= entry.gained; i += 1) {
-            buscheVisualizer.state.players[entry.arm].busche = entry.previous + i;
-            buscheVisualizer.render();
-            pulseLatestBuscaTick(buscheVisualizer, entry.arm, entry.previous + i);
-            await sleep(320);
+    const previousVisible = Math.min(previousBusche, 10);
+    const nextVisible = Math.min(nextBusche, 10);
+
+    for (let i = previousVisible; i < nextVisible; i += 1) {
+        const mark = buscheVisualizer.getTickElement(arm, i);
+        if (mark) {
+            pulseLatestBuscaTick(buscheVisualizer, arm, i + 1);
+            await sleep(220);
         }
     }
 

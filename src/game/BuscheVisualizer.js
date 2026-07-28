@@ -1,9 +1,5 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-}
-
 function hashSeed(key) {
     let h = 2166136261;
     for (let i = 0; i < key.length; i += 1) {
@@ -17,10 +13,6 @@ function jitter(key, min, max) {
     const seed = hashSeed(String(key));
     const t = (seed % 10000) / 10000;
     return min + (max - min) * t;
-}
-
-function shortLabel(name) {
-    return (name || '?').trim().charAt(0).toUpperCase() || '?';
 }
 
 function createSvgEl(tag, attrs = {}) {
@@ -88,73 +80,197 @@ function createArmGroup(direction) {
     });
 }
 
-function renderTicks(group, direction, count, armLength, seedPrefix) {
-    const gap = 13;
-    const start = 22;
-    const shortSize = 9;
-    const longSize = 18;
+function renderBuscheDot(group, cx, cy, seedPrefix, radius) {
+    const dx1 = jitter(`${seedPrefix}-dx1`, -0.55, 0.55);
+    const dy1 = jitter(`${seedPrefix}-dy1`, -0.55, 0.55);
+    const dx2 = jitter(`${seedPrefix}-dx2`, -0.55, 0.55);
+    const dy2 = jitter(`${seedPrefix}-dy2`, -0.55, 0.55);
+    const r1 = radius + jitter(`${seedPrefix}-r1`, -0.30, 0.30);
+    const r2 = radius + jitter(`${seedPrefix}-r2`, -0.42, 0.42);
 
-    for (let i = 0; i < count; i += 1) {
+    const c1 = createSvgEl('circle', {
+        cx: cx + dx1,
+        cy: cy + dy1,
+        r: r1,
+        fill: 'none',
+        stroke: '#25334a',
+        'stroke-width': '1.7',
+        'stroke-linecap': 'round',
+        filter: 'url(#busche-roughen)',
+        opacity: '0.95',
+    });
+
+    const c2 = createSvgEl('circle', {
+        cx: cx + dx2,
+        cy: cy + dy2,
+        r: r2,
+        fill: 'none',
+        stroke: '#25334a',
+        'stroke-width': '1.1',
+        'stroke-linecap': 'round',
+        filter: 'url(#busche-roughen)',
+        opacity: '0.72',
+    });
+
+    group.appendChild(c1);
+    group.appendChild(c2);
+}
+
+function renderBuscheMarks(group, direction, count, armLength, seedPrefix) {
+    const visibleDots = Math.min(Math.max(0, count), 10);
+    const gap = 8;
+    const start = 10;
+    const dotRadius = 2.35;
+    const separatorLength = dotRadius * 8.4;
+
+    for (let i = 0; i < visibleDots; i += 1) {
         const step = i + 1;
         const pos = start + (i * gap);
-        if (pos > armLength - 10) break;
 
-        const isFive = step % 5 === 0;
-        const tickSize = isFive ? longSize : shortSize;
-        const wobble = jitter(`${seedPrefix}-${step}`, -1.8, 1.8);
-        const tilt = jitter(`${seedPrefix}-tilt-${step}`, -7, 7);
-
-        let x1;
-        let y1;
-        let x2;
-        let y2;
+        const mark = createSvgEl('g', {
+            'data-busca-index': String(i),
+            'data-busca-value': String(step),
+            'data-busca-milestone': 'false',
+        });
 
         if (direction === 'up' || direction === 'down') {
             const y = direction === 'up' ? -pos : pos;
-            x1 = -tickSize / 2 + wobble;
-            y1 = y - 0.5;
-            x2 = tickSize / 2 + wobble;
-            y2 = y + 0.5;
+            renderBuscheDot(mark, 0, y, `${seedPrefix}-dot-${step}`, dotRadius);
         } else {
             const x = direction === 'left' ? -pos : pos;
-            x1 = x - 0.5;
-            y1 = -tickSize / 2 + wobble;
-            x2 = x + 0.5;
-            y2 = tickSize / 2 + wobble;
+            renderBuscheDot(mark, x, 0, `${seedPrefix}-dot-${step}`, dotRadius);
         }
 
-        const line = createStroke(x1, y1, x2, y2, {
-            stroke: '#25334a',
-            'stroke-width': isFive ? 2.8 : 2.2,
-            'stroke-linecap': 'round',
-            transform: `rotate(${tilt})`,
-            filter: 'url(#busche-roughen)',
-            'data-busca-index': String(i),
-            'data-busca-value': String(step),
-            'data-busca-milestone': isFive ? 'true' : 'false',
-        });
-
-        group.appendChild(line);
+        group.appendChild(mark);
     }
+
+    if (visibleDots >= 5) {
+        const separatorPos = start + (5 * gap) - (gap * 0.35);
+
+        if (direction === 'up' || direction === 'down') {
+            const y = direction === 'up' ? -separatorPos : separatorPos;
+            renderBuscheSeparator(group, 0, y, 'vertical', `${seedPrefix}-sep-5`, separatorLength);
+        } else {
+            const x = direction === 'left' ? -separatorPos : separatorPos;
+            renderBuscheSeparator(group, x, 0, 'horizontal', `${seedPrefix}-sep-5`, separatorLength);
+        }
+    }
+}
+
+function renderBuscheSeparator(group, cx, cy, orientation, seedPrefix, baseLength) {
+    const wobble = jitter(`${seedPrefix}-wobble`, -0.8, 0.8);
+    const tilt = jitter(`${seedPrefix}-tilt`, -10, 10);
+    const length = 20 + jitter(`${seedPrefix}-len`, 2, 6);
+
+    let x1;
+    let y1;
+    let x2;
+    let y2;
+    let pivotX = cx;
+    let pivotY = cy;
+
+    if (orientation === 'vertical') {
+        x1 = cx - length / 2;
+        y1 = cy + 1.8 + wobble;
+        x2 = cx + length / 2;
+        y2 = cy - 1.2 + wobble;
+    } else {
+        x1 = cx + 1.8 + wobble;
+        y1 = cy - length / 2;
+        x2 = cx - 1.2 + wobble;
+        y2 = cy + length / 2;
+    }
+
+    const line = createStroke(x1, y1, x2, y2, {
+        stroke: '#25334a',
+        'stroke-width': '2.6',
+        'stroke-linecap': 'round',
+        transform: `rotate(${tilt} ${pivotX} ${pivotY})`,
+        filter: 'url(#busche-roughen)',
+        'data-busche-separator': 'true',
+    });
+
+    group.appendChild(line);
+}
+
+function createArmEndCross(group, direction, totalBusche, armLength, seedPrefix) {
+    if (totalBusche < 10) return;
+
+    let cx = 0;
+    let cy = 0;
+    const offset = armLength - 2;
+
+    if (direction === 'up') cy = -offset;
+    if (direction === 'down') cy = offset;
+    if (direction === 'left') cx = -offset;
+    if (direction === 'right') cx = offset;
+
+    const size = 7.5 + jitter(`${seedPrefix}-out-size`, -1.2, 2.2);
+
+    const g = createSvgEl('g', {
+        'data-out-cross': direction,
+    });
+
+    g.appendChild(createStroke(
+        cx - size,
+        cy - size,
+        cx + size,
+        cy + size,
+        {
+            stroke: '#25334a',
+            'stroke-width': '2.8',
+            'stroke-linecap': 'round',
+            transform: `rotate(${jitter(`${seedPrefix}-out-a`, -12, 12)} ${cx} ${cy})`,
+            filter: 'url(#busche-roughen)',
+        }
+    ));
+
+    g.appendChild(createStroke(
+        cx - size,
+        cy + size,
+        cx + size,
+        cy - size,
+        {
+            stroke: '#25334a',
+            'stroke-width': '2.3',
+            'stroke-linecap': 'round',
+            transform: `rotate(${jitter(`${seedPrefix}-out-b`, -12, 12)} ${cx} ${cy})`,
+            filter: 'url(#busche-roughen)',
+        }
+    ));
+
+    group.appendChild(g);
 }
 
 function createArmLabel(group, direction, label, armLength, seedPrefix) {
     if (!label) return;
+
     let x = 0;
     let y = 0;
+    let rotation = 0;
 
-    if (direction === 'up') y = -(armLength + 20);
-    if (direction === 'down') y = armLength + 28;
-    if (direction === 'left') x = -(armLength + 28);
-    if (direction === 'right') x = armLength + 18;
-
-    const rotate = jitter(`${seedPrefix}-label-rot`, -5, 5);
+    if (direction === 'up') {
+        y = -(armLength + 16);
+        rotation = jitter(`${seedPrefix}-label-rot`, -2, 2);
+    }
+    if (direction === 'down') {
+        y = armLength + 16;
+        rotation = jitter(`${seedPrefix}-label-rot`, -2, 2);
+    }
+    if (direction === 'left') {
+        x = -(armLength + 16);
+        rotation = -90 + jitter(`${seedPrefix}-label-rot`, -2, 2);
+    }
+    if (direction === 'right') {
+        x = armLength + 16;
+        rotation = 90 + jitter(`${seedPrefix}-label-rot`, -2, 2);
+    }
 
     const text = createText(x, y, label, {
         fill: '#25334a',
         'text-anchor': 'middle',
         'dominant-baseline': 'middle',
-        transform: `rotate(${rotate} ${x} ${y})`,
+        transform: `rotate(${rotation} ${x} ${y})`,
         'data-arm-label': direction,
     });
 
@@ -175,6 +291,7 @@ export default class BuscheVisualizer {
         };
 
         this.ensureShell();
+
         if (options.gameState) {
             this.setPlayersByState(options.gameState);
         } else {
@@ -186,8 +303,6 @@ export default class BuscheVisualizer {
         this.container.classList.add('busche-note-slot');
         this.container.innerHTML = `
       <div class="busche-note" aria-live="polite">
-        <div class="busche-note-pin" aria-hidden="true"></div>
-        <div class="busche-note-title">Busche</div>
         <div class="busche-note-paper">
           <div class="busche-note-svg-wrap"></div>
         </div>
@@ -197,22 +312,21 @@ export default class BuscheVisualizer {
     }
 
     setPlayersByState(gameState) {
-        const labels = {
-            top: shortLabel(gameState.players?.[2]?.name),
-            right: shortLabel(gameState.players?.[3]?.name),
-            bottom: shortLabel(gameState.players?.[0]?.name),
-            left: shortLabel(gameState.players?.[1]?.name),
+        const players = {
+            top: gameState.players?.[2],
+            right: gameState.players?.[3],
+            bottom: gameState.players?.[0],
+            left: gameState.players?.[1],
         };
 
-        this.state.players.top.label = labels.top;
-        this.state.players.right.label = labels.right;
-        this.state.players.bottom.label = labels.bottom;
-        this.state.players.left.label = labels.left;
+        Object.entries(players).forEach(([arm, player]) => {
+            const busche = player?.busche || 0;
+            const baseName = (player?.name || '').trim();
+            const label = busche >= 10 ? `${baseName} (${busche})` : baseName;
 
-        this.state.players.top.busche = gameState.players?.[2]?.busche || 0;
-        this.state.players.right.busche = gameState.players?.[3]?.busche || 0;
-        this.state.players.bottom.busche = gameState.players?.[0]?.busche || 0;
-        this.state.players.left.busche = gameState.players?.[1]?.busche || 0;
+            this.state.players[arm].label = label;
+            this.state.players[arm].busche = busche;
+        });
 
         this.render();
     }
@@ -232,20 +346,23 @@ export default class BuscheVisualizer {
     render() {
         this.svgWrap.innerHTML = '';
 
+        // area per la croce
         const svg = createSvgEl('svg', {
-            viewBox: '0 0 220 220',
+            viewBox: '0 0 270 270',
             class: 'busche-cross',
             role: 'img',
             'aria-label': 'Segnapunti busche a croce',
+            overflow: 'visible',
         });
 
         buildHandDrawnStyle(svg);
 
         const root = createSvgEl('g', {
-            transform: 'translate(110 110) rotate(-1.5)',
+            transform: 'translate(135 135) rotate(-1.5)',
         });
 
-        const armLength = 76;
+
+        const armLength = 100;
 
         const cross = createSvgEl('g', {
             stroke: '#25334a',
@@ -260,19 +377,23 @@ export default class BuscheVisualizer {
         root.appendChild(cross);
 
         const topGroup = createArmGroup('top');
-        renderBuscheMarks(topGroup, 'up', clamp(this.state.players.top.busche, 0, 20), armLength, 'top');
+        renderBuscheMarks(topGroup, 'up', this.state.players.top.busche, armLength, 'top');
+        createArmEndCross(topGroup, 'up', this.state.players.top.busche, armLength, 'top');
         createArmLabel(topGroup, 'up', this.state.players.top.label, armLength, 'top');
 
         const rightGroup = createArmGroup('right');
-        renderBuscheMarks(rightGroup, 'right', clamp(this.state.players.right.busche, 0, 20), armLength, 'right');
+        renderBuscheMarks(rightGroup, 'right', this.state.players.right.busche, armLength, 'right');
+        createArmEndCross(rightGroup, 'right', this.state.players.right.busche, armLength, 'right');
         createArmLabel(rightGroup, 'right', this.state.players.right.label, armLength, 'right');
 
         const bottomGroup = createArmGroup('bottom');
-        renderBuscheMarks(bottomGroup, 'down', clamp(this.state.players.bottom.busche, 0, 20), armLength, 'bottom');
+        renderBuscheMarks(bottomGroup, 'down', this.state.players.bottom.busche, armLength, 'bottom');
+        createArmEndCross(bottomGroup, 'down', this.state.players.bottom.busche, armLength, 'bottom');
         createArmLabel(bottomGroup, 'down', this.state.players.bottom.label, armLength, 'bottom');
 
         const leftGroup = createArmGroup('left');
-        renderBuscheMarks(leftGroup, 'left', clamp(this.state.players.left.busche, 0, 20), armLength, 'left');
+        renderBuscheMarks(leftGroup, 'left', this.state.players.left.busche, armLength, 'left');
+        createArmEndCross(leftGroup, 'left', this.state.players.left.busche, armLength, 'left');
         createArmLabel(leftGroup, 'left', this.state.players.left.label, armLength, 'left');
 
         root.appendChild(topGroup);
@@ -283,112 +404,4 @@ export default class BuscheVisualizer {
         svg.appendChild(root);
         this.svgWrap.appendChild(svg);
     }
-}
-
-
-function renderBuscheMarks(group, direction, count, armLength, seedPrefix) {
-    const gap = 13;
-    const start = 22;
-    const dotRadius = 2.7;
-    const barLengthBase = dotRadius * 6;
-
-    for (let i = 0; i < count; i += 1) {
-        const step = i + 1;
-        const pos = start + (i * gap);
-        if (pos > armLength - 10) break;
-
-        const isMilestone = step % 5 === 0;
-        const mark = createSvgEl('g', {
-            'data-busca-index': String(i),
-            'data-busca-value': String(step),
-            'data-busca-milestone': isMilestone ? 'true' : 'false',
-        });
-
-        if (direction === 'up' || direction === 'down') {
-            const y = direction === 'up' ? -pos : pos;
-            if (isMilestone) {
-                renderBuscheBar(mark, 0, y, 'vertical', `${seedPrefix}-${step}`, barLengthBase);
-            } else {
-                renderBuscheDot(mark, 0, y, `${seedPrefix}-${step}`, dotRadius);
-            }
-        } else {
-            const x = direction === 'left' ? -pos : pos;
-            if (isMilestone) {
-                renderBuscheBar(mark, x, 0, 'horizontal', `${seedPrefix}-${step}`, barLengthBase);
-            } else {
-                renderBuscheDot(mark, x, 0, `${seedPrefix}-${step}`, dotRadius);
-            }
-        }
-
-        group.appendChild(mark);
-    }
-}
-
-function renderBuscheDot(group, cx, cy, seedPrefix, radius) {
-    const dx1 = jitter(`${seedPrefix}-dx1`, -0.6, 0.6);
-    const dy1 = jitter(`${seedPrefix}-dy1`, -0.6, 0.6);
-    const dx2 = jitter(`${seedPrefix}-dx2`, -0.6, 0.6);
-    const dy2 = jitter(`${seedPrefix}-dy2`, -0.6, 0.6);
-    const r1 = radius + jitter(`${seedPrefix}-r1`, -0.35, 0.35);
-    const r2 = radius + jitter(`${seedPrefix}-r2`, -0.45, 0.45);
-
-    const c1 = createSvgEl('circle', {
-        cx: cx + dx1,
-        cy: cy + dy1,
-        r: r1,
-        fill: 'none',
-        stroke: '#25334a',
-        'stroke-width': '1.7',
-        'stroke-linecap': 'round',
-        filter: 'url(#busche-roughen)',
-        opacity: '0.95',
-    });
-
-    const c2 = createSvgEl('circle', {
-        cx: cx + dx2,
-        cy: cy + dy2,
-        r: r2,
-        fill: 'none',
-        stroke: '#25334a',
-        'stroke-width': '1.15',
-        'stroke-linecap': 'round',
-        filter: 'url(#busche-roughen)',
-        opacity: '0.75',
-    });
-
-    group.appendChild(c1);
-    group.appendChild(c2);
-}
-
-function renderBuscheBar(group, cx, cy, orientation, seedPrefix, baseLength) {
-    const wobble = jitter(`${seedPrefix}-wobble`, -1.2, 1.2);
-    const tilt = jitter(`${seedPrefix}-tilt`, -6, 6);
-    const length = baseLength + jitter(`${seedPrefix}-len`, -2.5, 2.5);
-
-    let x1;
-    let y1;
-    let x2;
-    let y2;
-
-    if (orientation === 'vertical') {
-        x1 = cx + wobble;
-        y1 = cy - length / 2;
-        x2 = cx + wobble;
-        y2 = cy + length / 2;
-    } else {
-        x1 = cx - length / 2;
-        y1 = cy + wobble;
-        x2 = cx + length / 2;
-        y2 = cy + wobble;
-    }
-
-    const line = createStroke(x1, y1, x2, y2, {
-        stroke: '#25334a',
-        'stroke-width': '2.6',
-        'stroke-linecap': 'round',
-        transform: `rotate(${tilt} ${cx} ${cy})`,
-        filter: 'url(#busche-roughen)',
-    });
-
-    group.appendChild(line);
 }
