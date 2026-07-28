@@ -12,12 +12,15 @@
 </head>
 
 <body>
-    <main class="table-shell">
-        <header class="table-header">
-            <h1>Partita singola</h1>
-            <p>Tre avversari computer, mazzo nuovo e carte distribuite.</p>
-        </header>
+    <div id="test-buttons"
+        style="position:fixed;top:12px;right:12px;z-index:99999;display:flex;flex-direction:column;gap:8px;">
+        <button type="button" data-test-preset="normal">TEST normale</button>
+        <button type="button" data-test-preset="pigugno-you">TEST pigugno tu</button>
+        <button type="button" data-test-preset="no-capture-you">TEST tu senza prese</button>
+        <button type="button" data-test-preset="ten-tricks-left">TEST 10 prese sinistra</button>
+    </div>
 
+    <main class="table-shell">
         <section class="table" aria-label="Tavolo di gioco">
             <div class="player-area top" id="player-top" data-cell="1B"></div>
             <div class="player-area left" id="player-left" data-cell="2A"></div>
@@ -28,6 +31,7 @@
     </main>
 
     <script type="module" src="./single.js"></script>
+    <script type="module" src="./test/test_buttons.js"></script>
 </body>
 
 </html>

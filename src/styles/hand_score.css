@@ -91,7 +91,7 @@
 }
 
 .summary-score.you {
-    bottom: 54px;
+    bottom: 120px;
     left: 50%;
     transform: translateX(-50%) scale(0.92);
 }

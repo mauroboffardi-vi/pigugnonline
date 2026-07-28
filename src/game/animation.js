@@ -289,7 +289,7 @@ export async function animateHandSummary(summary) {
         const pigugnoOwner = summary.players.find(p => p.playerId === summary.pigugnoWinnerId);
         const pigugnoCard = pigugnoOwner?.captures.find(card => card.suit === 'spade' && card.value === 8);
         if (pigugnoCard) {
-            await showPigugnoCenter(pigugnoCard);
+            await showPigugnoCenter(pigugnoCard, summary.pigugnoWinnerId);
         }
     }
 
@@ -355,26 +355,45 @@ async function scatterScoringCardsForPlayer(playerSummary) {
     }
 }
 
-async function showPigugnoCenter(card) {
+/**
+ * Mostra il pigugno dopo il reveal delle prese, alla fine di ciascuna mano.
+ * @param {*} card 
+ * @param {*} playerId 
+ */
+async function showPigugnoCenter(card, playerId) {
+    const pos = getPositionClassByPlayerId(playerId);
+    const rect = getPlayerAnchorRect(pos);
+
     const layer = ensureSummaryLayer().querySelector('.summary-cards-layer');
     const node = createScoreCard(card, 'pigugno-center');
     layer.appendChild(node);
 
-    node.style.left = '50vw';
-    node.style.top = '50vh';
-    node.style.transform = 'translate(-50%, -50%) scale(0.2) rotate(-12deg)';
+    // Ancora sopra la zona prese del vincitore, con offset casuale minimo
+    const anchorX = rect ? rect.left + rect.width / 2 + rand(-40, 40) : window.innerWidth / 2;
+    const anchorY = rect ? rect.top + rect.height / 2 + rand(-30, 30) : window.innerHeight / 2;
+
+    node.style.left = `${anchorX}px`;
+    node.style.top = `${anchorY}px`;
     node.style.opacity = '0';
+
+    // Rotazione finale casuale ±30°
+    const finalRot = rand(-30, 30);
+    // Rotazione iniziale leggermente diversa per dare movimento
+    const startRot = finalRot + rand(-15, 15);
+
+    node.style.transform = `translate(-50%, -50%) scale(3.5) rotate(${startRot}deg)`;
 
     const anim = node.animate(
         [
-            { transform: 'translate(-50%, -50%) scale(0.2) rotate(-18deg)', opacity: 0 },
-            { transform: 'translate(-50%, -50%) scale(1.15) rotate(4deg)', opacity: 1, offset: 0.75 },
-            { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 1, offset: 1 }
+            { transform: `translate(-50%, -50%) scale(3.5) rotate(${startRot}deg)`, opacity: 0, offset: 0 },
+            { transform: `translate(-50%, -50%) scale(3.8) rotate(${startRot}deg)`, opacity: 1, offset: 0.08 },
+            { transform: `translate(-50%, -50%) scale(1.1) rotate(${finalRot}deg)`, opacity: 1, offset: 0.80 },
+            { transform: `translate(-50%, -50%) scale(1.0) rotate(${finalRot}deg)`, opacity: 1, offset: 1 },
         ],
         {
-            duration: 700,
-            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-            fill: 'forwards'
+            duration: 900,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            fill: 'forwards',
         }
     );
 
@@ -392,7 +411,6 @@ async function animatePlayerScore(playerSummary) {
     const pointsEl = area.querySelector('.summary-points-value');
     const buscheEl = area.querySelector('.summary-busche');
 
-    labelEl.textContent = playerSummary.name;
     pointsEl.textContent = '0';
     buscheEl.innerHTML = '';
 

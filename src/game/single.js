@@ -179,3 +179,11 @@ document.addEventListener('click', (e) => {
 
 gameState.startGame();
 renderBoard(gameState);
+
+/*
+ * Hook per bottoni di test
+ */
+window.__PIGUGNO_TEST_API__ = {
+  getGameState: () => gameState,
+  render: () => renderBoard(gameState),
+};
