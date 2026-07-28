@@ -101,7 +101,7 @@ export class GameState {
             if (this.dealerId == null) {
                 this.dealerId = 0;
             }
-            this.currentTurn = this.getPlayerToRightOf(this.dealerId);
+            this.currentTurn = this.getNextPlayerId(this.dealerId);
             this.startingPlayerForHand = this.currentTurn;
         }
 
@@ -289,6 +289,14 @@ export class GameState {
         const pigugnoWinner = summaryPlayers.find(p => p.hasPigugno) || null;
         if (pigugnoWinner) {
             this.dealerId = pigugnoWinner.playerId;
+
+            // QUI: logga chi ha preso il pigugno e chi partirà dopo
+            const nextPlayerId = this.getNextPlayerId(this.dealerId);
+            const pigugnoName = pigugnoWinner.name;
+            const nextPlayerName = this.players[nextPlayerId]?.name || '(sconosciuto)';
+            console.debug(
+                `${pigugnoName} ha preso il Pigugno, la mano successiva inizia da ${nextPlayerName}`
+            );
         }
 
         this.lastHandSummary = {
@@ -371,8 +379,8 @@ export class GameState {
         return 1;
     }
 
-    getPlayerToRightOf(playerId) {
-        return (playerId + this.players.length - 1) % this.players.length;
+    getNextPlayerId(playerId) {
+        return (playerId + 1) % this.players.length;
     }
 
     getCurrentPlayer() {
