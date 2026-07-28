@@ -285,7 +285,7 @@ export async function animateHandSummary(summary) {
     }
 
     if (everyoneCovered && summary.pigugnoWinnerId != null) {
-        await sleep(rand(1000, 3000));
+        await sleep(rand(500, 1500));
         const pigugnoOwner = summary.players.find(p => p.playerId === summary.pigugnoWinnerId);
         const pigugnoCard = pigugnoOwner?.captures.find(card => card.suit === 'spade' && card.value === 8);
         if (pigugnoCard) {
@@ -295,8 +295,17 @@ export async function animateHandSummary(summary) {
 
     const orderedPlayers = getOrderedPlayersFromStartingPlayer(summary);
 
+    // Primo giro: mostra i punti per tutti
     for (const playerSummary of orderedPlayers) {
-        await animatePlayerScore(playerSummary);
+        await animatePlayerPoints(playerSummary);
+    }
+
+    // Piccola pausa tra i due giri
+    await sleep(400);
+
+    // Secondo giro: mostra le busche per tutti
+    for (const playerSummary of orderedPlayers) {
+        await animatePlayerBusche(playerSummary);
     }
 
     nextBtn.hidden = false;
@@ -400,7 +409,7 @@ async function showPigugnoCenter(card, playerId) {
     await anim.finished;
 }
 
-async function animatePlayerScore(playerSummary) {
+async function animatePlayerPoints(playerSummary) {
     const overlay = ensureSummaryLayer();
     const pos = getPositionClassByPlayerId(playerSummary.playerId);
     const area = overlay.querySelector(`.summary-score.${pos}`);
@@ -409,15 +418,25 @@ async function animatePlayerScore(playerSummary) {
     area.classList.add('visible');
 
     const pointsEl = area.querySelector('.summary-points-value');
-    const buscheEl = area.querySelector('.summary-busche');
-
     pointsEl.textContent = '0';
-    buscheEl.innerHTML = '';
 
     await countUp(pointsEl, playerSummary.points, 900);
+}
+
+async function animatePlayerBusche(playerSummary) {
+    const overlay = ensureSummaryLayer();
+    const pos = getPositionClassByPlayerId(playerSummary.playerId);
+    const area = overlay.querySelector(`.summary-score.${pos}`);
+    if (!area) return;
+
+    area.classList.add('visible');
+
+    const buscheEl = area.querySelector('.summary-busche');
+    buscheEl.innerHTML = '';
 
     for (let i = 0; i < playerSummary.buscheEarned; i++) {
-        await sleep(1000);
+        await sleep(750);
+
         const dot = document.createElement('span');
         dot.className = 'busca-dot';
         dot.textContent = '●';
@@ -439,6 +458,7 @@ async function animatePlayerScore(playerSummary) {
         await anim.finished;
     }
 }
+
 
 async function countUp(el, target, duration = 1000) {
     if (target <= 0) {
