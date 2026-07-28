@@ -141,8 +141,8 @@ body {
     font-size: 0.75rem;
 }
 
-#view-captures,
-#view-captures:visited {
+.view-captures-link,
+.view-captures-link:visited {
     color: inherit;
     text-decoration: underline;
 }

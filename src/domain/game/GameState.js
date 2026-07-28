@@ -391,20 +391,18 @@ export class GameState {
      * Restituisce la stringa di stato per il numero di presi di un giocatore.
      *
      * @param {Object} player - L'oggetto del giocatore.
+     * @param {null} [viewerPlayerId=null]  - l'id del giocatore dalla cui prospettiva si gioca. usato per gestire prima/terza persona
      * @returns {string} La stringa di stato.
     */
-    getPlayerCaptureStatus(player) {
+    getPlayerCaptureStatus(player, viewerPlayerId = null) {
         const capturesCount = Math.floor(player.captures.length / this.players.length);
 
-        let peekLink = '';
-        if (player.id === this.players[0].id && capturesCount > 0) {
-            peekLink = ' (guarda)';
-        }
+        const isSelf = player.id === viewerPlayerId;
 
         switch (capturesCount) {
-            case 0: return 'non ha coperto';
-            case 1: return `${capturesCount} presa${peekLink}`;
-            default: return `${capturesCount} prese${peekLink}`;
+            case 0: return isSelf ? 'non ho coperto' : 'non ha coperto';
+            case 1: return `1 presa`;
+            default: return `${capturesCount} prese`;
         }
     }
 

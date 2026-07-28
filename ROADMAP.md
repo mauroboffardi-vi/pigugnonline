@@ -49,7 +49,7 @@ Nota progettuale:
 
 ### 5a. pensare a un'animazione della distribuzione delle carte
 - distribuzione di 40 carte coperte con animazione dal lato del dealer
-- "showdown" delle carte del giocatore Tu
+- "showdown" delle carte del giocatore Io
 
 ### 5. Suoni
 **Obiettivo:** dare peso alle animazioni e agli eventi importanti.

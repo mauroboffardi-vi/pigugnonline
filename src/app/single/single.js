@@ -20,7 +20,7 @@ function createCardMarkup(card) {
   `;
 }
 
-const gameState = new GameState(['Tu', ...pickRandomNames(3)]);
+const gameState = new GameState(['Io', ...pickRandomNames(3)]);
 let playCounter = 0;
 const cardsOnTable = new Map();
 let isResolvingTrick = false;
@@ -30,7 +30,7 @@ const gameOverOverlay = new GameOverOverlay();
 
 function renderPlayerArea(container, player) {
   const title = player.name;
-  const captureStatus = gameState.getPlayerCaptureStatus(player);
+  const captureStatus = renderPlayerStatus(player);
   const cardsMarkup = player.hand.map(createCardMarkup).join('');
 
   container.dataset.playerId = player.id;
@@ -160,23 +160,20 @@ function refreshPlayerStatuses() {
 
     const statusEl = container.querySelector('.player-status');
     if (!statusEl) return;
-
-    statusEl.innerHTML = getPlayerStatusMarkup(player);
+    statusEl.innerHTML = renderPlayerStatus(player);
   });
 }
 
-function getPlayerStatusMarkup(player) {
+function renderPlayerStatus(player) {
+  const baseStatus = gameState.getPlayerCaptureStatus(player, 0);
   const capturesCount = Math.floor(player.captures.length / gameState.players.length);
+  const canPeek = player.id === 0 && capturesCount > 0;
 
-  if (capturesCount === 0) {
-    return 'non ha coperto';
-  }
+  if (!canPeek) return baseStatus;
 
-  const label = capturesCount === 1 ? 'presa' : 'prese';
-  const peek = player.id === 0 ? ' (<a href="#" id="view-captures">guarda</a>)' : '';
-
-  return `${capturesCount} ${label}${peek}`;
+  return `${baseStatus} (<a href="#" class="view-captures-link">guarda</a>)`;
 }
+
 
 async function syncBuscheTrackerFromState(summary) {
   if (summary) {
@@ -227,10 +224,11 @@ gameState.onHandEnded = handleHandEnded;
 document.addEventListener('click', handleCardClick);
 
 document.addEventListener('click', (e) => {
-  if (e.target.id === 'view-captures') {
-    e.preventDefault();
-    openCaptureOverlay(gameState.players[0]);
-  }
+  const link = e.target.closest('.view-captures-link');
+  if (!link) return;
+
+  e.preventDefault();
+  openCaptureOverlay(gameState.players[0]);
 });
 
 gameState.startGame();
