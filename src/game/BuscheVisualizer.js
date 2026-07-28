@@ -317,6 +317,19 @@ function createArmLabel(group, direction, label, armLength, seedPrefix) {
     group.appendChild(text);
 }
 
+const PLAYER_ID_TO_ARM = {
+    2: 'top',
+    3: 'right',
+    0: 'bottom',
+    1: 'left',
+};
+
+const ARM_TO_PLAYER_ID = {
+    top: 2,
+    right: 3,
+    bottom: 0,
+    left: 1,
+};
 
 export default class BuscheVisualizer {
     constructor(container, options = {}) {
@@ -327,20 +340,6 @@ export default class BuscheVisualizer {
         this.container = container;
         this.options = options;
         this.gameState = options.gameState || null;
-
-        this.playerIdToArm = {
-            2: 'top',
-            3: 'right',
-            0: 'bottom',
-            1: 'left',
-        };
-
-        this.armToPlayerId = {
-            top: 2,
-            right: 3,
-            bottom: 0,
-            left: 1,
-        };
 
         this.state = {
             players: {
@@ -377,14 +376,8 @@ export default class BuscheVisualizer {
 
         this.gameState = gameState;
 
-        const players = {
-            top: gameState.players?.[2],
-            right: gameState.players?.[3],
-            bottom: gameState.players?.[0],
-            left: gameState.players?.[1],
-        };
-
-        Object.entries(players).forEach(([arm, player]) => {
+        Object.entries(ARM_TO_PLAYER_ID).forEach(([arm, playerId]) => {
+            const player = gameState.players?.[playerId];
             const busche = Math.max(0, Number(player?.busche) || 0);
             const baseName = (player?.name || '').trim();
             const label = busche >= 10 ? `${baseName} (${busche})` : baseName;
@@ -408,7 +401,7 @@ export default class BuscheVisualizer {
 
         summary.players.forEach((playerSummary) => {
             const playerId = playerSummary.playerId;
-            const arm = this.playerIdToArm[playerId];
+            const arm = PLAYER_ID_TO_ARM[playerId];
             if (!arm) return;
 
             const busche = Math.max(0, Number(playerSummary.buscheAfterHand ?? playerSummary.buscheEarned ?? 0) || 0);
@@ -425,7 +418,7 @@ export default class BuscheVisualizer {
     }
 
     setPlayerBusche(playerId, value) {
-        const arm = this.playerIdToArm[playerId];
+        const arm = PLAYER_ID_TO_ARM[playerId];
         if (!arm) return;
 
         const normalized = Math.max(0, Number(value) || 0);
@@ -447,13 +440,13 @@ export default class BuscheVisualizer {
     }
 
     getPlayerBusche(playerId) {
-        const arm = this.playerIdToArm[playerId];
+        const arm = PLAYER_ID_TO_ARM[playerId];
         if (!arm) return 0;
         return Math.max(0, Number(this.state.players?.[arm]?.busche) || 0);
     }
 
     setPlayerLabel(playerId, label) {
-        const arm = this.playerIdToArm[playerId];
+        const arm = PLAYER_ID_TO_ARM[playerId];
         if (!arm) return;
 
         const current = this.state.players[arm] || { label: '', busche: 0 };
@@ -476,6 +469,30 @@ export default class BuscheVisualizer {
         if (!this.svgWrap) return null;
         return this.svgWrap.querySelector(
             `[data-arm="${arm}"] [data-busca-index="${buscaIndex}"]`
+        );
+    }
+
+    markBusca(playerId, value) {
+        const arm = PLAYER_ID_TO_ARM[playerId];
+        if (!arm) return;
+
+        const index = Number(value) - 1;
+        if (index < 0) return;
+
+        const mark = this.getTickElement(arm, index);
+        if (!mark) return;
+
+        mark.animate(
+            [
+                { opacity: 0.15, transform: 'scale(0.35)' },
+                { opacity: 1, transform: 'scale(1.45)', offset: 0.72 },
+                { opacity: 1, transform: 'scale(1)' },
+            ],
+            {
+                duration: 280,
+                easing: 'cubic-bezier(0.2, 1.4, 0.2, 1)',
+                fill: 'forwards',
+            }
         );
     }
 

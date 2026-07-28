@@ -1,20 +1,11 @@
 /**
- * Animazione dei punteggi
- * 
- * Funzioni esportate:
- * 1. `animateThrow`: Anima il lancio di una carta dal suo punto di partenza verso un elemento di destinazione.
- * 2. `playCard`: API di alto livello per giocare una carta con l'animazione.
- * 3. `animateTrickResolution`: Anima le carte vinte verso il giocatore vincitore.
- *
+ * Animazione dei punteggi fine mano e fine partita
+ *  
  */
 
 function rand(min, max) {
     return Math.round(Math.random() * (max - min) + min);
 }
-
-/*
- * ANIMAZIONI DI FINE MANO E SHOW PUNTEGGIO
- */
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -237,13 +228,12 @@ async function animatePlayerBusche(summary, gameState, buscheVisualizer) {
     }
 
     for (const { playerId, previous, total } of increments) {
-        const arm = buscheVisualizer.playerIdToArm[playerId];
         const previousVisible = Math.min(previous, 10);
         const nextVisible = Math.min(total, 10);
 
         for (let value = previousVisible + 1; value <= nextVisible; value += 1) {
             buscheVisualizer.setPlayerBusche(playerId, value);
-            pulseLatestBuscaTick(buscheVisualizer, arm, value);
+            buscheVisualizer.markBusca(playerId, value);
             await sleep(750);
         }
     }
@@ -325,25 +315,3 @@ export function clearHandSummaryOverlay() {
     layer.remove();
 }
 
-
-
-function pulseLatestBuscaTick(buscheVisualizer, arm, count) {
-    const index = count - 1;
-    if (index < 0) return;
-
-    const mark = buscheVisualizer.getTickElement(arm, index);
-    if (!mark) return;
-
-    mark.animate(
-        [
-            { opacity: 0.15, transform: 'scale(0.35)' },
-            { opacity: 1, transform: 'scale(1.45)', offset: 0.72 },
-            { opacity: 1, transform: 'scale(1)' },
-        ],
-        {
-            duration: 280,
-            easing: 'cubic-bezier(0.2, 1.4, 0.2, 1)',
-            fill: 'forwards',
-        }
-    );
-}
