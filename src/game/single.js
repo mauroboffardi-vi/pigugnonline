@@ -182,9 +182,15 @@ function getPlayerStatusMarkup(player) {
   return `${capturesCount} ${label}${peek}`;
 }
 
+async function syncBuscheVisualizerFromState(summary) {
+  if (summary) {
+    buscheVisualizer.setPlayersByState(gameState);
+  }
+}
+
 async function handleHandEnded(summary) {
-  await animateHandSummary(summary);
-  buscheVisualizer.updateFromSummary(summary, gameState);
+  await animateHandSummary(summary, gameState, buscheVisualizer);
+  //buscheVisualizer.updateFromSummary(summary, gameState);
 
   clearHandSummaryOverlay();
 
@@ -234,15 +240,6 @@ document.addEventListener('click', (e) => {
 gameState.startGame();
 renderBoard(gameState);
 
-
-async function syncBuscheVisualizerFromState(summary = null) {
-  if (summary) {
-    await animateBuscheVisualizerIncrement(summary, gameState, buscheVisualizer);
-    return;
-  }
-
-  buscheVisualizer.setPlayersByState(gameState);
-}
 /*
  * Hook per bottoni di test
  */

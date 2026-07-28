@@ -272,12 +272,18 @@ export class GameState {
         const buscheMap = this.calculateBuscheForHand(summaryPlayers);
 
         summaryPlayers.forEach(p => {
-            p.buscheEarned = buscheMap.get(p.playerId) || 0;
-
             const player = this.players.find(x => x.id === p.playerId);
+            const earned = buscheMap.get(p.playerId) || 0;
+            const before = player.busche;
+
+            p.buscheBeforeHand = before;
+            p.buscheEarned = earned;
+
             player.pointsThisHand = p.points;
-            player.buscheThisHand = p.buscheEarned;
-            player.busche += p.buscheEarned;
+            player.buscheThisHand = earned;
+            player.busche = before + earned;
+
+            p.buscheAfterHand = player.busche;
         });
 
         const pigugnoWinner = summaryPlayers.find(p => p.hasPigugno) || null;

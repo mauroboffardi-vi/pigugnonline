@@ -262,13 +262,9 @@ function getPositionClassByPlayerId(playerId) {
     }
 }
 
-export async function animateHandSummary(summary) {
+export async function animateHandSummary(summary, gameState, buscheVisualizer) {
     const overlay = ensureSummaryLayer();
     overlay.classList.add('visible');
-
-    const nextBtn = overlay.querySelector('.next-hand-button');
-    nextBtn.hidden = true;
-    nextBtn.onclick = null;
 
     overlay.querySelector('.summary-cards-layer').innerHTML = '';
     overlay.querySelectorAll('.summary-score').forEach((el) => {
@@ -306,19 +302,9 @@ export async function animateHandSummary(summary) {
     }
 
 
-    // Secondo giro: mostra le busche per tutti
-    for (const playerSummary of orderedPlayers) {
-        await animatePlayerBusche(playerSummary);
-    }
-
-    nextBtn.hidden = false;
-
-    return new Promise(resolve => {
-        nextBtn.onclick = () => {
-            nextBtn.onclick = null;
-            resolve();
-        };
-    });
+    // Aggiungi i punti Busche uno alla volta
+    await animatePlayerBusche(summary, gameState, buscheVisualizer);
+    await sleep(500);
 }
 
 async function scatterScoringCardsForPlayer(playerSummary, everyoneCovered) {
@@ -436,42 +422,39 @@ async function animatePlayerPoints(playerSummary) {
     await countUp(pointsEl, playerSummary.points, 900);
 }
 
-async function animatePlayerBusche(playerSummary) {
-    const overlay = ensureSummaryLayer();
-    const pos = getPositionClassByPlayerId(playerSummary.playerId);
-    const area = overlay.querySelector(`.summary-score.${pos}`);
-    if (!area) return;
+async function animatePlayerBusche(summary, gameState, buscheVisualizer) {
+    if (!summary || !buscheVisualizer) return;
 
-    area.classList.add('visible');
+    const increments = summary.players
+        .map((playerSummary) => ({
+            playerId: playerSummary.playerId,
+            previous: playerSummary.buscheBeforeHand ?? 0,
+            total: playerSummary.buscheAfterHand ?? 0,
+            gained: playerSummary.buscheEarned ?? 0,
+        }))
+        .filter((entry) => entry.gained > 0);
 
-    const buscheEl = area.querySelector('.summary-busche');
-    buscheEl.innerHTML = '';
+    if (!increments.length) {
+        if (gameState) buscheVisualizer.setPlayersByState(gameState);
+        return;
+    }
 
-    for (let i = 0; i < playerSummary.buscheEarned; i++) {
-        await sleep(250);
+    for (const { playerId, previous } of increments) {
+        buscheVisualizer.setPlayerBusche(playerId, previous);
+    }
 
-        const dot = document.createElement('span');
-        dot.className = 'busca-dot';
-        dot.textContent = '●';
-        buscheEl.appendChild(dot);
+    for (const { playerId, previous, total } of increments) {
+        const arm = buscheVisualizer.playerIdToArm[playerId];
+        const previousVisible = Math.min(previous, 10);
+        const nextVisible = Math.min(total, 10);
 
-        const anim = dot.animate(
-            [
-                { transform: 'scale(0.2)', opacity: 0 },
-                { transform: 'scale(1.8)', opacity: 1, offset: 0.7 },
-                { transform: 'scale(1)', opacity: 1, offset: 1 }
-            ],
-            {
-                duration: 280,
-                easing: 'cubic-bezier(0.2, 1.4, 0.2, 1)',
-                fill: 'forwards'
-            }
-        );
-
-        await anim.finished;
+        for (let value = previousVisible + 1; value <= nextVisible; value += 1) {
+            buscheVisualizer.setPlayerBusche(playerId, value);
+            pulseLatestBuscaTick(buscheVisualizer, arm, value);
+            await sleep(750);
+        }
     }
 }
-
 
 async function countUp(el, target, duration = 1000) {
     if (target <= 0) {
@@ -537,8 +520,6 @@ function ensureSummaryLayer() {
       <div class="summary-points-value"></div>
       <div class="summary-busche"></div>
     </div>
-
-    <button class="next-hand-button" hidden>Prossima mano</button>
   `;
 
     document.body.appendChild(layer);
@@ -552,78 +533,6 @@ export function clearHandSummaryOverlay() {
 }
 
 
-export async function animateBuscheVisualizerIncrement(summary, gameState, buscheVisualizer) {
-    if (!summary || !gameState || !buscheVisualizer) return;
-
-    const playerIdToArm = {
-        2: 'top',
-        3: 'right',
-        0: 'bottom',
-        1: 'left',
-    };
-
-    const increments = summary.players
-        .map((playerSummary) => {
-            const player = gameState.players.find((p) => p.id === playerSummary.playerId);
-            const gained = playerSummary.buscheEarned || 0;
-            const total = player?.busche || 0;
-            const previous = Math.max(0, total - gained);
-
-            return {
-                playerId: playerSummary.playerId,
-                arm: playerIdToArm[playerSummary.playerId],
-                gained,
-                previous,
-            };
-        })
-        .filter((entry) => entry.arm && entry.gained > 0);
-
-    if (!increments.length) {
-        buscheVisualizer.setPlayersByState(gameState);
-        return;
-    }
-
-    const snapshot = {
-        players: {
-            top: {
-                label: buscheVisualizer.state.players.top.label,
-                busche: buscheVisualizer.state.players.top.busche,
-            },
-            right: {
-                label: buscheVisualizer.state.players.right.label,
-                busche: buscheVisualizer.state.players.right.busche,
-            },
-            bottom: {
-                label: buscheVisualizer.state.players.bottom.label,
-                busche: buscheVisualizer.state.players.bottom.busche,
-            },
-            left: {
-                label: buscheVisualizer.state.players.left.label,
-                busche: buscheVisualizer.state.players.left.busche,
-            },
-        },
-    };
-
-    increments.forEach(({ arm, previous }) => {
-        if (snapshot.players[arm]) snapshot.players[arm].busche = previous;
-    });
-
-    buscheVisualizer.state = snapshot;
-    buscheVisualizer.render();
-
-    const previousVisible = Math.min(previousBusche, 10);
-    const nextVisible = Math.min(nextBusche, 10);
-
-    for (let i = previousVisible; i < nextVisible; i += 1) {
-        const mark = buscheVisualizer.getTickElement(arm, i);
-        if (mark) {
-            pulseLatestBuscaTick(buscheVisualizer, arm, i + 1);
-            await sleep(220);
-        }
-    }
-
-    buscheVisualizer.setPlayersByState(gameState);
-}
 
 function pulseLatestBuscaTick(buscheVisualizer, arm, count) {
     const index = count - 1;

@@ -1,5 +1,6 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+
 function hashSeed(key) {
     let h = 2166136261;
     for (let i = 0; i < key.length; i += 1) {
@@ -9,11 +10,13 @@ function hashSeed(key) {
     return h >>> 0;
 }
 
+
 function jitter(key, min, max) {
     const seed = hashSeed(String(key));
     const t = (seed % 10000) / 10000;
     return min + (max - min) * t;
 }
+
 
 function createSvgEl(tag, attrs = {}) {
     const el = document.createElementNS(SVG_NS, tag);
@@ -22,6 +25,7 @@ function createSvgEl(tag, attrs = {}) {
     });
     return el;
 }
+
 
 function createStroke(x1, y1, x2, y2, extra = {}) {
     return createSvgEl('line', {
@@ -33,6 +37,7 @@ function createStroke(x1, y1, x2, y2, extra = {}) {
     });
 }
 
+
 function createText(x, y, text, attrs = {}) {
     const el = createSvgEl('text', {
         x,
@@ -43,8 +48,10 @@ function createText(x, y, text, attrs = {}) {
     return el;
 }
 
+
 function buildHandDrawnStyle(svg) {
     const defs = createSvgEl('defs');
+
 
     const filter = createSvgEl('filter', {
         id: 'busche-roughen',
@@ -54,6 +61,7 @@ function buildHandDrawnStyle(svg) {
         height: '120%',
     });
 
+
     filter.appendChild(createSvgEl('feTurbulence', {
         type: 'fractalNoise',
         baseFrequency: '0.85',
@@ -61,6 +69,7 @@ function buildHandDrawnStyle(svg) {
         seed: '7',
         result: 'noise',
     }));
+
 
     filter.appendChild(createSvgEl('feDisplacementMap', {
         in: 'SourceGraphic',
@@ -70,15 +79,18 @@ function buildHandDrawnStyle(svg) {
         yChannelSelector: 'G',
     }));
 
+
     defs.appendChild(filter);
     svg.appendChild(defs);
 }
+
 
 function createArmGroup(direction) {
     return createSvgEl('g', {
         'data-arm': direction,
     });
 }
+
 
 function renderBuscheDot(group, cx, cy, seedPrefix, radius) {
     const dx1 = jitter(`${seedPrefix}-dx1`, -0.55, 0.55);
@@ -87,6 +99,7 @@ function renderBuscheDot(group, cx, cy, seedPrefix, radius) {
     const dy2 = jitter(`${seedPrefix}-dy2`, -0.55, 0.55);
     const r1 = radius + jitter(`${seedPrefix}-r1`, -0.30, 0.30);
     const r2 = radius + jitter(`${seedPrefix}-r2`, -0.42, 0.42);
+
 
     const c1 = createSvgEl('circle', {
         cx: cx + dx1,
@@ -100,6 +113,7 @@ function renderBuscheDot(group, cx, cy, seedPrefix, radius) {
         opacity: '0.95',
     });
 
+
     const c2 = createSvgEl('circle', {
         cx: cx + dx2,
         cy: cy + dy2,
@@ -112,9 +126,11 @@ function renderBuscheDot(group, cx, cy, seedPrefix, radius) {
         opacity: '0.72',
     });
 
+
     group.appendChild(c1);
     group.appendChild(c2);
 }
+
 
 function renderBuscheMarks(group, direction, count, armLength, seedPrefix) {
     const visibleDots = Math.min(Math.max(0, count), 10);
@@ -123,15 +139,18 @@ function renderBuscheMarks(group, direction, count, armLength, seedPrefix) {
     const dotRadius = 2.35;
     const separatorLength = dotRadius * 8.4;
 
+
     for (let i = 0; i < visibleDots; i += 1) {
         const step = i + 1;
         const pos = start + (i * gap);
+
 
         const mark = createSvgEl('g', {
             'data-busca-index': String(i),
             'data-busca-value': String(step),
             'data-busca-milestone': 'false',
         });
+
 
         if (direction === 'up' || direction === 'down') {
             const y = direction === 'up' ? -pos : pos;
@@ -141,11 +160,14 @@ function renderBuscheMarks(group, direction, count, armLength, seedPrefix) {
             renderBuscheDot(mark, x, 0, `${seedPrefix}-dot-${step}`, dotRadius);
         }
 
+
         group.appendChild(mark);
     }
 
+
     if (visibleDots >= 5) {
         const separatorPos = start + (5 * gap) - (gap * 0.35);
+
 
         if (direction === 'up' || direction === 'down') {
             const y = direction === 'up' ? -separatorPos : separatorPos;
@@ -157,17 +179,20 @@ function renderBuscheMarks(group, direction, count, armLength, seedPrefix) {
     }
 }
 
+
 function renderBuscheSeparator(group, cx, cy, orientation, seedPrefix, baseLength) {
     const wobble = jitter(`${seedPrefix}-wobble`, -0.8, 0.8);
     const tilt = jitter(`${seedPrefix}-tilt`, -10, 10);
     const length = 20 + jitter(`${seedPrefix}-len`, 2, 6);
 
+
     let x1;
     let y1;
     let x2;
     let y2;
-    let pivotX = cx;
-    let pivotY = cy;
+    const pivotX = cx;
+    const pivotY = cy;
+
 
     if (orientation === 'vertical') {
         x1 = cx - length / 2;
@@ -181,6 +206,7 @@ function renderBuscheSeparator(group, cx, cy, orientation, seedPrefix, baseLengt
         y2 = cy + length / 2;
     }
 
+
     const line = createStroke(x1, y1, x2, y2, {
         stroke: '#25334a',
         'stroke-width': '2.6',
@@ -190,26 +216,33 @@ function renderBuscheSeparator(group, cx, cy, orientation, seedPrefix, baseLengt
         'data-busche-separator': 'true',
     });
 
+
     group.appendChild(line);
 }
+
 
 function createArmEndCross(group, direction, totalBusche, armLength, seedPrefix) {
     if (totalBusche < 10) return;
 
+
     let cx = 0;
     let cy = 0;
     const offset = armLength - 2;
+
 
     if (direction === 'up') cy = -offset;
     if (direction === 'down') cy = offset;
     if (direction === 'left') cx = -offset;
     if (direction === 'right') cx = offset;
 
+
     const size = 7.5 + jitter(`${seedPrefix}-out-size`, -1.2, 2.2);
+
 
     const g = createSvgEl('g', {
         'data-out-cross': direction,
     });
+
 
     g.appendChild(createStroke(
         cx - size,
@@ -225,6 +258,7 @@ function createArmEndCross(group, direction, totalBusche, armLength, seedPrefix)
         }
     ));
 
+
     g.appendChild(createStroke(
         cx - size,
         cy + size,
@@ -239,15 +273,19 @@ function createArmEndCross(group, direction, totalBusche, armLength, seedPrefix)
         }
     ));
 
+
     group.appendChild(g);
 }
+
 
 function createArmLabel(group, direction, label, armLength, seedPrefix) {
     if (!label) return;
 
+
     let x = 0;
     let y = 0;
     let rotation = 0;
+
 
     if (direction === 'up') {
         y = -(armLength + 16);
@@ -266,6 +304,7 @@ function createArmLabel(group, direction, label, armLength, seedPrefix) {
         rotation = 90 + jitter(`${seedPrefix}-label-rot`, -2, 2);
     }
 
+
     const text = createText(x, y, label, {
         fill: '#25334a',
         'text-anchor': 'middle',
@@ -274,13 +313,35 @@ function createArmLabel(group, direction, label, armLength, seedPrefix) {
         'data-arm-label': direction,
     });
 
+
     group.appendChild(text);
 }
 
+
 export default class BuscheVisualizer {
     constructor(container, options = {}) {
+        if (!container) {
+            throw new Error('BuscheVisualizer: container mancante');
+        }
+
         this.container = container;
         this.options = options;
+        this.gameState = options.gameState || null;
+
+        this.playerIdToArm = {
+            2: 'top',
+            3: 'right',
+            0: 'bottom',
+            1: 'left',
+        };
+
+        this.armToPlayerId = {
+            top: 2,
+            right: 3,
+            bottom: 0,
+            left: 1,
+        };
+
         this.state = {
             players: {
                 top: { label: '', busche: 0 },
@@ -292,8 +353,8 @@ export default class BuscheVisualizer {
 
         this.ensureShell();
 
-        if (options.gameState) {
-            this.setPlayersByState(options.gameState);
+        if (this.gameState) {
+            this.setPlayersByState(this.gameState);
         } else {
             this.render();
         }
@@ -312,6 +373,10 @@ export default class BuscheVisualizer {
     }
 
     setPlayersByState(gameState) {
+        if (!gameState || !Array.isArray(gameState.players)) return;
+
+        this.gameState = gameState;
+
         const players = {
             top: gameState.players?.[2],
             right: gameState.players?.[3],
@@ -320,20 +385,91 @@ export default class BuscheVisualizer {
         };
 
         Object.entries(players).forEach(([arm, player]) => {
-            const busche = player?.busche || 0;
+            const busche = Math.max(0, Number(player?.busche) || 0);
             const baseName = (player?.name || '').trim();
             const label = busche >= 10 ? `${baseName} (${busche})` : baseName;
 
-            this.state.players[arm].label = label;
-            this.state.players[arm].busche = busche;
+            this.state.players[arm] = {
+                label,
+                busche,
+            };
         });
 
         this.render();
     }
 
     updateFromSummary(summary, gameState) {
-        if (!summary || !gameState) return;
-        this.setPlayersByState(gameState);
+        if (gameState) {
+            this.setPlayersByState(gameState);
+            return;
+        }
+
+        if (!summary || !Array.isArray(summary.players)) return;
+
+        summary.players.forEach((playerSummary) => {
+            const playerId = playerSummary.playerId;
+            const arm = this.playerIdToArm[playerId];
+            if (!arm) return;
+
+            const busche = Math.max(0, Number(playerSummary.buscheAfterHand ?? playerSummary.buscheEarned ?? 0) || 0);
+            const baseName = (playerSummary.name || '').trim();
+            const label = busche >= 10 ? `${baseName} (${busche})` : baseName;
+
+            this.state.players[arm] = {
+                label,
+                busche,
+            };
+        });
+
+        this.render();
+    }
+
+    setPlayerBusche(playerId, value) {
+        const arm = this.playerIdToArm[playerId];
+        if (!arm) return;
+
+        const normalized = Math.max(0, Number(value) || 0);
+        const current = this.state.players[arm] || { label: '', busche: 0 };
+        const baseLabel = this.extractBaseLabel(current.label);
+
+        this.state.players[arm] = {
+            ...current,
+            label: normalized >= 10 && baseLabel ? `${baseLabel} (${normalized})` : baseLabel,
+            busche: normalized,
+        };
+
+        this.render();
+    }
+
+    incrementPlayerBusche(playerId, amount = 1) {
+        const current = this.getPlayerBusche(playerId);
+        this.setPlayerBusche(playerId, current + amount);
+    }
+
+    getPlayerBusche(playerId) {
+        const arm = this.playerIdToArm[playerId];
+        if (!arm) return 0;
+        return Math.max(0, Number(this.state.players?.[arm]?.busche) || 0);
+    }
+
+    setPlayerLabel(playerId, label) {
+        const arm = this.playerIdToArm[playerId];
+        if (!arm) return;
+
+        const current = this.state.players[arm] || { label: '', busche: 0 };
+        const busche = Math.max(0, Number(current.busche) || 0);
+        const baseLabel = (label || '').trim();
+
+        this.state.players[arm] = {
+            ...current,
+            label: busche >= 10 && baseLabel ? `${baseLabel} (${busche})` : baseLabel,
+        };
+
+        this.render();
+    }
+
+    extractBaseLabel(label) {
+        return String(label || '').replace(/\s*\(\d+\)\s*$/, '').trim();
     }
 
     getTickElement(arm, buscaIndex) {
@@ -344,9 +480,10 @@ export default class BuscheVisualizer {
     }
 
     render() {
+        if (!this.svgWrap) return;
+
         this.svgWrap.innerHTML = '';
 
-        // area per la croce
         const svg = createSvgEl('svg', {
             viewBox: '0 0 270 270',
             class: 'busche-cross',
@@ -360,7 +497,6 @@ export default class BuscheVisualizer {
         const root = createSvgEl('g', {
             transform: 'translate(135 135) rotate(-1.5)',
         });
-
 
         const armLength = 100;
 
