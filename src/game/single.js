@@ -8,6 +8,7 @@ import {
   animateHandSummary,
   clearHandSummaryOverlay
 } from './animation.js';
+import BuscheVisualizer from './BuscheVisualizer.js';
 
 function createCardMarkup(card) {
   return `
@@ -26,6 +27,8 @@ const gameState = new GameState(['Tu', ...pickRandomNames(3)]);
 let playCounter = 0;
 const cardsOnTable = new Map();
 let isResolvingTrick = false;
+const buscheVisualizer = new BuscheVisualizer(document.getElementById('busche-note'), { gameState });
+
 
 function renderPlayerArea(container, player) {
   const title = player.name;
@@ -145,6 +148,7 @@ function openCaptureOverlay(player) {
 
 async function handleHandEnded(summary) {
   await animateHandSummary(summary);
+  buscheVisualizer.updateFromSummary(summary, gameState);
 
   clearHandSummaryOverlay();
 
@@ -180,10 +184,21 @@ document.addEventListener('click', (e) => {
 gameState.startGame();
 renderBoard(gameState);
 
+
+async function syncBuscheVisualizerFromState(summary = null) {
+  if (summary) {
+    await animateBuscheVisualizerIncrement(summary, gameState, buscheVisualizer);
+    return;
+  }
+
+  buscheVisualizer.setPlayersByState(gameState);
+}
 /*
  * Hook per bottoni di test
  */
 window.__PIGUGNO_TEST_API__ = {
   getGameState: () => gameState,
   render: () => renderBoard(gameState),
+  syncBuscheVisualizerFromState,
 };
+

@@ -550,3 +550,98 @@ export function clearHandSummaryOverlay() {
     if (!layer) return;
     layer.remove();
 }
+
+
+export async function animateBuscheVisualizerIncrement(summary, gameState, buscheVisualizer) {
+    if (!summary || !gameState || !buscheVisualizer) return;
+
+    const playerIdToArm = {
+        2: 'top',
+        3: 'right',
+        0: 'bottom',
+        1: 'left',
+    };
+
+    const increments = summary.players
+        .map((playerSummary) => {
+            const player = gameState.players.find((p) => p.id === playerSummary.playerId);
+            const gained = playerSummary.buscheEarned || 0;
+            const total = player?.busche || 0;
+            const previous = Math.max(0, total - gained);
+
+            return {
+                playerId: playerSummary.playerId,
+                arm: playerIdToArm[playerSummary.playerId],
+                gained,
+                previous,
+            };
+        })
+        .filter((entry) => entry.arm && entry.gained > 0);
+
+    if (!increments.length) {
+        buscheVisualizer.setPlayersByState(gameState);
+        return;
+    }
+
+    const snapshot = {
+        players: {
+            top: {
+                label: buscheVisualizer.state.players.top.label,
+                busche: buscheVisualizer.state.players.top.busche,
+            },
+            right: {
+                label: buscheVisualizer.state.players.right.label,
+                busche: buscheVisualizer.state.players.right.busche,
+            },
+            bottom: {
+                label: buscheVisualizer.state.players.bottom.label,
+                busche: buscheVisualizer.state.players.bottom.busche,
+            },
+            left: {
+                label: buscheVisualizer.state.players.left.label,
+                busche: buscheVisualizer.state.players.left.busche,
+            },
+        },
+    };
+
+    increments.forEach(({ arm, previous }) => {
+        if (snapshot.players[arm]) snapshot.players[arm].busche = previous;
+    });
+
+    buscheVisualizer.state = snapshot;
+    buscheVisualizer.render();
+
+    for (const entry of increments) {
+        for (let i = 1; i <= entry.gained; i += 1) {
+            buscheVisualizer.state.players[entry.arm].busche = entry.previous + i;
+            buscheVisualizer.render();
+            pulseLatestBuscaTick(buscheVisualizer, entry.arm, entry.previous + i);
+            await sleep(320);
+        }
+    }
+
+    buscheVisualizer.setPlayersByState(gameState);
+}
+
+function pulseLatestBuscaTick(buscheVisualizer, arm, count) {
+    const index = count - 1;
+    if (index < 0) return;
+
+    const line = buscheVisualizer.getTickElement(arm, index);
+    if (!line) return;
+
+    const baseTransform = line.getAttribute('transform') || '';
+
+    line.animate(
+        [
+            { opacity: 0.15, transform: `${baseTransform} scale(0.35)` },
+            { opacity: 1, transform: `${baseTransform} scale(1.45)`, offset: 0.72 },
+            { opacity: 1, transform: `${baseTransform} scale(1)` },
+        ],
+        {
+            duration: 280,
+            easing: 'cubic-bezier(0.2, 1.4, 0.2, 1)',
+            fill: 'forwards',
+        }
+    );
+}
