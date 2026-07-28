@@ -1,8 +1,13 @@
 // src/game/single.js
 import { GameState } from './GameState.js';
-import { playCard as animatePlayCard, animateTrickResolution } from './animation.js';
 import { pickRandomNames } from './PlayerNames.js';
 import { showCaptureOverlay, closeCaptureOverlay } from './CaptureOverlay.js';
+import {
+  playCard as animatePlayCard,
+  animateTrickResolution,
+  animateHandSummary,
+  clearHandSummaryOverlay
+} from './animation.js';
 
 function createCardMarkup(card) {
   return `
@@ -17,6 +22,10 @@ function createCardMarkup(card) {
   `;
 }
 
+const gameState = new GameState(['Tu', ...pickRandomNames(3)]);
+let playCounter = 0;
+const cardsOnTable = new Map();
+let isResolvingTrick = false;
 
 function renderPlayerArea(container, player) {
   const title = player.name;
@@ -62,14 +71,6 @@ function renderBoard(state) {
   }
 }
 
-const gameState = new GameState(['Tu', ...pickRandomNames(3)]);
-gameState.startGame();
-renderBoard(gameState);
-
-let playCounter = 0;
-const cardsOnTable = new Map();
-let isResolvingTrick = false;
-
 function getPlayerByContainer(container) {
   const pid = container?.dataset?.playerId;
   return gameState.players.find((p) => String(p.id) === String(pid));
@@ -114,8 +115,10 @@ async function handleCardClick(e) {
     },
   });
 
-  cardsOnTable.set(String(cardId), clone);
-  playCounter += 1;
+  if (clone) {
+    cardsOnTable.set(String(cardId), clone);
+    playCounter += 1;
+  }
 }
 
 async function onTrickResolved(winnerId, resolvedTrick) {
@@ -135,7 +138,36 @@ async function onTrickResolved(winnerId, resolvedTrick) {
   isResolvingTrick = false;
 }
 
+function openCaptureOverlay(player) {
+  const capturedCards = gameState.getCapturedCards(player);
+  showCaptureOverlay(capturedCards);
+}
+
+async function handleHandEnded(summary) {
+  await animateHandSummary(summary);
+
+  clearHandSummaryOverlay();
+
+  const ok = gameState.startNextHand();
+  if (!ok) return;
+
+  cardsOnTable.forEach((clone) => {
+    try {
+      clone.remove();
+    } catch (_) { }
+  });
+  cardsOnTable.clear();
+
+  closeCaptureOverlay();
+  playCounter = 0;
+  isResolvingTrick = false;
+
+  renderBoard(gameState);
+}
+
 gameState.onTrickResolved = onTrickResolved;
+gameState.onHandEnded = handleHandEnded;
+
 document.addEventListener('click', handleCardClick);
 
 document.addEventListener('click', (e) => {
@@ -145,8 +177,5 @@ document.addEventListener('click', (e) => {
   }
 });
 
-function openCaptureOverlay(player) {
-  const capturedCards = gameState.getCapturedCards(player);
-  // This will trigger the overlay logic in CaptureOverlay.js
-  showCaptureOverlay(capturedCards);
-}
+gameState.startGame();
+renderBoard(gameState);

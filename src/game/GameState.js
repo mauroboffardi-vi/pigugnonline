@@ -13,6 +13,7 @@ export class GameState {
      */
     constructor(playerNames) {
         this.playerNames = playerNames;
+
         this.players = playerNames.map((name, index) => ({
             id: index,
             name,
@@ -20,25 +21,54 @@ export class GameState {
             hand: [],
             faceUp: false,
             captures: [],
+            capturedTricks: 0,
+            busche: 0,
+            buscheThisHand: 0,
+            pointsThisHand: 0,
         }));
+
         this.deck = null;
         this.currentTurn = 0;
         this.phase = 'setup';
         this.trick = [];
-        this.trumpSuit = 'spade'; // Pigugno
-        this.onTrickResolved = null; //  callback for trick resolution
+        this.trumpSuit = 'spade';
+        this.onTrickResolved = null;
+        this.onHandEnded = null;
+
         this.isFirstTrick = true;
+
+        this.handNumber = 1;
+        this.dealerId = null;
+        this.startingPlayerForHand = 0;
+        this.lastHandWinnerId = null;
+        this.lastHandSummary = null;
     }
 
-    /**
-     * Inizia una nuova partita.
-     */
     startGame() {
+        this.handNumber = 1;
+        this.players.forEach((player) => {
+            player.busche = 0;
+        });
+
+        this.startHand({ firstHand: true });
+    }
+
+    startHand({ firstHand = false } = {}) {
         this.deck = new Deck();
         this.deck.shuffle();
 
+        this.phase = 'playing';
+        this.trick = [];
+        this.isFirstTrick = true;
+        this.lastHandWinnerId = null;
+        this.lastHandSummary = null;
+
         this.players.forEach((player) => {
             player.hand = [];
+            player.captures = [];
+            player.capturedTricks = 0;
+            player.buscheThisHand = 0;
+            player.pointsThisHand = 0;
         });
 
         const playersInOrder = [...this.players];
@@ -55,27 +85,41 @@ export class GameState {
             CardSorter.sortHand(player.hand);
         });
 
-        // Determine the starting player with the seven of diamonds
-        const sevenOfDiamonds = this.players.find(player =>
-            player.hand.some(card => card.value === 7 && card.suit === 'denari')
-        );
-        if (sevenOfDiamonds) {
-            this.currentTurn = this.players.indexOf(sevenOfDiamonds);
-            console.debug(`Inizia il giocatore ${this.players[this.currentTurn].name}`);
+        if (firstHand) {
+            const sevenOfDiamondsOwner = this.players.find(player =>
+                player.hand.some(card => card.value === 7 && card.suit === 'denari')
+            );
+
+            if (sevenOfDiamondsOwner) {
+                this.currentTurn = sevenOfDiamondsOwner.id;
+                this.startingPlayerForHand = sevenOfDiamondsOwner.id;
+            } else {
+                this.currentTurn = 0;
+                this.startingPlayerForHand = 0;
+            }
+        } else {
+            if (this.dealerId == null) {
+                this.dealerId = 0;
+            }
+            this.currentTurn = this.getPlayerToRightOf(this.dealerId);
+            this.startingPlayerForHand = this.currentTurn;
         }
 
-        this.phase = 'playing';
+        console.debug(`Inizia la mano ${this.handNumber}, turno a ${this.players[this.currentTurn].name}`);
     }
 
-    /**
-     * Gioca una carta.
-     *
-     * @param {number} playerId - L'ID del giocatore che sta giocando la carta.
-     * @param {number} cardId - L'ID della carta da giocare.
-     */
+    startNextHand() {
+        if (!this.lastHandSummary) return false;
+
+        this.handNumber += 1;
+        this.startHand({ firstHand: false });
+        return true;
+    }
+
     playCard(playerId, cardId) {
         console.debug(`playCard(): turno ${this.currentTurn} playerID [${playerId}] sta provando a giocare la cardId[${cardId}]`);
 
+        if (this.phase !== 'playing') return false;
         if (playerId !== this.currentTurn) {
             console.debug('click ignorato: non è il turno di questo giocatore');
             return false;
@@ -135,7 +179,6 @@ export class GameState {
                 console.debug('click ignorato: il Pigugno non può essere giocato in apertura della prima mano');
                 return false;
             }
-
             return true;
         }
 
@@ -153,17 +196,13 @@ export class GameState {
             return false;
         }
 
-        // Eccezione del Pigugno: solo nella prima mano, su uscita a spade,
-        // si può giocare solo se è l'unica spada disponibile
         if (this.isFirstTrick && isPigugno && leadingSuit === 'spade') {
             const otherSpades = cardsOfLeadingSuit.filter(
                 c => !(c.suit === 'spade' && c.value === 8)
             );
 
             if (otherSpades.length > 0) {
-                console.debug(
-                    'click ignorato: nella prima mano il Pigugno su spade si può giocare solo se è l’unica spada'
-                );
+                console.debug('click ignorato: nella prima mano il Pigugno su spade si può giocare solo se è l’unica spada');
                 return false;
             }
         }
@@ -178,7 +217,6 @@ export class GameState {
 
         const resolvedTrick = [...this.trick];
         const leadingSuit = resolvedTrick[0].card.suit;
-
         const candidates = resolvedTrick.filter(({ card }) => card.suit === leadingSuit);
 
         const winner = candidates.reduce((prev, current) =>
@@ -186,7 +224,9 @@ export class GameState {
         );
 
         winner.player.captures.push(...resolvedTrick.map(t => t.card));
+        winner.player.capturedTricks += 1;
         this.currentTurn = winner.player.id;
+        this.lastHandWinnerId = winner.player.id;
 
         console.debug(`la presa è di ${winner.player.name}`);
 
@@ -197,16 +237,138 @@ export class GameState {
         this.trick = [];
         this.isFirstTrick = false;
 
-        if (this.deck.cards.length === 0 && this.players.every(player => player.hand.length === 0)) {
-            this.phase = 'gameover';
+        const handFinished = this.deck.cards.length === 0 && this.players.every(player => player.hand.length === 0);
+
+        if (handFinished) {
+            this.finalizeHand();
+            this.phase = 'hand-ended';
         }
     }
 
-    /**
-     * Ottiene il giocatore attivo.
-     *
-     * @returns {object} Il giocatore attivo.
-     */
+    finalizeHand() {
+        const summaryPlayers = this.players.map(player => {
+            const points = this.calculatePointsFromCaptures(player.captures);
+            const tricks = player.capturedTricks;
+            const hasPigugno = player.captures.some(card => this.isPigugno(card));
+            const scoringCards = player.captures.filter(card => this.isScoringCard(card));
+
+            return {
+                playerId: player.id,
+                name: player.name,
+                points,
+                tricks,
+                hasPigugno,
+                scoringCards,
+                captures: [...player.captures],
+                buscheEarned: 0,
+            };
+        });
+
+        const lastTrickWinner = summaryPlayers.find(p => p.playerId === this.lastHandWinnerId);
+        if (lastTrickWinner) {
+            lastTrickWinner.points += 3;
+        }
+
+        const buscheMap = this.calculateBuscheForHand(summaryPlayers);
+
+        summaryPlayers.forEach(p => {
+            p.buscheEarned = buscheMap.get(p.playerId) || 0;
+
+            const player = this.players.find(x => x.id === p.playerId);
+            player.pointsThisHand = p.points;
+            player.buscheThisHand = p.buscheEarned;
+            player.busche += p.buscheEarned;
+        });
+
+        const pigugnoWinner = summaryPlayers.find(p => p.hasPigugno) || null;
+        if (pigugnoWinner) {
+            this.dealerId = pigugnoWinner.playerId;
+        }
+
+        this.lastHandSummary = {
+            handNumber: this.handNumber,
+            dealerId: this.dealerId,
+            startingPlayerId: this.startingPlayerForHand,
+            lastTrickWinnerId: this.lastHandWinnerId,
+            pigugnoWinnerId: pigugnoWinner ? pigugnoWinner.playerId : null,
+            players: summaryPlayers,
+        };
+
+        if (typeof this.onHandEnded === 'function') {
+            this.onHandEnded(this.lastHandSummary);
+        }
+    }
+
+    calculatePointsFromCaptures(cards) {
+        return cards.reduce((sum, card) => sum + this.getCardPoints(card), 0);
+    }
+
+    getCardPoints(card) {
+        if (card.value === 1) return 3;
+        if (card.value === 2) return 1;
+        if (card.value === 3) return 1;
+        if ([8, 9, 10].includes(card.value)) return 1;
+        return 0;
+    }
+
+    isScoringCard(card) {
+        return this.getCardPoints(card) > 0;
+    }
+
+    isPigugno(card) {
+        return card.suit === 'spade' && card.value === 8;
+    }
+
+    calculateBuscheForHand(playersSummary) {
+        const result = new Map(playersSummary.map(p => [p.playerId, 0]));
+        const noCapturePlayers = playersSummary.filter(p => p.tricks === 0);
+        const tenTricksPlayer = playersSummary.find(p => p.tricks === 10);
+
+        if (tenTricksPlayer) {
+            result.set(tenTricksPlayer.playerId, 0);
+            playersSummary
+                .filter(p => p.playerId !== tenTricksPlayer.playerId)
+                .forEach(p => result.set(p.playerId, (result.get(p.playerId) || 0) + 6));
+            return result;
+        }
+
+        if (noCapturePlayers.length > 0) {
+            const malus = noCapturePlayers.length === 1 ? 2 : noCapturePlayers.length === 2 ? 4 : 6;
+            noCapturePlayers.forEach(p => result.set(p.playerId, malus));
+            return result;
+        }
+
+        const pigugnoHolder = playersSummary.find(p => p.hasPigugno);
+        if (pigugnoHolder) {
+            result.set(pigugnoHolder.playerId, (result.get(pigugnoHolder.playerId) || 0) + 1);
+        }
+
+        const maxPoints = Math.max(...playersSummary.map(p => p.points));
+        const topPlayers = playersSummary.filter(p => p.points === maxPoints);
+
+        const baseBusche = this.pointsToBusche(maxPoints);
+        const multipliedBusche = baseBusche * topPlayers.length;
+
+        topPlayers.forEach(p => {
+            result.set(p.playerId, (result.get(p.playerId) || 0) + multipliedBusche);
+        });
+
+        return result;
+    }
+
+    pointsToBusche(points) {
+        if (points <= 17) return 1;
+        if (points >= 18 && points <= 20) return 2;
+        if (points >= 21 && points <= 23) return 3;
+        if (points === 24) return 4;
+        if (points >= 25) return points - 20;
+        return 1;
+    }
+
+    getPlayerToRightOf(playerId) {
+        return (playerId + this.players.length - 1) % this.players.length;
+    }
+
     getCurrentPlayer() {
         return this.players[this.currentTurn];
     }
@@ -218,17 +380,17 @@ export class GameState {
      * @returns {string} La stringa di stato.
     */
     getPlayerCaptureStatus(player) {
-        const capturesCount = Math.floor(player.captures.length / 4);
+        const capturesCount = Math.floor(player.captures.length / this.players.length);
 
-        var peekLink = "";
+        let peekLink = '';
         if (player.id === this.players[0].id && capturesCount > 0) {
-            peekLink = '&nbsp;<a href="#" id="view-captures">(guarda)</a>';
+            peekLink = ' (guarda)';
         }
 
         switch (capturesCount) {
-            case 0: return "non ha coperto";
-            case 1: return `${capturesCount} presa` + peekLink;
-            default: return `${capturesCount} prese` + peekLink;
+            case 0: return 'non ha coperto';
+            case 1: return `${capturesCount} presa${peekLink}`;
+            default: return `${capturesCount} prese${peekLink}`;
         }
     }
 

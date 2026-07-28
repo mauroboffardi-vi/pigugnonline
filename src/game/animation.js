@@ -1,15 +1,5 @@
 /**
  * Animazione di lancio di una carta verso il centro del tavolo.
- * Crea un clone dell'immagine, anima un arco con rotazione casuale
- * e lascia il clone nella posizione finale mantenendo la rotazione.
- *
- * @param {HTMLImageElement} img - immagine sorgente cliccata
- * @param {HTMLElement} container - area giocatore contenente la carta
- * @param {HTMLElement} centerElem - elemento della zona centrale del tavolo
- * @param {string} direction - direzione del lancio ('top', 'bottom', 'left', 'right')
- * @param {number} zIndex - z-index base per l'animazione
- * @param {DOMRect} startRect - rettangolo di confinamento della carta iniziale (opzionale)
- * @param {Function} onPlayed - callback da chiamare al termine dell'animazione (opzionale)
  */
 export async function animateThrow(
     img,
@@ -53,7 +43,7 @@ export async function animateThrow(
             minY: centerRect.top + padY,
             maxY: midY - rect.height - padY
         };
-    } else if (direction === 'bottom') {
+    } else if (direction === 'you' || direction === 'bottom') {
         box = {
             minX: centerRect.left + padX,
             maxX: centerRect.right - rect.width - padX,
@@ -139,24 +129,14 @@ function rand(min, max) {
 }
 
 function getArcHeight(direction, absDx, absDy) {
-    if (direction === 'top' || direction === 'bottom') {
+    if (direction === 'top' || direction === 'you' || direction === 'bottom') {
         return Math.max(60, Math.min(180, absDy * 0.22));
     }
     return Math.max(35, Math.min(120, absDx * 0.16));
 }
 
 /**
- * High-level API: play a card. Single.js can call this and provide an `onPlayed`
- * callback that updates game state (remove card from hand and re-render).
- * The animation internals (start rect capture, out/in sequence) are handled here.
- *
- * @param {HTMLImageElement} img
- * @param {HTMLElement} container
- * @param {HTMLElement} centerElem
- * @param {Object} opts
- * @param {Function} opts.onPlayed - called when the card is considered played (between out and in)
- * @param {number} opts.zIndex
- * @returns {Promise<HTMLImageElement>} clone
+ * High-level API: play a card.
  */
 export async function playCard(img, container, centerElem, opts = {}) {
     const { onPlayed = () => { }, zIndex = 1000 } = opts;
@@ -164,6 +144,7 @@ export async function playCard(img, container, centerElem, opts = {}) {
     let direction;
     if (container.classList.contains('top')) direction = 'top';
     else if (container.classList.contains('bottom')) direction = 'bottom';
+    else if (container.classList.contains('you')) direction = 'you';
     else if (container.classList.contains('left')) direction = 'left';
     else if (container.classList.contains('right')) direction = 'right';
     else throw new Error('Container senza direzione valida');
@@ -185,11 +166,7 @@ export async function playCard(img, container, centerElem, opts = {}) {
 
 /*
  * Animazione per muovere le carte vinte verso il giocatore vincitore.
- *
- * @param { HTMLElement } centerElem - elemento della zona centrale del tavolo
- * @param { Object[] } trickCards - array di oggetti carta che hanno vinto la mano
- * @param { number } winnerId - ID del giocatore vincitore
-*/
+ */
 export async function animateTrickResolution(centerElem, trickEntries, winnerId, cardsOnTable) {
     const centerRect = centerElem.getBoundingClientRect();
     const margin = 40;
@@ -198,7 +175,7 @@ export async function animateTrickResolution(centerElem, trickEntries, winnerId,
     let targetY = 0;
 
     switch (winnerId) {
-        case 0: // top
+        case 0: // you
             targetX = centerRect.left + centerRect.width / 2;
             targetY = window.innerHeight + margin;
             break;
@@ -206,9 +183,9 @@ export async function animateTrickResolution(centerElem, trickEntries, winnerId,
             targetX = -window.innerWidth - margin;
             targetY = centerRect.top + centerRect.height / 2;
             break;
-        case 2: // bottom
+        case 2: // top
             targetX = centerRect.left + centerRect.width / 2;
-            targetY = - window.innerHeight - margin;
+            targetY = -window.innerHeight - margin;
             break;
         case 3: // right
             targetX = window.innerWidth + margin;
@@ -226,13 +203,13 @@ export async function animateTrickResolution(centerElem, trickEntries, winnerId,
 
         const anim = clone.animate(
             [
-                { transform: clone.style.transform || "translate(0px, 0px)", opacity: 1 },
-                { transform: `${clone.style.transform || "translate(0px, 0px)"} translate(${dx}px, ${dy}px)`, opacity: 0.2 }
+                { transform: clone.style.transform || 'translate(0px, 0px)', opacity: 1 },
+                { transform: `${clone.style.transform || 'translate(0px, 0px)'} translate(${dx}px, ${dy}px)`, opacity: 0.2 }
             ],
             {
                 duration: 700 + index * 80,
-                easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-                fill: "forwards"
+                easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                fill: 'forwards'
             }
         );
 
@@ -242,3 +219,283 @@ export async function animateTrickResolution(centerElem, trickEntries, winnerId,
     await Promise.all(animations);
 }
 
+/*
+ * ANIMAZIONI DI FINE MANO E SHOW PUNTEGGIO
+ */
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function getPlayerAnchorRect(positionClass) {
+    const byId = {
+        top: 'player-top',
+        left: 'player-left',
+        right: 'player-right',
+        you: 'player-you',
+        bottom: 'player-you'
+    };
+
+    const el = document.getElementById(byId[positionClass]);
+    if (!el) return null;
+    return el.getBoundingClientRect();
+}
+
+function createScoreCard(card, className = '') {
+    const el = document.createElement('div');
+    el.className = `summary-card ${className}`.trim();
+    el.dataset.cardId = card.id;
+
+    const src = card.imagePath || card.image || '';
+    el.innerHTML = `<img src="${src}" alt="${card.value} di ${card.suit}">`;
+
+    return el;
+}
+
+function getPositionClassByPlayerId(playerId) {
+    switch (playerId) {
+        case 0: return 'you';
+        case 1: return 'left';
+        case 2: return 'top';
+        case 3: return 'right';
+        default: return 'you';
+    }
+}
+
+export async function animateHandSummary(summary) {
+    const overlay = ensureSummaryLayer();
+    overlay.classList.add('visible');
+
+    const nextBtn = overlay.querySelector('.next-hand-button');
+    nextBtn.hidden = true;
+    nextBtn.onclick = null;
+
+    overlay.querySelector('.summary-cards-layer').innerHTML = '';
+    overlay.querySelectorAll('.summary-score').forEach((el) => {
+        el.classList.remove('visible');
+        el.querySelector('.summary-points-value').textContent = '0';
+        el.querySelector('.summary-busche').innerHTML = '';
+    });
+
+    const everyoneCovered = summary.players.every(p => p.tricks > 0);
+
+    for (const playerSummary of summary.players) {
+        await scatterScoringCardsForPlayer(playerSummary);
+        await sleep(180);
+    }
+
+    if (everyoneCovered && summary.pigugnoWinnerId != null) {
+        await sleep(rand(1000, 3000));
+        const pigugnoOwner = summary.players.find(p => p.playerId === summary.pigugnoWinnerId);
+        const pigugnoCard = pigugnoOwner?.captures.find(card => card.suit === 'spade' && card.value === 8);
+        if (pigugnoCard) {
+            await showPigugnoCenter(pigugnoCard);
+        }
+    }
+
+    const orderedPlayers = getOrderedPlayersFromStartingPlayer(summary);
+
+    for (const playerSummary of orderedPlayers) {
+        await animatePlayerScore(playerSummary);
+    }
+
+    nextBtn.hidden = false;
+
+    return new Promise(resolve => {
+        nextBtn.onclick = () => {
+            nextBtn.onclick = null;
+            resolve();
+        };
+    });
+}
+
+async function scatterScoringCardsForPlayer(playerSummary) {
+    const pos = getPositionClassByPlayerId(playerSummary.playerId);
+    const rect = getPlayerAnchorRect(pos);
+    if (!rect) return;
+
+    const cards = playerSummary.scoringCards.filter(
+        card => !(card.suit === 'spade' && card.value === 8)
+    );
+    const layer = ensureSummaryLayer().querySelector('.summary-cards-layer');
+
+    for (const card of cards) {
+        const node = createScoreCard(card);
+        layer.appendChild(node);
+
+        const baseX = rect.left + rect.width / 2;
+        const baseY = rect.top + rect.height / 2;
+
+        const spreadX = pos === 'left' || pos === 'right' ? 50 : 140;
+        const spreadY = pos === 'top' || pos === 'you' || pos === 'bottom' ? 50 : 140;
+
+        const x = baseX + rand(-spreadX, spreadX);
+        const y = baseY + rand(-spreadY, spreadY);
+        const rot = rand(-28, 28);
+
+        node.style.left = `${x}px`;
+        node.style.top = `${y}px`;
+        node.style.transform = `translate(-50%, -50%) rotate(${rot}deg) scale(0.4)`;
+        node.style.opacity = '0';
+
+        const anim = node.animate(
+            [
+                { transform: `translate(-50%, -50%) rotate(${rot - 18}deg) scale(0.2)`, opacity: 0 },
+                { transform: `translate(-50%, -50%) rotate(${rot}deg) scale(1)`, opacity: 1 }
+            ],
+            {
+                duration: 260,
+                easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                fill: 'forwards'
+            }
+        );
+
+        await anim.finished;
+        await sleep(70);
+    }
+}
+
+async function showPigugnoCenter(card) {
+    const layer = ensureSummaryLayer().querySelector('.summary-cards-layer');
+    const node = createScoreCard(card, 'pigugno-center');
+    layer.appendChild(node);
+
+    node.style.left = '50vw';
+    node.style.top = '50vh';
+    node.style.transform = 'translate(-50%, -50%) scale(0.2) rotate(-12deg)';
+    node.style.opacity = '0';
+
+    const anim = node.animate(
+        [
+            { transform: 'translate(-50%, -50%) scale(0.2) rotate(-18deg)', opacity: 0 },
+            { transform: 'translate(-50%, -50%) scale(1.15) rotate(4deg)', opacity: 1, offset: 0.75 },
+            { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 1, offset: 1 }
+        ],
+        {
+            duration: 700,
+            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+            fill: 'forwards'
+        }
+    );
+
+    await anim.finished;
+}
+
+async function animatePlayerScore(playerSummary) {
+    const overlay = ensureSummaryLayer();
+    const pos = getPositionClassByPlayerId(playerSummary.playerId);
+    const area = overlay.querySelector(`.summary-score.${pos}`);
+    if (!area) return;
+
+    area.classList.add('visible');
+
+    const pointsEl = area.querySelector('.summary-points-value');
+    const buscheEl = area.querySelector('.summary-busche');
+
+    labelEl.textContent = playerSummary.name;
+    pointsEl.textContent = '0';
+    buscheEl.innerHTML = '';
+
+    await countUp(pointsEl, playerSummary.points, 900);
+
+    for (let i = 0; i < playerSummary.buscheEarned; i++) {
+        await sleep(1000);
+        const dot = document.createElement('span');
+        dot.className = 'busca-dot';
+        dot.textContent = '●';
+        buscheEl.appendChild(dot);
+
+        const anim = dot.animate(
+            [
+                { transform: 'scale(0.2)', opacity: 0 },
+                { transform: 'scale(1.35)', opacity: 1, offset: 0.7 },
+                { transform: 'scale(1)', opacity: 1, offset: 1 }
+            ],
+            {
+                duration: 280,
+                easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                fill: 'forwards'
+            }
+        );
+
+        await anim.finished;
+    }
+}
+
+async function countUp(el, target, duration = 1000) {
+    if (target <= 0) {
+        el.textContent = '0';
+        return;
+    }
+
+    const start = performance.now();
+
+    return new Promise(resolve => {
+        function tick(now) {
+            const progress = Math.min(1, (now - start) / duration);
+            const value = Math.max(0, Math.floor(progress * target));
+            el.textContent = String(value);
+
+            if (progress < 1) {
+                requestAnimationFrame(tick);
+            } else {
+                el.textContent = String(target);
+                resolve();
+            }
+        }
+        requestAnimationFrame(tick);
+    });
+}
+
+function getOrderedPlayersFromStartingPlayer(summary) {
+    const ids = summary.players.map(p => p.playerId);
+    const startIndex = ids.indexOf(summary.startingPlayerId);
+    if (startIndex === -1) return summary.players;
+
+    return [
+        ...summary.players.slice(startIndex),
+        ...summary.players.slice(0, startIndex)
+    ];
+}
+
+function ensureSummaryLayer() {
+    let layer = document.querySelector('.hand-summary-overlay');
+    if (layer) return layer;
+
+    layer = document.createElement('div');
+    layer.className = 'hand-summary-overlay';
+    layer.innerHTML = `
+    <div class="summary-cards-layer"></div>
+
+    <div class="summary-score top">
+      <div class="summary-points-value">0</div>
+      <div class="summary-busche"></div>
+    </div>
+
+    <div class="summary-score left">
+      <div class="summary-points-value">0</div>
+      <div class="summary-busche"></div>
+    </div>
+
+    <div class="summary-score right">
+      <div class="summary-points-value">0</div>
+      <div class="summary-busche"></div>
+    </div>
+
+    <div class="summary-score you">
+      <div class="summary-points-value">0</div>
+      <div class="summary-busche"></div>
+    </div>
+
+    <button class="next-hand-button" hidden>Prossima mano</button>
+  `;
+
+    document.body.appendChild(layer);
+    return layer;
+}
+
+export function clearHandSummaryOverlay() {
+    const layer = document.querySelector('.hand-summary-overlay');
+    if (!layer) return;
+    layer.remove();
+}
