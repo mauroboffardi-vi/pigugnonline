@@ -116,24 +116,20 @@ function takePigugnoFromAllocations(allocations) {
     return null;
 }
 
-function finalizeForcedHand(gameState, rerender) {
-    gameState.finalizeHand();
-
-    if (typeof rerender === 'function') {
-        rerender();
-    }
+async function finalizeForcedHand(gameState, rerender) {
+    await clearHandsThenFinalize(gameState, rerender);
 }
 
-function presetNormal(gameState, rerender) {
+async function presetNormal(gameState, rerender) {
     const cards = flattenCards(gameState);
     resetHandState(gameState);
 
     const allocations = buildBalancedAllocations(cards, gameState.players.length);
     assignCardsAndTricks(gameState, allocations, 0);
-    finalizeForcedHand(gameState, rerender);
+    await finalizeForcedHand(gameState, rerender);
 }
 
-function presetPigugnoYou(gameState, rerender) {
+async function presetPigugnoYou(gameState, rerender) {
     const cards = flattenCards(gameState);
     resetHandState(gameState);
 
@@ -145,10 +141,10 @@ function presetPigugnoYou(gameState, rerender) {
     }
 
     assignCardsAndTricks(gameState, allocations, 0);
-    finalizeForcedHand(gameState, rerender);
+    await finalizeForcedHand(gameState, rerender);
 }
 
-function presetNoCaptureYou(gameState, rerender) {
+async function presetNoCaptureYou(gameState, rerender) {
     const cards = flattenCards(gameState);
     resetHandState(gameState);
 
@@ -168,10 +164,10 @@ function presetNoCaptureYou(gameState, rerender) {
     });
 
     assignCardsAndTricks(gameState, allocations, 1);
-    finalizeForcedHand(gameState, rerender);
+    await finalizeForcedHand(gameState, rerender);
 }
 
-function presetTenTricksLeft(gameState, rerender) {
+async function presetTenTricksLeft(gameState, rerender) {
     const cards = flattenCards(gameState);
     resetHandState(gameState);
 
@@ -183,28 +179,79 @@ function presetTenTricksLeft(gameState, rerender) {
     };
 
     assignCardsAndTricks(gameState, allocations, 1);
-    finalizeForcedHand(gameState, rerender);
+    await finalizeForcedHand(gameState, rerender);
 }
 
-function runPreset(preset) {
+async function runPreset(preset) {
     const { api, gameState } = getGameStateOrThrow();
     const rerender = api.rerender;
 
     switch (preset) {
         case 'normal':
-            presetNormal(gameState, rerender);
+            await presetNormal(gameState, rerender);
             break;
         case 'pigugno-you':
-            presetPigugnoYou(gameState, rerender);
+            await presetPigugnoYou(gameState, rerender);
             break;
         case 'no-capture-you':
-            presetNoCaptureYou(gameState, rerender);
+            await presetNoCaptureYou(gameState, rerender);
+            break;
+        case 'two-no-capture':
+            await presetTwoNoCapture(gameState, rerender);
             break;
         case 'ten-tricks-left':
-            presetTenTricksLeft(gameState, rerender);
+            await presetTenTricksLeft(gameState, rerender);
             break;
         default:
             console.warn('Preset di test sconosciuto:', preset);
+    }
+}
+
+function presetTwoNoCapture(gameState, rerender) {
+    const cards = flattenCards(gameState);
+    resetHandState(gameState);
+
+    const allocations = {
+        0: [],
+        1: [],
+        2: [],
+        3: [],
+    };
+
+    const tricks = splitIntoTricks(cards, gameState.players.length);
+
+    // Solo due giocatori coprono: left(1) e top(2)
+    tricks.forEach((trick, index) => {
+        const winnerId = index % 2 === 0 ? 1 : 2;
+        allocations[winnerId].push(...trick);
+    });
+
+    // Ultima presa a top
+    const lastWinnerId = 2;
+
+    assignCardsAndTricks(gameState, allocations, lastWinnerId);
+    finalizeForcedHand(gameState, rerender);
+}
+function nextFrame() {
+    return new Promise(resolve => requestAnimationFrame(() => resolve()));
+}
+
+async function clearHandsThenFinalize(gameState, rerender) {
+    for (const player of gameState.players) {
+        player.hand = [];
+    }
+
+    if (typeof rerender === 'function') {
+        rerender();
+    }
+
+    await nextFrame();
+    await nextFrame();
+
+    gameState.finalizeHand();
+
+    if (typeof rerender === 'function') {
+        rerender();
     }
 }
 
@@ -215,14 +262,14 @@ function wireButtons() {
         return;
     }
 
-    root.addEventListener('click', (event) => {
+    root.addEventListener('click', async (event) => {
         const btn = event.target.closest('[data-test-preset]');
         if (!btn) return;
 
         const preset = btn.dataset.testPreset;
 
         try {
-            runPreset(preset);
+            await runPreset(preset);
         } catch (err) {
             console.error('Errore preset test:', err);
         }
@@ -230,5 +277,7 @@ function wireButtons() {
 
     console.debug('Test buttons collegati');
 }
+
+
 
 wireButtons();

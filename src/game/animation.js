@@ -273,14 +273,14 @@ export async function animateHandSummary(summary) {
     overlay.querySelector('.summary-cards-layer').innerHTML = '';
     overlay.querySelectorAll('.summary-score').forEach((el) => {
         el.classList.remove('visible');
-        el.querySelector('.summary-points-value').textContent = '0';
+        el.querySelector('.summary-points-value').textContent = '';
         el.querySelector('.summary-busche').innerHTML = '';
     });
 
     const everyoneCovered = summary.players.every(p => p.tricks > 0);
 
     for (const playerSummary of summary.players) {
-        await scatterScoringCardsForPlayer(playerSummary);
+        await scatterScoringCardsForPlayer(playerSummary, everyoneCovered);
         await sleep(180);
     }
 
@@ -295,13 +295,16 @@ export async function animateHandSummary(summary) {
 
     const orderedPlayers = getOrderedPlayersFromStartingPlayer(summary);
 
-    // Primo giro: mostra i punti per tutti
-    for (const playerSummary of orderedPlayers) {
-        await animatePlayerPoints(playerSummary);
+    // Primo giro: mostra i punti per tutti, se tutti hanno coperto
+    if (everyoneCovered) {
+        for (const playerSummary of orderedPlayers) {
+            await animatePlayerPoints(playerSummary);
+        }
+
+        // Piccola pausa tra i due giri
+        await sleep(400);
     }
 
-    // Piccola pausa tra i due giri
-    await sleep(400);
 
     // Secondo giro: mostra le busche per tutti
     for (const playerSummary of orderedPlayers) {
@@ -318,7 +321,7 @@ export async function animateHandSummary(summary) {
     });
 }
 
-async function scatterScoringCardsForPlayer(playerSummary) {
+async function scatterScoringCardsForPlayer(playerSummary, everyoneCovered) {
     const pos = getPositionClassByPlayerId(playerSummary.playerId);
     const rect = getPlayerAnchorRect(pos);
     if (!rect) return;
@@ -359,8 +362,12 @@ async function scatterScoringCardsForPlayer(playerSummary) {
             }
         );
 
-        await anim.finished;
-        await sleep(70);
+        // mostra animazione carta per carta solo se tutti hanno coperto,
+        // se no vistoche non serve contare tutti "buttano" le carte senza pausa
+        if (everyoneCovered) {
+            await anim.finished;
+            await sleep(70);
+        }
     }
 }
 
@@ -418,7 +425,13 @@ async function animatePlayerPoints(playerSummary) {
     area.classList.add('visible');
 
     const pointsEl = area.querySelector('.summary-points-value');
-    pointsEl.textContent = '0';
+
+    // se non ha punti, non mostrare niente. Altrimenti parti da 0 e poi incerementa
+    if (playerSummary.points == 0) {
+        pointsEl.textContent = '';
+    } else {
+        pointsEl.textContent = '0';
+    }
 
     await countUp(pointsEl, playerSummary.points, 900);
 }
@@ -445,12 +458,12 @@ async function animatePlayerBusche(playerSummary) {
         const anim = dot.animate(
             [
                 { transform: 'scale(0.2)', opacity: 0 },
-                { transform: 'scale(1.35)', opacity: 1, offset: 0.7 },
+                { transform: 'scale(1.8)', opacity: 1, offset: 0.7 },
                 { transform: 'scale(1)', opacity: 1, offset: 1 }
             ],
             {
                 duration: 280,
-                easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                easing: 'cubic-bezier(0.2, 1.4, 0.2, 1)',
                 fill: 'forwards'
             }
         );
@@ -462,7 +475,7 @@ async function animatePlayerBusche(playerSummary) {
 
 async function countUp(el, target, duration = 1000) {
     if (target <= 0) {
-        el.textContent = '0';
+        el.textContent = '';
         return;
     }
 
@@ -506,22 +519,22 @@ function ensureSummaryLayer() {
     <div class="summary-cards-layer"></div>
 
     <div class="summary-score top">
-      <div class="summary-points-value">0</div>
+      <div class="summary-points-value"></div>
       <div class="summary-busche"></div>
     </div>
 
     <div class="summary-score left">
-      <div class="summary-points-value">0</div>
+      <div class="summary-points-value"></div>
       <div class="summary-busche"></div>
     </div>
 
     <div class="summary-score right">
-      <div class="summary-points-value">0</div>
+      <div class="summary-points-value"></div>
       <div class="summary-busche"></div>
     </div>
 
     <div class="summary-score you">
-      <div class="summary-points-value">0</div>
+      <div class="summary-points-value"></div>
       <div class="summary-busche"></div>
     </div>
 
