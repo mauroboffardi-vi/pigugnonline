@@ -414,49 +414,64 @@ export class GameState {
     findCardIndex(player, cardId) {
         return player.hand.findIndex(c => c.id.toString() === cardId.toString());
     }
-}
 
-/**
- * controlla se la partita sia terminata
- */
-checkGameOver() {
-    // Un giocatore è fuori se ha 10 o più busche
-    const eliminated = this.players.filter(p => p.busche >= 10);
-    const remaining = this.players.filter(p => p.busche < 10);
 
-    // Se ci sono meno di 2 giocatori fuori, la partita continua
-    if (eliminated.length < 2) {
-        return { isGameOver: false };
+    /**
+     * controlla se la partita sia terminata
+     */
+    // GameState.js
+
+    computeGameOverState() {
+        console.debug("computeGameOverState()");
+        const BUSCHE_LIMIT = 10;
+
+        // Separamento dei giocatori in base al limite delle busche
+        const eliminated = this.players.filter(p => p.busche >= BUSCHE_LIMIT);
+        const active = this.players.filter(p => p.busche < BUSCHE_LIMIT);
+
+        let isGameOver = false;
+        let winners = [];
+        let isDoubleWin = false;
+        let message = "";
+
+        if (eliminated.length === 2) {
+            // CASO STANDARD: 2 giocatori fuori -> vincono i 2 rimasti dentro
+            isGameOver = true;
+            winners = active;
+            isDoubleWin = false;
+            message = `La vittoria va a ${winners[0].name} e ${winners[1].name}`;
+
+        } else if (eliminated.length === 3) {
+            // CASO SPECIALE 1: 3 giocatori fuori -> DOPPIA vittoria all'unico rimasto dentro
+            isGameOver = true;
+            winners = active; // 1 solo giocatore
+            isDoubleWin = true;
+            message = `DOPPIA vittoria per ${winners[0].name}!`;
+
+        } else if (eliminated.length === 4) {
+            // CASO SPECIALE 2: 4 giocatori fuori -> vittoria singola ai 2 con minor numero di busche
+            isGameOver = true;
+            isDoubleWin = false;
+
+            // Ordiniamo tutti i giocatori per numero di busche crescenti
+            const sortedByBusche = [...this.players].sort((a, b) => a.busche - b.busche);
+            winners = [sortedByBusche[0], sortedByBusche[1]];
+            message = `La vittoria va a ${winners[0].name} e ${winners[1].name}`;
+
+        } else {
+            // 0 o 1 giocatore fuori -> la partita prosegue
+            isGameOver = false;
+        }
+
+        return { isGameOver, winners, isDoubleWin, message };
     }
 
-    let winners = [];
-    let isDoubleVictory = false;
-    let message = "";
-
-    // CASO SPECIALE 1: 3 giocatori fuori
-    if (eliminated.length === 3) {
-        winners = remaining; // 1 solo giocatore rimasto dentro
-        isDoubleVictory = true;
-        message = `DOPPIA vittoria per ${winners[0].name}!`;
-    }
-    // CASO SPECIALE 2: Tutti e 4 i giocatori fuori
-    else if (eliminated.length === 4) {
-        // Ordiniamo tutti i giocatori per numero di busche crescenti
-        const sorted = [...this.players].sort((a, b) => a.busche - b.busche);
-        // Prendiamo i due con il minor numero di busche
-        winners = [sorted[0], sorted[1]];
-        message = `la vittoria va a ${winners[0].name} e ${winners[1].name}`;
-    }
-    // CASO STANDARD: 2 giocatori fuori
-    else if (eliminated.length === 2) {
-        winners = remaining; // I 2 giocatori sotto le 10 busche
-        message = `la vittoria va a ${winners[0].name} e ${winners[1].name}`;
+    checkGameOver() {
+        console.debug('CheckGameOver()');
+        const state = this.computeGameOverState();
+        this.gameOverState = state;
+        console.debug(`isGameOver= ${state.isGameOver}`);
+        return state.isGameOver;
     }
 
-    return {
-        isGameOver: true,
-        winners: winners,
-        isDoubleVictory: isDoubleVictory,
-        message: message
-    };
 }

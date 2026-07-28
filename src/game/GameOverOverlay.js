@@ -1,54 +1,44 @@
 // src/game/GameOverOverlay.js
 
-/**
- * Mostra l'overlay di fine partita con il risultato.
- * 
- * @param {Object} result - L'oggetto contenente il risultato della partita.
- * @param {boolean} result.isDoubleVictory - Se si tratta di una doppia vittoria.
- * @param {string} result.message - Il messaggio di vittoria da mostrare.
- */
-export function showGameOverOverlay(result) {
-    let overlay = document.getElementById('game-over-overlay');
+export class GameOverOverlay {
+    show(gameOverData, onClickCallback) {
+        this.close();
 
-    // Se non esiste, crea l'elemento overlay
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'game-over-overlay';
+        const overlay = document.createElement('div');
         overlay.className = 'game-over-overlay';
+        overlay.innerHTML = `
+            <div class="game-over-content" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
+                <h1 id="game-over-title" class="game-over-title">
+                    ${gameOverData.isDoubleWin ? 'DOPPIA VITTORIA!' : 'PARTITA FINITA'}
+                </h1>
+                <p class="winner-message">${gameOverData.message}</p>
+                <p class="click-to-continue">Clicca per tornare al menu</p>
+            </div>
+        `;
+
         document.body.appendChild(overlay);
+        document.body.style.pointerEvents = 'none';
+        overlay.style.pointerEvents = 'auto';
+
+        const handleClose = () => {
+            this.close();
+            if (onClickCallback) {
+                onClickCallback();
+            } else {
+                window.location.href = 'index.html';
+            }
+        };
+
+        overlay.addEventListener('click', handleClose);
+        this.overlayElement = overlay;
     }
 
-    // Costruisci l'HTML interno
-    overlay.innerHTML = `
-        <div class="game-over-content">
-            <h1 class="game-over-title">PARTITA CONCLUSA</h1>
-            ${result.isDoubleVictory ? '<h2 class="double-victory-text">DOPPIA VITTORIA!</h2>' : ''}
-            <p class="winner-message">${result.message}</p>
-            <button class="new-game-btn" id="new-game-btn">Nuova Partita</button>
-        </div>
-    `;
+    close() {
+        const overlay = this.overlayElement || document.querySelector('.game-over-overlay');
+        if (!overlay) return;
 
-    // Aggiungi l'evento al pulsante per ricaricare la pagina (iniziare una nuova partita)
-    const newGameBtn = overlay.querySelector('#new-game-btn');
-    if (newGameBtn) {
-        newGameBtn.addEventListener('click', () => {
-            location.reload();
-        });
-    }
-
-    // Stili dinamici di base (opzionale se decidi di mettere tutto in un file CSS)
-    overlay.style.display = 'flex';
-    document.body.style.pointerEvents = 'none'; // Disabilita click sottostanti
-    overlay.style.pointerEvents = 'auto';       // Riabilita click solo per l'overlay
-}
-
-/**
- * Chiude (o rimuove) l'overlay di fine partita.
- */
-export function closeGameOverOverlay() {
-    const overlay = document.getElementById('game-over-overlay');
-    if (overlay) {
-        document.body.removeChild(overlay);
-        document.body.style.pointerEvents = 'auto'; // Riabilita le interazioni
+        overlay.remove();
+        document.body.style.pointerEvents = 'auto';
+        this.overlayElement = null;
     }
 }

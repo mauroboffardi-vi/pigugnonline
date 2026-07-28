@@ -2,7 +2,7 @@
 import { GameState } from './GameState.js';
 import { pickRandomNames } from './PlayerNames.js';
 import { showCaptureOverlay, closeCaptureOverlay } from './CaptureOverlay.js';
-import { showGameOverOverlay } from './GameOverOverlay.js';
+import { GameOverOverlay } from './GameOverOverlay.js';
 import {
   playCard as animatePlayCard,
   animateTrickResolution,
@@ -29,6 +29,7 @@ let playCounter = 0;
 const cardsOnTable = new Map();
 let isResolvingTrick = false;
 const buscheVisualizer = new BuscheVisualizer(document.getElementById('busche-note'), { gameState });
+const gameOverOverlay = new GameOverOverlay();
 
 
 function renderPlayerArea(container, player) {
@@ -188,6 +189,18 @@ async function handleHandEnded(summary) {
   clearHandSummaryOverlay();
 
   refreshPlayerStatuses();
+
+  const gameOverState = gameState.computeGameOverState();
+
+  if (gameOverState.isGameOver) {
+    gameState.gameOverState = gameOverState; // se vuoi tenerlo in GameState
+    gameOverOverlay.show(gameOverState, () => {
+      window.location.href = '../index.html';
+    });
+    return;
+  }
+
+  // se la partita non é finita prosegui con la prossima mano
 
   const ok = gameState.startNextHand();
   if (!ok) return;
