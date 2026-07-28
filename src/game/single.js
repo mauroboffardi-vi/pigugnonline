@@ -113,7 +113,9 @@ async function handleCardClick(e) {
     onPlayed(clone) {
       cardsOnTable.set(String(cardId), clone);
       gameState.playCard(player.id, cardId);
-      renderBoard(gameState);
+      //invece di renderBoard(gameState); che ricostruisce tutto il DOM, rimuovo solo la carta giocata.
+      const cardItem = img.closest('.card-item');
+      if (cardItem) cardItem.remove();
       playCounter += 1;
     },
   });
@@ -136,7 +138,7 @@ async function onTrickResolved(winnerId, resolvedTrick) {
   });
 
   playCounter = 0;
-  renderBoard(gameState);
+  refreshPlayerStatuses();
 
   isResolvingTrick = false;
 }
@@ -146,11 +148,45 @@ function openCaptureOverlay(player) {
   showCaptureOverlay(capturedCards);
 }
 
+function refreshPlayerStatuses() {
+  const mapping = {
+    0: document.getElementById('player-you'),
+    1: document.getElementById('player-left'),
+    2: document.getElementById('player-top'),
+    3: document.getElementById('player-right'),
+  };
+
+  gameState.players.forEach((player) => {
+    const container = mapping[player.id];
+    if (!container) return;
+
+    const statusEl = container.querySelector('.player-status');
+    if (!statusEl) return;
+
+    statusEl.innerHTML = getPlayerStatusMarkup(player);
+  });
+}
+
+function getPlayerStatusMarkup(player) {
+  const capturesCount = Math.floor(player.captures.length / gameState.players.length);
+
+  if (capturesCount === 0) {
+    return 'non ha coperto';
+  }
+
+  const label = capturesCount === 1 ? 'presa' : 'prese';
+  const peek = player.id === 0 ? ' (<a href="#" id="view-captures">guarda</a>)' : '';
+
+  return `${capturesCount} ${label}${peek}`;
+}
+
 async function handleHandEnded(summary) {
   await animateHandSummary(summary);
   buscheVisualizer.updateFromSummary(summary, gameState);
 
   clearHandSummaryOverlay();
+
+  refreshPlayerStatuses();
 
   const ok = gameState.startNextHand();
   if (!ok) return;

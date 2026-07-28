@@ -141,6 +141,12 @@ body {
     font-size: 0.75rem;
 }
 
+#view-captures,
+#view-captures:visited {
+    color: inherit;
+    text-decoration: underline;
+}
+
 .player-hand {
     display: flex;
     align-items: center;
