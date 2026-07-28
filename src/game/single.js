@@ -3,12 +3,8 @@ import { GameState } from './GameState.js';
 import { pickRandomNames } from './PlayerNames.js';
 import { showCaptureOverlay, closeCaptureOverlay } from './CaptureOverlay.js';
 import { GameOverOverlay } from './GameOverOverlay.js';
-import {
-  playCard as animatePlayCard,
-  animateTrickResolution,
-  animateHandSummary,
-  clearHandSummaryOverlay
-} from './animation.js';
+import { animatePlayCard, animateTrickResolution } from './tableAnimation.js';
+import { animateHandSummary, clearHandSummaryOverlay } from './scoreAnimation.js';
 import BuscheVisualizer from './BuscheVisualizer.js';
 
 function createCardMarkup(card) {

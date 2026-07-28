@@ -8,9 +8,6 @@ Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priori
 ### 1. Refactoring di `animation.js`
 **Obiettivo:** separare le animazioni di gioco da quelle di fine mano.
 
-- Estrarre le animazioni di gioco carta per carta in un file dedicato, per esempio `tableAnimations.js`.
-- Spostare le animazioni di fine mano e riepilogo in un file dedicato, per esempio `handSummaryAnimations.js`.
-- Lasciare in `animation.js` solo un layer di export temporaneo, oppure rimuoverlo del tutto dopo la migrazione.
 - Verificare che ogni modulo dipenda dal minimo indispensabile.
 - Ridurre la conoscenza diretta dello stato interno di altri componenti, specialmente `BuscheVisualizer`.
 
