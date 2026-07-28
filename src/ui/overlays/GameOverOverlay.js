@@ -25,7 +25,7 @@ export class GameOverOverlay {
             if (onClickCallback) {
                 onClickCallback();
             } else {
-                window.location.href = 'index.html';
+                window.location.href = '../../index.html';
             }
         };
 

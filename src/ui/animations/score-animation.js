@@ -46,7 +46,7 @@ function getPositionClassByPlayerId(playerId) {
     }
 }
 
-export async function animateHandSummary(summary, gameState, buscheVisualizer) {
+export async function animateHandSummary(summary, gameState, buscheTracker) {
     const overlay = ensureSummaryLayer();
     overlay.classList.add('visible');
 
@@ -87,7 +87,7 @@ export async function animateHandSummary(summary, gameState, buscheVisualizer) {
 
 
     // Aggiungi i punti Busche uno alla volta
-    await animatePlayerBusche(summary, gameState, buscheVisualizer);
+    await animatePlayerBusche(summary, gameState, buscheTracker);
     await sleep(500);
 }
 
@@ -206,8 +206,8 @@ async function animatePlayerPoints(playerSummary) {
     await countUp(pointsEl, playerSummary.points, 900);
 }
 
-async function animatePlayerBusche(summary, gameState, buscheVisualizer) {
-    if (!summary || !buscheVisualizer) return;
+async function animatePlayerBusche(summary, gameState, buscheTracker) {
+    if (!summary || !buscheTracker) return;
 
     const increments = summary.players
         .map((playerSummary) => ({
@@ -219,12 +219,12 @@ async function animatePlayerBusche(summary, gameState, buscheVisualizer) {
         .filter((entry) => entry.gained > 0);
 
     if (!increments.length) {
-        if (gameState) buscheVisualizer.setPlayersByState(gameState);
+        if (gameState) buscheTracker.setPlayersByState(gameState);
         return;
     }
 
     for (const { playerId, previous } of increments) {
-        buscheVisualizer.setPlayerBusche(playerId, previous);
+        buscheTracker.setPlayerBusche(playerId, previous);
     }
 
     for (const { playerId, previous, total } of increments) {
@@ -232,8 +232,8 @@ async function animatePlayerBusche(summary, gameState, buscheVisualizer) {
         const nextVisible = Math.min(total, 10);
 
         for (let value = previousVisible + 1; value <= nextVisible; value += 1) {
-            buscheVisualizer.setPlayerBusche(playerId, value);
-            buscheVisualizer.markBusca(playerId, value);
+            buscheTracker.setPlayerBusche(playerId, value);
+            buscheTracker.markBusca(playerId, value);
             await sleep(750);
         }
     }

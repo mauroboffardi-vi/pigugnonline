@@ -5,55 +5,12 @@ Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priori
 
 ## Priorità 1, struttura del codice
 
-### 1. Refactoring di `animation.js`
-**Obiettivo:** separare le animazioni di gioco da quelle di fine mano.
-
-- Verificare che ogni modulo dipenda dal minimo indispensabile.
-- Ridurre la conoscenza diretta dello stato interno di altri componenti, specialmente `BuscheVisualizer`.
-
-**Risultato atteso:** file più piccoli, meno confusi, con responsabilità chiare.
-
-### 2. Riorganizzazione delle cartelle sorgenti
-**Obiettivo:** dividere meglio logica di dominio, UI e support utilities.
-
-Proposta di struttura:
-
-```text
-src/
-  core/
-    CardSorter.js
-    Deck.js
-    cardRules.js
-  game/
-    GameState.js
-    single.js
-    ai/
-      ComputerPlayer.js
-      strategy.js
-  ui/
-    overlays/
-      CaptureOverlay.js
-      GameOverOverlay.js
-    visualizers/
-      BuscheVisualizer.js
-    animations/
-      tableAnimations.js
-      handSummaryAnimations.js
-      animationUtils.js
-  data/
-    PlayerNames.js
-```
-
-Da fare:
-
-- Separare i file che rappresentano regole o modelli di gioco da quelli che manipolano il DOM.
-- Spostare overlay, visualizer e animazioni sotto una cartella `ui/`.
-- Tenere `core/` solo per elementi riusabili e indipendenti dall'interfaccia.
-- Evitare file “ibridi” che mischiano regole di gioco e rendering.
-
-**Risultato atteso:** il progetto smette di essere un miscuglio e diventa navigabile.
+### 1. Refactoring di `animation.js` - fatto
+### 2. Riorganizzazione delle cartelle sorgenti - fatto
 
 ## Priorità 2, completare bene il single player
+
+### 3a. pensare a un'indicatore del giocatore di turno
 
 ### 3. AI base del computer
 **Obiettivo:** introdurre una logica semplice, credibile e migliorabile.
@@ -89,6 +46,10 @@ Nota progettuale:
 **Risultato atteso:** il gioco sembra davvero un gioco di carte, non un debugger visivo.
 
 ## Priorità 3, arricchimento dell'esperienza
+
+### 5a. pensare a un'animazione della distribuzione delle carte
+- distribuzione di 40 carte coperte con animazione dal lato del dealer
+- "showdown" delle carte del giocatore Tu
 
 ### 5. Suoni
 **Obiettivo:** dare peso alle animazioni e agli eventi importanti.
@@ -148,20 +109,9 @@ Nota importante:
 
 **Risultato atteso:** decisione realistica su fattibilità, complessità e limiti.
 
-## Ordine consigliato
-
-1. Refactoring di `animation.js`.
-2. Riorganizzazione delle cartelle e dei file.
-3. AI base in modulo separato.
-4. Carte dei computer coperte con reveal in giocata.
-5. Suoni.
-6. Fumetti e commenti dinamici.
-7. Analisi architetturale del multiplayer.
-8. Prototipo multiplayer con invito e sincronizzazione.
 
 ## Note strategiche
 
-- Non iniziare il multiplayer finché il confine tra logica di gioco e UI non è molto più pulito.
 - Non rendere l'AI “furba” prima di averla resa separata e testabile.
 - Non aggiungere effetti collaterali narrativi come fumetti e suoni dentro `GameState`: quello è il modo più rapido per rovinarlo.
 - Ogni nuova feature dovrebbe passare da una domanda semplice: è logica di dominio, presentazione, o orchestrazione?

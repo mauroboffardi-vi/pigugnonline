@@ -331,10 +331,10 @@ const ARM_TO_PLAYER_ID = {
     left: 1,
 };
 
-export default class BuscheVisualizer {
+export default class BuscheTracker {
     constructor(container, options = {}) {
         if (!container) {
-            throw new Error('BuscheVisualizer: container mancante');
+            throw new Error('BuscheTracker: container mancante');
         }
 
         this.container = container;

@@ -1,6 +1,6 @@
 // src/game/GameState.js
-import { Deck } from './../core/Deck.js';
-import { CardSorter } from '../core/CardSorter.js';
+import { Deck } from '../cards/Deck.js';
+import { CardSorter } from '../cards/CardSorter.js';
 
 /**
  * Rappresenta lo stato della partita singola.

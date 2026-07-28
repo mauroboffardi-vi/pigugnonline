@@ -1,11 +1,11 @@
 // src/game/single.js
-import { GameState } from './GameState.js';
-import { pickRandomNames } from './PlayerNames.js';
-import { showCaptureOverlay, closeCaptureOverlay } from './CaptureOverlay.js';
-import { GameOverOverlay } from './GameOverOverlay.js';
-import { animatePlayCard, animateTrickResolution } from './tableAnimation.js';
-import { animateHandSummary, clearHandSummaryOverlay } from './scoreAnimation.js';
-import BuscheVisualizer from './BuscheVisualizer.js';
+import { GameState } from '../../domain/game/GameState.js';
+import { pickRandomNames } from '../../domain/players/player-names.js';
+import { showCaptureOverlay, closeCaptureOverlay } from '../../ui/overlays/CaptureOverlay.js';
+import { GameOverOverlay } from '../../ui/overlays/GameOverOverlay.js';
+import { animatePlayCard, animateTrickResolution } from '../../ui/animations/table-animation.js';
+import { animateHandSummary, clearHandSummaryOverlay } from '../../ui/animations/score-animation.js';
+import BuscheTracker from '../../ui/BuscheTracker.js';
 
 function createCardMarkup(card) {
   return `
@@ -24,7 +24,7 @@ const gameState = new GameState(['Tu', ...pickRandomNames(3)]);
 let playCounter = 0;
 const cardsOnTable = new Map();
 let isResolvingTrick = false;
-const buscheVisualizer = new BuscheVisualizer(document.getElementById('busche-note'), { gameState });
+const buscheTracker = new BuscheTracker(document.getElementById('busche-note'), { gameState });
 const gameOverOverlay = new GameOverOverlay();
 
 
@@ -178,15 +178,15 @@ function getPlayerStatusMarkup(player) {
   return `${capturesCount} ${label}${peek}`;
 }
 
-async function syncBuscheVisualizerFromState(summary) {
+async function syncBuscheTrackerFromState(summary) {
   if (summary) {
-    buscheVisualizer.setPlayersByState(gameState);
+    buscheTracker.setPlayersByState(gameState);
   }
 }
 
 async function handleHandEnded(summary) {
-  await animateHandSummary(summary, gameState, buscheVisualizer);
-  //buscheVisualizer.updateFromSummary(summary, gameState);
+  await animateHandSummary(summary, gameState, buscheTracker);
+  //buscheTracker.updateFromSummary(summary, gameState);
 
   clearHandSummaryOverlay();
 
@@ -197,7 +197,7 @@ async function handleHandEnded(summary) {
   if (gameOverState.isGameOver) {
     gameState.gameOverState = gameOverState; // se vuoi tenerlo in GameState
     gameOverOverlay.show(gameOverState, () => {
-      window.location.href = '../index.html';
+      window.location.href = '../../index.html';
     });
     return;
   }
@@ -242,6 +242,6 @@ renderBoard(gameState);
 window.__PIGUGNO_TEST_API__ = {
   getGameState: () => gameState,
   render: () => renderBoard(gameState),
-  syncBuscheVisualizerFromState,
+  syncBuscheTrackerFromState,
 };
 
