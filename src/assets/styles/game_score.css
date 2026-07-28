@@ -3,23 +3,23 @@
     **/
 
    @font-face {
-       font-family: 'Pinkend';
+       font-family: 'ReenieBeanie';
        src:
-           url('../fonts/pinkend/Pinkend-Regular.woff2') format('woff2');
+           url('../fonts/reeniebeanie/ReenieBeanie.woff2') format('woff2');
        font-style: normal;
        font-weight: 400;
        font-display: swap;
    }
 
    .busche-cross text {
-       font-family: 'Pinkend', 'Patrick Hand', 'Gloria Hallelujah', cursive;
+       font-family: 'ReenieBeanie', 'Patrick Hand', 'Gloria Hallelujah', cursive;
        font-size: 10px;
        fill: #25334a;
    }
 
    .busche-cross [data-arm-label] {
-       font-family: 'Pinkend', 'Patrick Hand', 'Gloria Hallelujah', cursive;
-       font-size: 22px;
+       font-family: 'ReenieBeanie', 'Patrick Hand', 'Gloria Hallelujah', cursive;
+       font-size: 40px;
    }
 
    .busche-board-cell {
