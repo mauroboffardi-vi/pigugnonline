@@ -1,4 +1,4 @@
-tenere. Regole e punteggio
+Regole e punteggio
 Si gioca con un mazzo da 40 carte, normalmente in 4 o 5 giocatori. Secondo alcuni, il vero pigugno si gioca solo in 4 e a coppie.
 
 Per segnare i punti si traccia una croce e si assegna un ramo a ogni giocatore, per ogni busca si traccia una linea verso destra, ogni cinque busche si congiungono le linee e si passa a segnare le busche sul secondo piano.

@@ -44,6 +44,7 @@ export class Card {
         return 0;
     }
 
+
     isScoringCard() {
         return this.getPoints() > 0;
     }
