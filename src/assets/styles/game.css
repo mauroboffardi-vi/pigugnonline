@@ -126,6 +126,7 @@ body {
     /* accommodate 10 cards stacked with offsets */
     padding-top: 12px;
     padding-bottom: 12px;
+    min-width: stretch;
 }
 
 .player-meta {
