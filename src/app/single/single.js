@@ -24,7 +24,12 @@ function createCardMarkup(card) {
 const gameState = new GameState(['Io', ...pickRandomNames(3)]);
 let playCounter = 0;
 const cardsOnTable = new Map();
+
+// variabili di gestione del flow
 let isResolvingTrick = false;
+let isAdvancingGameFlow = false;
+let gameFlowVersion = 0;
+
 const buscheTracker = new BuscheTracker(document.getElementById('busche-note'), { gameState });
 const gameOverOverlay = new GameOverOverlay();
 const computerPlayer = new ComputerPlayer();
@@ -46,11 +51,12 @@ function renderPlayerArea(container, player) {
 }
 
 function renderBoard(state) {
-  for (const player of state.players) {
+  state.players.forEach((player) => {
     const container = getContainerByPlayerId(player.id);
-    if (!container) continue;
-    renderPlayerArea(container, player);
-  }
+    if (container) {
+      renderPlayerArea(container, player);
+    }
+  });
 
   const center = document.getElementById('table-center');
   let playArea = center.querySelector('.play-area');
@@ -72,32 +78,53 @@ function getPlayerByContainer(container) {
 * funzione che gioca una carta, animandola sullo schermo,
 * a prescindere che sia umana o bot
 */
-async function playCardWithAnimation(player, card, img, container) {
+async function playCardWithAnimation(player, card, img, container, flowVersion = getCurrentGameFlowVersion()) {
+  if (!player || !card || !img || !container) return false;
+  if (isStaleFlow(flowVersion)) return false;
+  if (gameState.phase !== 'playing') return false;
+  if (gameState.currentTurn !== player.id) return false;
+  if (!gameState.canPlayCard(card, player.id)) return false;
+
   const center = document.getElementById('table-center');
+  if (!center) return false;
+
+  let playApplied = false;
 
   const clone = await animatePlayCard(img, container, center, {
     zIndex: 1000 + playCounter,
-    onPlayed(clone) {
-      cardsOnTable.set(String(card.id), clone);
+    onPlayed(cloneNode) {
+      if (isStaleFlow(flowVersion)) {
+        try { cloneNode.remove(); } catch (_) { }
+        return;
+      }
 
       const success = gameState.playCard(player.id, card.id);
       if (!success) {
-        console.error(`Mossa non valida: ${player.name} -> ${card.id}`);
-        clone.remove();
-        cardsOnTable.delete(String(card.id));
+        try { cloneNode.remove(); } catch (_) { }
         return;
       }
+
+      cardsOnTable.set(String(card.id), cloneNode);
 
       const cardItem = img.closest('.card-item');
       if (cardItem) cardItem.remove();
 
       playCounter += 1;
+      playApplied = true;
     },
   });
 
-  if (clone) {
-    cardsOnTable.set(String(card.id), clone);
+  if (!clone || !playApplied) {
+    return false;
   }
+
+  if (isStaleFlow(flowVersion)) {
+    try { clone.remove(); } catch (_) { }
+    cardsOnTable.delete(String(card.id));
+    return false;
+  }
+
+  return true;
 }
 
 /*
@@ -108,29 +135,31 @@ async function playCardWithAnimation(player, card, img, container) {
  */
 async function handleCardClick(e) {
   if (isResolvingTrick) return;
+  if (isAdvancingGameFlow) return;
+  if (gameState.phase !== 'playing') return;
 
   const img = e.target.closest('.card-image');
   if (!img) return;
 
+  const cardId = img.dataset.cardId;
+  if (!cardId) return;
+
   const container = img.closest('.player-area');
   const player = getPlayerByContainer(container);
-  if (!player || player.id !== gameState.currentTurn) {
+
+  if (!player || player.isComputer) return;
+  if (player.id !== gameState.currentTurn) {
     console.debug('click ignorato: non è il tuo turno');
     return;
   }
 
-  const cardId = img.dataset.cardId;
-  if (!cardId) return;
-
-  const card = player.hand.find(c => String(c.id) === String(cardId));
+  const card = player.hand.find((c) => String(c.id) === String(cardId));
   if (!card) return;
 
-  if (!gameState.canPlayCard(card, player.id)) {
-    console.debug('click ignorato: carta non valida');
-    return;
-  }
+  const flowVersion = getCurrentGameFlowVersion();
+  const played = await playCardWithAnimation(player, card, img, container, flowVersion);
+  if (!played) return;
 
-  await playCardWithAnimation(player, card, img, container);
   await continueGameFlow();
 }
 
@@ -138,39 +167,64 @@ async function handleCardClick(e) {
  *. funzione che gioca il turno del computer.
  *
  */
-async function playComputerTurn() {
+async function playComputerTurn(flowVersion) {
+  if (isStaleFlow(flowVersion)) return false;
+  if (gameState.phase !== 'playing') return false;
+
   const player = gameState.getCurrentPlayer();
-  if (!player || !player.isComputer) return;
+  if (!player || !player.isComputer) return false;
 
   const card = computerPlayer.chooseCard(gameState, player.id);
   if (!card) {
-    throw new Error(`Il bot ${player.name} non ha scelto nessuna carta`);
+    console.error(`ComputerPlayer non ha scelto alcuna carta per ${player.name}`);
+    return false;
   }
 
   const container = getContainerByPlayerId(player.id);
   if (!container) {
-    throw new Error(`Container non trovato per il player ${player.id}`);
+    console.error(`Container non trovato per il player ${player.id}`);
+    return false;
   }
 
   const img = container.querySelector(`[data-card-id="${card.id}"]`);
   if (!img) {
-    throw new Error(`Elemento DOM non trovato per la carta ${card.id}`);
+    console.error(`Immagine carta non trovata nel DOM per cardId=${card.id}`);
+    return false;
   }
 
-  await playCardWithAnimation(player, card, img, container);
-  await continueGameFlow();
+  return playCardWithAnimation(player, card, img, container, flowVersion);
 }
-
-let isAdvancingGameFlow = false;
 
 async function continueGameFlow() {
   if (isAdvancingGameFlow) return;
+  if (gameState.phase !== 'playing') return;
+
   isAdvancingGameFlow = true;
+  const flowVersion = getCurrentGameFlowVersion();
 
   try {
-    while (!isResolvingTrick && gameState.phase === 'playing' && gameState.getCurrentPlayer()?.isComputer) {
-      await sleep(600);
-      await playComputerTurn();
+    while (true) {
+      if (isStaleFlow(flowVersion)) return;
+      if (gameState.phase !== 'playing') return;
+      if (isResolvingTrick) return;
+
+      const currentPlayer = gameState.getCurrentPlayer();
+      if (!currentPlayer || !currentPlayer.isComputer) return;
+
+      await sleep(500);
+
+      if (isStaleFlow(flowVersion)) return;
+      if (gameState.phase !== 'playing') return;
+      if (isResolvingTrick) return;
+      if (gameState.getCurrentPlayer()?.id !== currentPlayer.id) continue;
+
+      const played = await playComputerTurn(flowVersion);
+      if (!played) return;
+
+      if (isStaleFlow(flowVersion)) return;
+      if (gameState.phase !== 'playing') return;
+
+      await sleep(120);
     }
   } finally {
     isAdvancingGameFlow = false;
@@ -179,9 +233,9 @@ async function continueGameFlow() {
 
 async function onTrickResolved(winnerId, resolvedTrick) {
   isResolvingTrick = true;
+  nextGameFlowVersion();
 
   const center = document.getElementById('table-center');
-
   await animateTrickResolution(center, resolvedTrick, winnerId, cardsOnTable);
 
   resolvedTrick.forEach(({ card }) => {
@@ -236,9 +290,9 @@ async function syncBuscheTrackerFromState(summary) {
 }
 
 async function handleHandEnded(summary) {
-  await animateHandSummary(summary, gameState, buscheTracker);
-  //buscheTracker.updateFromSummary(summary, gameState);
+  nextGameFlowVersion();
 
+  await animateHandSummary(summary, gameState, buscheTracker);
   clearHandSummaryOverlay();
 
   refreshPlayerStatuses();
@@ -246,22 +300,18 @@ async function handleHandEnded(summary) {
   const gameOverState = gameState.computeGameOverState();
 
   if (gameOverState.isGameOver) {
-    gameState.gameOverState = gameOverState; // se vuoi tenerlo in GameState
+    gameState.gameOverState = gameOverState;
     gameOverOverlay.show(gameOverState, () => {
       window.location.href = '../../index.html';
     });
     return;
   }
 
-  // se la partita non é finita prosegui con la prossima mano
-
   const ok = gameState.startNextHand();
   if (!ok) return;
 
   cardsOnTable.forEach((clone) => {
-    try {
-      clone.remove();
-    } catch (_) { }
+    try { clone.remove(); } catch (_) { }
   });
   cardsOnTable.clear();
 
@@ -270,6 +320,8 @@ async function handleHandEnded(summary) {
   isResolvingTrick = false;
 
   renderBoard(gameState);
+
+  nextGameFlowVersion();
   await continueGameFlow();
 }
 
@@ -288,6 +340,19 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function nextGameFlowVersion() {
+  gameFlowVersion += 1;
+  return gameFlowVersion;
+}
+
+function getCurrentGameFlowVersion() {
+  return gameFlowVersion;
+}
+
+function isStaleFlow(version) {
+  return version !== gameFlowVersion;
+}
+
 gameState.onTrickResolved = onTrickResolved;
 gameState.onHandEnded = handleHandEnded;
 
@@ -302,6 +367,7 @@ document.addEventListener('click', (e) => {
 });
 
 async function bootstrapGame() {
+  nextGameFlowVersion();
   gameState.startGame();
   renderBoard(gameState);
   await continueGameFlow();

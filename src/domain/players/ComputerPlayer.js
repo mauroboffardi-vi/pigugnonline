@@ -22,6 +22,7 @@ import { CardSorter } from "../cards/CardSorter.js";
 - [ ] Verificare che dopo ogni presa risolta il flow riparta correttamente col prossimo computer, se il turno è suo. [web:561][web:564]
 - [ ] Mettere temporaneamente `ComputerPlayer.RANDOM_PLAY_PROBABILITY = 0` finché la logica base non è stabile. [web:558]
 - "ciapa e torna"
+- rendere le carte del computer non cliccabili
  */
 export default class ComputerPlayer {
     static DEBUG = true;

@@ -117,8 +117,6 @@ export class GameState {
     }
 
     playCard(playerId, cardId) {
-        console.debug(`playCard(): turno ${this.currentTurn} playerID [${playerId}] sta provando a giocare la cardId[${cardId}]`);
-
         if (this.phase !== 'playing') return false;
         if (playerId !== this.currentTurn) {
             console.debug('click ignorato: non è il turno di questo giocatore');
