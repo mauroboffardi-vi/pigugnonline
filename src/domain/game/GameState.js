@@ -161,22 +161,24 @@ export class GameState {
      * @param {number} playerId - L'ID del giocatore che sta giocando la carta.
      * @returns {boolean}
      */
-    canPlayCard(card, playerId) {
+    canPlayCard(card, playerId, { verbose = true } = {}) {
         if (this.phase !== 'playing') return false;
 
         const player = this.players.find(p => p.id === playerId);
         if (!player) return false;
 
-        console.debug(
-            `canPlayCard(): turno ${this.trick.length} : ${player.name} sta provando a giocare ${card.value} di ${card.suit}`
-        );
-
-        const isPigugno = card.suit === 'spade' && card.value === 8;
+        if (verbose) {
+            console.debug(
+                `canPlayCard(): turno ${this.trick.length} : ${player.name} sta provando a giocare ${card.value} di ${card.suit}`
+            );
+        }
 
         // Apertura della presa
         if (this.trick.length === 0) {
-            if (this.isFirstTrick && isPigugno) {
-                console.debug('click ignorato: il Pigugno non può essere giocato in apertura della prima mano');
+            if (this.isFirstTrick && card.isPigugno()) {
+                if (verbose) {
+                    console.debug('click ignorato: il Pigugno non può essere giocato in apertura della prima mano');
+                }
                 return false;
             }
             return true;
@@ -196,19 +198,93 @@ export class GameState {
             return false;
         }
 
-        if (this.isFirstTrick && isPigugno && leadingSuit === 'spade') {
+        if (this.isFirstTrick && card.isPigugno() && leadingSuit === 'spade') {
             const otherSpades = cardsOfLeadingSuit.filter(
                 c => !(c.suit === 'spade' && c.value === 8)
             );
 
             if (otherSpades.length > 0) {
-                console.debug('click ignorato: nella prima mano il Pigugno su spade si può giocare solo se è l’unica spada');
+                if (verbose) {
+                    console.debug('click ignorato: nella prima mano il Pigugno su spade si può giocare solo se è l’unica spada');
+                }
                 return false;
             }
         }
 
         return true;
     }
+
+    /**
+     * Restutuisce le carte che il giocatore puó giocare in questo momento.
+     * @param {*} playerId 
+     * @returns {Cards[]} un array delle possibili carte giocabili
+     */
+    getPlayableCards(playerId) {
+        const player = this.getPlayerById(playerId);
+        if (!player) return [];
+
+        return player.hand.filter(card =>
+            this.canPlayCard(card, playerId, { verbose: false })
+        );
+    }
+
+    /**
+     * Restituisce tutte le carte già uscite in prese concluse.
+     *
+     * Le carte sono restituite come lista piatta, senza informazioni
+     * su quale giocatore le abbia catturate, per non esporre dati non pubblici.
+     *
+     * @returns {Card[]} Tutte le carte già giocate in prese concluse.
+     */
+    getPlayedCards() {
+        return this.players.flatMap(player => player.captures);
+    }
+
+    /**
+     * Restituisce le carte sul tavolo. 
+     */
+
+    getCurrentTrick() {
+        return this.trick.map(entry => ({ ...entry }));
+    }
+
+    /**
+     * Restituisce tutte le carte pubblicamente viste finora.
+     *
+     * Include sia le carte nelle prese concluse sia quelle attualmente
+     * presenti nel trick corrente.
+     *
+     * @returns {Card[]} Tutte le carte pubblicamente viste.
+     */
+    getSeenCards() {
+        return [
+            ...this.getPlayedCards(),
+            ...this.trick.map(entry => entry.card),
+        ];
+    }
+
+    /* metodi da usare per strategia di partita
+    getPlayersPublicState()
+getBusche(playerId)
+getCapturedTricks(playerId)
+getCurrentTurnPlayerId()
+isFirstTrick()
+getHandNumber() */
+
+
+    /**
+     * Restituisce il seme di uscita della presa corrente.
+     *
+     * Se la presa corrente è vuota, restituisce null.
+     * Questo accade quando il giocatore di turno è il primo a giocare nel trick.
+     *
+     * @returns {string|null} Il seme di uscita, oppure null se il trick non è ancora iniziato.
+     */
+    getLeadingSuit() {
+        if (this.trick.length === 0) return null;
+        return this.trick[0].card.suit;
+    }
+
     /**
      * Risolve la mano corrente.
      */
@@ -249,8 +325,8 @@ export class GameState {
         const summaryPlayers = this.players.map(player => {
             const points = this.calculatePointsFromCaptures(player.captures);
             const tricks = player.capturedTricks;
-            const hasPigugno = player.captures.some(card => this.isPigugno(card));
-            const scoringCards = player.captures.filter(card => this.isScoringCard(card));
+            const hasPigugno = player.captures.some(card => card.isPigugno());
+            const scoringCards = player.captures.filter(card => card.isScoringCard());
 
             return {
                 playerId: player.id,
@@ -314,24 +390,9 @@ export class GameState {
     }
 
     calculatePointsFromCaptures(cards) {
-        return cards.reduce((sum, card) => sum + this.getCardPoints(card), 0);
+        return cards.reduce((sum, card) => sum + card.getPoints(), 0);
     }
 
-    getCardPoints(card) {
-        if (card.value === 1) return 3;
-        if (card.value === 2) return 1;
-        if (card.value === 3) return 1;
-        if ([8, 9, 10].includes(card.value)) return 1;
-        return 0;
-    }
-
-    isScoringCard(card) {
-        return this.getCardPoints(card) > 0;
-    }
-
-    isPigugno(card) {
-        return card.suit === 'spade' && card.value === 8;
-    }
 
     calculateBuscheForHand(playersSummary) {
         const result = new Map(playersSummary.map(p => [p.playerId, 0]));
@@ -379,6 +440,10 @@ export class GameState {
         return 1;
     }
 
+    getPlayerById(playerId) {
+        return this.players.find(player => player.id === playerId) || null;
+    }
+
     getNextPlayerId(playerId) {
         return (playerId + 1) % this.players.length;
     }
@@ -386,6 +451,34 @@ export class GameState {
     getCurrentPlayer() {
         return this.players[this.currentTurn];
     }
+
+    /**
+     * Restituisce per tutti i giocatori solo le informazioni pubbliche,
+     * osservabili da chiunque durante la partita.
+     *
+     * Non include mani, carte catturate specifiche o altre informazioni private.
+     *
+     * @returns {Array<{
+     *   playerId: number,
+     *   name: string,
+     *   busche: number,
+     *   capturedTricks: number,
+     *   cardsInHand: number,
+     *   isEliminated: boolean
+     * }>}
+     *
+    getPlayersPublicState() {
+        return this.players.map(player => ({
+            playerId: player.id,
+            name: player.name,
+            busche: player.busche,
+            capturedTricks: player.capturedTricks,
+            cardsInHand: player.hand.length,
+            isEliminated: player.busche >= 10,
+        }));
+    }
+        */
+
 
     /**
      * Restituisce la stringa di stato per il numero di presi di un giocatore.
@@ -425,6 +518,46 @@ export class GameState {
      */
     findCardIndex(player, cardId) {
         return player.hand.findIndex(c => c.id.toString() === cardId.toString());
+    }
+
+    /**
+     * Restituisce il numero totale di busche del giocatore.
+     *
+     * @param {number} playerId - L'ID del giocatore.
+     * @returns {number|null} Il numero di busche del giocatore, oppure null se il giocatore non esiste.
+     */
+    getPlayerBusche(playerId) {
+        const player = this.getPlayerById(playerId);
+        return player ? player.busche : null;
+    }
+
+    /**
+     * Restituisce il numero di prese catturate dal giocatore nella mano corrente.
+     *
+     * @param {number} playerId - L'ID del giocatore.
+     * @returns {number|null} Il numero di prese catturate, oppure null se il giocatore non esiste.
+     */
+    getPlayerCapturedTricksCount(playerId) {
+        const player = this.getPlayerById(playerId);
+        return player ? player.capturedTricks : null;
+    }
+
+    /**
+     * Indica se la presa corrente è la prima della mano.
+     *
+     * @returns {boolean} true se è la prima presa della mano, altrimenti false.
+     */
+    isFirstTrickOfHand() {
+        return this.isFirstTrick;
+    }
+
+    /**
+     * Restituisce il numero della mano corrente.
+     *
+     * @returns {number} Il numero della mano corrente.
+     */
+    getHandNumber() {
+        return this.handNumber;
     }
 
 
