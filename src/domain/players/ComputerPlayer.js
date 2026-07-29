@@ -13,16 +13,7 @@ import { CardSorter } from "../cards/CardSorter.js";
  * 
  * 
  * todos:
- * 
- * - [ ] Estrarre una funzione comune `playCardWithAnimation(...)` usata sia dal click umano sia dal `ComputerPlayer`. [web:578][web:579]
-- [ ] Integrare `ComputerPlayer` nel flow principale con `continueGameFlow()` che fa giocare tutti i bot finché non torna il turno umano. [web:561][web:564]
-- [ ] Aggiungere `playComputerTurn()` che sceglie la carta col bot e la gioca passando dalla stessa pipeline UI/animazioni del giocatore umano. [web:579][web:588]
-- [ ] Aggiungere `getContainerByPlayerId()` per recuperare il container DOM corretto del giocatore. [web:579]
-- [ ] Evitare re-entry del flow automatico con un flag tipo `isAdvancingGameFlow`. [web:588]
-- [ ] Far partire automaticamente il gioco se il giocatore iniziale con il settebello è un computer, invece di restare in attesa di un click umano. [web:561][web:570]
-- [ ] Verificare che dopo ogni presa risolta il flow riparta correttamente col prossimo computer, se il turno è suo. [web:561][web:564]
-- [ ] Mettere temporaneamente `ComputerPlayer.RANDOM_PLAY_PROBABILITY = 0` finché la logica base non è stabile. [web:558]
-- "ciapa e torna"
+ *- "ciapa e torna"
 - rendere le carte del computer non cliccabili
  */
 export default class ComputerPlayer {
@@ -281,10 +272,7 @@ export default class ComputerPlayer {
         const forcedTricksEstimate = this.estimateForcedTricks(gameState, playerId);
         const decimeInfo = this.analyzeDecime(gameState, playerId);
 
-
-        const shouldPull =
-            forcedTricksEstimate.guaranteedHighTricks >= Math.max(2, hand.length - 1);
-
+        const shouldPull = this.#evaluatePull(gameState, playerId, hand, forcedTricksEstimate);
 
         const shouldGoUnder = hasCovered && !shouldPull;
         const mustDumpPigugno = hasPigugno;
@@ -550,19 +538,28 @@ export default class ComputerPlayer {
 
         let guaranteedHighTricks = 0;
         let dangerousHighCards = 0;
+        let protectedHighCards = 0;
 
 
         for (const card of hand) {
-            const cardPower = this.#cardPower(card);
-            if (cardPower >= 8) dangerousHighCards += 1;
-            if (cardPower >= 9) guaranteedHighTricks += 1;
+            const power = this.#cardPower(card);
+            const suitCount = this.#countSuit(hand, card.suit);
+
+
+            if (power >= 8) dangerousHighCards += 1;
+            if (power >= 9) guaranteedHighTricks += 1;
+            if (power >= 8 && suitCount >= 2) protectedHighCards += 1;
         }
+
+
+        const missingTricks = Math.max(0, hand.length - guaranteedHighTricks);
 
 
         const result = {
             guaranteedHighTricks,
             dangerousHighCards,
-            missingTricks: Math.max(0, hand.length - guaranteedHighTricks),
+            protectedHighCards,
+            missingTricks,
         };
 
 
@@ -616,6 +613,49 @@ export default class ComputerPlayer {
 
     #rankDistance(lowerCard, higherCard) {
         return Math.max(0, this.#cardPower(higherCard) - this.#cardPower(lowerCard));
+    }
+
+    #evaluatePull(gameState, playerId, hand, forcedTricksEstimate) {
+        const player = gameState.getPlayerById(playerId);
+        const hasCovered = this.#hasCovered(gameState, playerId);
+        const highCards = hand.filter(card => this.#cardPower(card) >= 8).length;
+        const topCards = hand.filter(card => this.#cardPower(card) >= 9).length;
+        const zeroPointCards = hand.filter(card => this.#getCardPoints(card) === 0).length;
+        const pigugnoInHand = hand.some(card => this.#isPigugno(card));
+        const handSize = hand.length;
+
+
+        let score = 0;
+
+
+        score += forcedTricksEstimate.guaranteedHighTricks * 30;
+        score += forcedTricksEstimate.dangerousHighCards * 12;
+        score += topCards * 10;
+        score += highCards * 6;
+
+
+        score -= forcedTricksEstimate.missingTricks * 22;
+        score -= zeroPointCards * 4;
+
+
+        if (handSize <= 3) score -= 20;
+        if (handSize >= 7) score += 10;
+
+
+        if (hasCovered) score += 12;
+        if (pigugnoInHand) score += 8;
+
+
+        const shouldPull = score >= 55;
+
+
+        this.#log(
+            player.name,
+            `valuto se tirare: guaranteed=${forcedTricksEstimate.guaranteedHighTricks}, dangerous=${forcedTricksEstimate.dangerousHighCards}, missing=${forcedTricksEstimate.missingTricks}, high=${highCards}, top=${topCards}, zero=${zeroPointCards}, score=${score}, shouldPull=${shouldPull}`
+        );
+
+
+        return shouldPull;
     }
 
 }
