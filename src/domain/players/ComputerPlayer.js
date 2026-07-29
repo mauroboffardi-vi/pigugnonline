@@ -273,11 +273,21 @@ export default class ComputerPlayer {
         const decimeInfo = this.analyzeDecime(gameState, playerId);
 
         const shouldPull = this.#evaluatePull(gameState, playerId, hand, forcedTricksEstimate);
-
         const shouldGoUnder = hasCovered && !shouldPull;
-        const mustDumpPigugno = hasPigugno;
         const protectLastTrick = !shouldPull && isLastTrickLikely;
 
+        const endgameMode = this.#evaluateEndgameMode(gameState, playerId, hand, forcedTricksEstimate);
+        const shortSuitPriority = this.#evaluateShortSuitPriority(hand);
+        const dangerousShortSuits = this.#evaluateDangerousShortSuits(
+            gameState,
+            playerId,
+            hand,
+            shortSuitPriority,
+            decimeInfo,
+            shouldPull
+        );
+        const pigugnoUrgency = this.#evaluatePigugnoUrgency(gameState, playerId, hand, hasCovered, shouldPull);
+        const decimaPressure = this.#evaluateDecimaPressure(gameState, playerId, decimeInfo, shouldPull);
 
         return {
             hasCovered,
@@ -285,9 +295,14 @@ export default class ComputerPlayer {
             isLeading,
             shouldPull,
             shouldGoUnder,
-            mustDumpPigugno,
+            mustDumpPigugno: pigugnoUrgency >= 70,
+            pigugnoUrgency,
             protectLastTrick,
             isLastTrickLikely,
+            endgameMode,
+            shortSuitPriority,
+            dangerousShortSuits,
+            decimaPressure,
             forcedTricksEstimate,
             decimeInfo,
         };
@@ -325,46 +340,78 @@ export default class ComputerPlayer {
         let score = 0;
         const player = gameState.getPlayerById(playerId);
 
-
         this.#log(player.name, `valuto apertura con ${this.#cardLabel(card)}`);
-
 
         if (handPlan.shouldPull) {
             score += 40;
             score += this.#getCardPoints(card) * 8;
-            score += CardSorter.compare(card, this.#getLowestCard([card])) === 0 ? 0 : 0;
+            score += this.#cardPower(card) * 3;
+
+            if (handPlan.endgameMode.isEndgame && this.#cardPower(card) >= 8) {
+                score += 20;
+                this.#log(player.name, `endgame aggressivo: apro alto mentre tiro`);
+            }
+
             if (this.#isPigugno(card)) score -= 200;
             this.#log(player.name, `modalità tirare: bonus aggressivo su ${this.#cardLabel(card)}`);
             return score;
         }
 
-
         score -= this.#getCardPoints(card) * 10;
-
+        score -= this.#cardPower(card);
 
         if (this.#isPigugno(card)) {
             score -= 120;
+            score -= handPlan.pigugnoUrgency;
             this.#log(player.name, `evito di aprire col pigugno`);
         }
 
-
         const hand = this.#getPlayerHand(gameState, playerId);
         const suitCount = this.#countSuit(hand, card.suit);
-
+        const dangerousShortSuit = this.#isDangerousShortSuit(handPlan, card.suit);
 
         if (suitCount <= 2) {
-            score += 10;
-            this.#log(player.name, `seme corto ${card.suit}: possibile preparare rifiuto più avanti`);
+            if (dangerousShortSuit) {
+                const malus = Math.floor(this.#getShortSuitDangerScore(handPlan, card.suit) / 2);
+                score -= malus;
+                this.#log(
+                    player.name,
+                    `seme corto ${card.suit} ma pericoloso da svuotare: malus ${malus}`
+                );
+            } else {
+                score += 10;
+                score += this.#getShortSuitUrgency(handPlan, card.suit);
+                this.#log(player.name, `seme corto ${card.suit}: possibile preparare rifiuto più avanti`);
+                this.#log(player.name, `apro in seme corto ${card.suit} per provare a svuotarlo`);
+            }
         }
-
 
         if (handPlan.protectLastTrick && this.#getCardPoints(card) === 0) {
             score += 12;
             this.#log(player.name, `provo a liberarmi di una carta bassa pensando all'ultima presa`);
         }
 
+        if (handPlan.endgameMode.isEndgame) {
+            if (this.#getCardPoints(card) === 0) {
+                score += 8;
+                this.#log(player.name, `endgame: preferisco uscire con carta leggera`);
+            } else {
+                score -= 8;
+            }
+        }
 
-        score -= this.#cardPower(card);
+        if (this.#isKnownDecimaSuit(handPlan, card.suit)) {
+            const missing = this.#getKnownMissingCardForSuit(handPlan, card.suit);
+            score += handPlan.decimaPressure[card.suit].pressure;
+
+            if (missing) {
+                this.#log(
+                    player.name,
+                    `seme ${card.suit} leggibile a decima; manca ${missing.value} di ${missing.suit}`
+                );
+            }
+        }
+
         return score;
     }
 
@@ -376,28 +423,36 @@ export default class ComputerPlayer {
         const trickPoints = this.#estimateCurrentTrickPoints(gameState);
         const currentWinner = this.#getCurrentWinningEntry(gameState)?.card || null;
 
-
         this.#log(
             player.name,
             `valuto risposta con ${this.#cardLabel(card)}; canWin=${canWin}; trickPoints=${trickPoints}`
         );
-
 
         if (handPlan.shouldPull) {
             if (canWin) {
                 score += 100;
                 score += trickPoints * 20;
                 score += this.#cardPower(card);
+
+                if (handPlan.endgameMode.isEndgame) {
+                    score += 20;
+                    this.#log(player.name, `endgame + tirare: massimizzo presa`);
+                }
+
                 if (this.#isPigugno(card)) score -= 60;
                 this.#log(player.name, `sto tirando: se posso prendere, spingo forte`);
             } else {
                 score -= 40;
                 score -= this.#getCardPoints(card) * 5;
+
+                if (handPlan.endgameMode.isEndgame) {
+                    score -= 12;
+                }
+
                 this.#log(player.name, `sto tirando ma questa non prende`);
             }
             return score;
         }
-
 
         if (!handPlan.hasCovered) {
             if (canWin) {
@@ -405,55 +460,93 @@ export default class ComputerPlayer {
                 score -= this.#getCardPoints(card) * 8;
                 score -= this.#cardPower(card);
                 score -= trickPoints * 6;
+
+                if (handPlan.endgameMode.isEndgame) {
+                    score += 10;
+                    this.#log(player.name, `endgame senza presa ancora fatta: accetto presa economica`);
+                }
+
                 this.#log(player.name, `non ho ancora coperto: provo una presa economica`);
             } else {
                 score -= 20;
                 score -= this.#getCardPoints(card) * 4;
                 score -= this.#cardPower(card);
+                if (this.#isDangerousShortSuit(handPlan, card.suit)) {
+                    const malus = Math.floor(this.#getShortSuitDangerScore(handPlan, card.suit) / 3);
+                    score -= malus;
+                    this.#log(
+                        player.name,
+                        `non copro e questa appartiene a un seme corto tossico (${card.suit}): malus ${malus}`
+                    );
+                }
                 this.#log(player.name, `non copro ancora, ma questa non riesce a prendere`);
             }
             return score;
         }
-
 
         if (handPlan.shouldGoUnder) {
             if (canWin) {
                 score -= 70;
                 score -= trickPoints * 12;
                 score -= this.#getCardPoints(card) * 10;
-                if (this.#isPigugno(card)) score += 140;
+
+                if (handPlan.endgameMode.isVeryLateEndgame && this.#getCardPoints(card) > 0) {
+                    score -= 25;
+                    this.#log(player.name, `endgame tardissimo: prendere ora con punti è pessimo`);
+                }
+
+                if (this.#isPigugno(card)) {
+                    score += handPlan.pigugnoUrgency;
+                    this.#log(player.name, `se devo prendere col pigugno almeno provo a liberarmene`);
+                }
+
                 this.#log(player.name, `ho già coperto: evitare di prendere`);
             } else {
                 score += 60;
                 score -= this.#getCardPoints(card) * 3;
-
 
                 if (currentWinner && card.suit === currentWinner.suit) {
                     const delta = this.#rankDistance(card, currentWinner);
                     score += Math.min(delta, 8);
                 }
 
-
                 if (handPlan.protectLastTrick && this.#getCardPoints(card) === 0) {
                     score += 8;
                 }
 
+                if (this.#isDangerousShortSuit(handPlan, card.suit)) {
+                    const malus = Math.floor(this.#getShortSuitDangerScore(handPlan, card.suit) / 4);
+                    score -= malus;
+                    this.#log(
+                        player.name,
+                        `vado sotto, ma su seme corto tossico ${card.suit}: malus ${malus}`
+                    );
+                }
+
+                if (handPlan.endgameMode.isEndgame && this.#getCardPoints(card) === 0) {
+                    score += 10;
+                    this.#log(player.name, `endgame: sotto con carta innocua`);
+                }
 
                 this.#log(player.name, `vado sotto volentieri con ${this.#cardLabel(card)}`);
             }
         }
 
-
         if (this.#isPigugno(card)) {
             if (canWin) {
-                score += 100;
-                this.#log(player.name, `se devo giocare il pigugno, meglio perderlo prendendo meno rischio futuro`);
+                score += 40;
+                score -= handPlan.pigugnoUrgency / 2;
+                this.#log(player.name, `pigugno in presa: situazione delicata`);
             } else {
-                score += 180;
+                score += 120 + handPlan.pigugnoUrgency;
                 this.#log(player.name, `ottimo: pigugno giocato sotto, provo a scaricarlo`);
             }
         }
 
+        if (this.#isKnownDecimaSuit(handPlan, card.suit)) {
+            score += handPlan.decimaPressure[card.suit].pressure / 2;
+            this.#log(player.name, `risposta su seme leggibile a decima`);
+        }
 
         return score;
     }
@@ -463,9 +556,9 @@ export default class ComputerPlayer {
         let score = 0;
         const player = gameState.getPlayerById(playerId);
         const points = this.#getCardPoints(card);
+        const dangerousShortSuit = this.#isDangerousShortSuit(handPlan, card.suit);
 
         this.#log(player.name, `valuto rifiuto con ${this.#cardLabel(card)}`);
-
 
         if (handPlan.shouldPull) {
             score -= points * 4;
@@ -474,28 +567,49 @@ export default class ComputerPlayer {
             return score;
         }
 
-
         score += points * 25;
         score += this.#cardPower(card);
-
 
         if (card.value === "A") {
             score += 30;
             this.#log(player.name, `scaricare un asso in rifiuto è ottimo`);
         }
 
-
         if (this.#isPigugno(card)) {
-            score += 260;
+            score += 260 + handPlan.pigugnoUrgency;
             this.#log(player.name, `pigugno da scaricare a tutti i costi`);
         }
 
+        const suitInfo = handPlan.shortSuitPriority?.[card.suit];
+        if (suitInfo?.shouldVoid) {
+            if (dangerousShortSuit) {
+                const malus = Math.floor(this.#getShortSuitDangerScore(handPlan, card.suit) / 2);
+                score -= malus;
+                this.#log(
+                    player.name,
+                    `rifiuto su seme corto ${card.suit}, ma è tossico da svuotare: malus ${malus}`
+                );
+            } else {
+                score += suitInfo.urgency;
+                this.#log(player.name, `rifiuto su seme corto ${card.suit}: provo a svuotarlo`);
+            }
+        }
+
+        if (handPlan.endgameMode.isEndgame) {
+            score += points * 8;
+            if (points === 0) score -= 10;
+            this.#log(player.name, `endgame: rifiuto più orientato a scaricare peso`);
+        }
 
         if (handPlan.protectLastTrick && points === 0) {
             score -= 15;
             this.#log(player.name, `meglio tenere basse innocue per l'ultima presa`);
         }
 
+        if (this.#isKnownDecimaSuit(handPlan, card.suit)) {
+            score += handPlan.decimaPressure[card.suit].pressure / 2;
+            this.#log(player.name, `rifiuto su seme leggibile a decima`);
+        }
 
         return score;
     }
@@ -516,12 +630,15 @@ export default class ComputerPlayer {
             const seenCount = handSuitCards.length + playedSuitCards.length;
 
 
+            const missingCards = this.#getMissingSuitCards(gameState, suit, handSuitCards, playedSuitCards);
+
             result[suit] = {
                 handCount: handSuitCards.length,
                 playedCount: playedSuitCards.length,
                 seenCount,
                 mayKnowDecima: seenCount === 9,
-                missingCards: this.#getMissingSuitCards(gameState, suit, handSuitCards, playedSuitCards),
+                missingCards,
+                knownMissing: missingCards.length === 1 ? missingCards[0] : null,
             };
         }
 
@@ -614,6 +731,160 @@ export default class ComputerPlayer {
     #rankDistance(lowerCard, higherCard) {
         return Math.max(0, this.#cardPower(higherCard) - this.#cardPower(lowerCard));
     }
+
+    #evaluateEndgameMode(gameState, playerId, hand, forcedTricksEstimate) {
+        const player = gameState.getPlayerById(playerId);
+        const handSize = hand.length;
+        const hasCovered = this.#hasCovered(gameState, playerId);
+
+        const isEndgame = handSize <= 3;
+        const isVeryLateEndgame = handSize <= 2;
+
+        let pressure = 0;
+        if (isEndgame) pressure += 30;
+        if (isVeryLateEndgame) pressure += 20;
+        if (!hasCovered) pressure += 18;
+        pressure += forcedTricksEstimate.guaranteedHighTricks * 8;
+        pressure += forcedTricksEstimate.missingTricks * 5;
+
+        const mode = {
+            isEndgame,
+            isVeryLateEndgame,
+            pressure,
+        };
+
+        this.#log(player.name, `valuto endgame: ${JSON.stringify(mode)}`);
+        return mode;
+    }
+
+    #evaluateShortSuitPriority(hand) {
+        const suits = ["denari", "coppe", "spade", "bastoni"];
+        const priorities = {};
+
+        for (const suit of suits) {
+            const count = this.#countSuit(hand, suit);
+            priorities[suit] = {
+                count,
+                shouldVoid: count > 0 && count <= 2,
+                urgency: count === 1 ? 30 : count === 2 ? 16 : 0,
+            };
+        }
+
+        return priorities;
+    }
+
+    #evaluatePigugnoUrgency(gameState, playerId, hand, hasCovered, shouldPull) {
+        const player = gameState.getPlayerById(playerId);
+        const hasPigugno = hand.some(card => this.#isPigugno(card));
+
+        if (!hasPigugno) return 0;
+
+        let urgency = 40;
+        if (hasCovered) urgency += 25;
+        if (!shouldPull) urgency += 15;
+        if (hand.length <= 5) urgency += 10;
+        if (hand.length <= 3) urgency += 15;
+
+        this.#log(player.name, `urgenza pigugno: ${urgency}`);
+        return urgency;
+    }
+
+    #evaluateDecimaPressure(gameState, playerId, decimeInfo, shouldPull) {
+        const player = gameState.getPlayerById(playerId);
+        const result = {};
+
+        for (const [suit, info] of Object.entries(decimeInfo)) {
+            const missingCount = info.missingCards.length;
+            const knownMissing = missingCount === 1;
+            const missingCard = knownMissing ? info.missingCards[0] : null;
+
+            result[suit] = {
+                knownMissing,
+                missingCard,
+                pressure: knownMissing ? (shouldPull ? 12 : 22) : 0,
+            };
+        }
+
+        this.#log(player.name, `pressione decime: ${JSON.stringify(result)}`);
+        return result;
+    }
+
+    #evaluateDangerousShortSuits(gameState, playerId, hand, shortSuitPriority, decimeInfo, shouldPull) {
+        const player = gameState.getPlayerById(playerId);
+        const suits = ["denari", "coppe", "spade", "bastoni"];
+        const result = {};
+
+        for (const suit of suits) {
+            const suitCards = this.#getSuitCards(hand, suit);
+            const shortInfo = shortSuitPriority[suit];
+
+            if (!shortInfo || !shortInfo.shouldVoid) {
+                result[suit] = {
+                    isDangerous: false,
+                    dangerScore: 0,
+                    reason: "not-short-suit",
+                };
+                continue;
+            }
+
+            const totalPoints = suitCards.reduce((sum, card) => sum + this.#getCardPoints(card), 0);
+            const maxPower = suitCards.reduce((max, card) => Math.max(max, this.#cardPower(card)), 0);
+            const highCards = suitCards.filter(card => this.#cardPower(card) >= 8).length;
+            const topCards = suitCards.filter(card => this.#cardPower(card) >= 9).length;
+            const knownDecima = !!decimeInfo?.[suit]?.knownMissing;
+            const seenCount = decimeInfo?.[suit]?.seenCount || 0;
+
+            let dangerScore = 0;
+
+            dangerScore += totalPoints * 10;
+            dangerScore += highCards * 16;
+            dangerScore += topCards * 18;
+
+            if (maxPower >= 8) dangerScore += 18;
+            if (maxPower >= 9) dangerScore += 22;
+            if (seenCount >= 8) dangerScore += 12;
+            if (knownDecima) dangerScore += 16;
+            if (!shouldPull) dangerScore += 15;
+
+            const isDangerous = dangerScore >= 45;
+
+            result[suit] = {
+                isDangerous,
+                dangerScore,
+                totalPoints,
+                maxPower,
+                highCards,
+                topCards,
+                knownDecima,
+                seenCount,
+                reason: isDangerous ? "high-risk-short-suit" : "safe-to-void",
+            };
+        }
+
+        this.#log(player.name, `semi corti pericolosi: ${JSON.stringify(result)}`);
+        return result;
+    }
+
+    #isDangerousShortSuit(handPlan, suit) {
+        return !!handPlan.dangerousShortSuits?.[suit]?.isDangerous;
+    }
+
+    #getShortSuitDangerScore(handPlan, suit) {
+        return handPlan.dangerousShortSuits?.[suit]?.dangerScore || 0;
+    }
+
+    #getShortSuitUrgency(handPlan, suit) {
+        return handPlan.shortSuitPriority?.[suit]?.urgency || 0;
+    }
+
+    #isKnownDecimaSuit(handPlan, suit) {
+        return !!handPlan.decimaPressure?.[suit]?.knownMissing;
+    }
+
+    #getKnownMissingCardForSuit(handPlan, suit) {
+        return handPlan.decimaPressure?.[suit]?.missingCard || null;
+    }
+
 
     #evaluatePull(gameState, playerId, hand, forcedTricksEstimate) {
         const player = gameState.getPlayerById(playerId);
