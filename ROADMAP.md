@@ -97,15 +97,7 @@ Nota progettuale:
 
 **Risultato atteso:** un avversario semplice ma sensato, senza sporcare `GameState`.
 
-### 4. Carte dei computer coperte
-**Obiettivo:** correggere una mancanza forte di UX e coerenza di gioco.
-
-- Mostrare il retro delle carte dei giocatori computer invece del fronte.
-- Al momento della giocata, sostituire temporaneamente il retro con la carta reale solo nell'animazione verso il tavolo.
-- Verificare che il reveal non rompa né click handling né animazioni esistenti.
-- Tenere la carta reale disponibile nel modello, ma non nel rendering costante della mano avversaria.
-
-**Risultato atteso:** il gioco sembra davvero un gioco di carte, non un debugger visivo.
+### 4. Carte dei computer coperte - fatto
 
 ## Priorità 3, arricchimento dell'esperienza
 

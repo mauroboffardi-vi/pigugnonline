@@ -8,18 +8,37 @@ import { animatePlayCard, animateTrickResolution } from '../../ui/animations/tab
 import { animateHandSummary, clearHandSummaryOverlay } from '../../ui/animations/score-animation.js';
 import BuscheTracker from '../../ui/BuscheTracker.js';
 
-function createCardMarkup(card) {
+
+function createCardMarkup(card, options = {}) {
+  const {
+    faceUp = true,
+    extraClass = '',
+  } = options;
+
+  const visibleSrc = faceUp ? card.imagePath : card.imageBackPath;
+  const classes = ['card-image', 'small'];
+  if (extraClass) classes.push(extraClass);
+  if (!faceUp) classes.push('is-face-down');
+
   return `
     <div class="card-item">
       <img
+        class="${classes.join(' ')}"
+        src="${visibleSrc}"
+        alt="${faceUp ? `${card.value} di ${card.suit}` : 'Carta coperta'}"
         data-card-id="${card.id}"
-        class="card-image small"
-        src="${card.imagePath}"
-        alt="${card.value} di ${card.suit}"
+        data-card-suit="${card.suit}"
+        data-card-value="${card.value}"
+        data-face-src="${card.imagePath}"
+        data-back-src="${card.imageBackPath}"
+        data-face-up="${faceUp ? 'true' : 'false'}"
+        draggable="false"
       />
     </div>
   `;
 }
+
+
 
 const gameState = new GameState(['Io', ...pickRandomNames(3)]);
 let playCounter = 0;
@@ -34,11 +53,22 @@ const buscheTracker = new BuscheTracker(document.getElementById('busche-note'), 
 const gameOverOverlay = new GameOverOverlay();
 const computerPlayer = new ComputerPlayer();
 
+let DEBUG_SHOW_CPU_CARDS = false;
+
+function isHumanPlayer(player) {
+  return player?.id === 0;
+}
+
+function shouldShowCardFace(player) {
+  return isHumanPlayer(player) || DEBUG_SHOW_CPU_CARDS;
+}
 
 function renderPlayerArea(container, player) {
   const title = player.name;
   const captureStatus = renderPlayerStatus(player);
-  const cardsMarkup = player.hand.map(createCardMarkup).join('');
+  const cardsMarkup = player.hand
+    .map(card => createCardMarkup(card, { faceUp: shouldShowCardFace(player) }))
+    .join('');
 
   container.dataset.playerId = player.id;
   container.innerHTML = `
@@ -90,19 +120,28 @@ async function playCardWithAnimation(player, card, img, container, flowVersion =
 
   let playApplied = false;
 
+  const revealSrc =
+    img.dataset.faceUp === 'true'
+      ? null
+      : img.dataset.faceSrc;
+
   const clone = await animatePlayCard(img, container, center, {
     zIndex: 1000 + playCounter,
-    onPlayed(cloneNode) {
+    revealSrc,
+    onPlayed: (cloneNode) => {
       if (isStaleFlow(flowVersion)) {
-        try { cloneNode.remove(); } catch (_) { }
+        try { cloneNode.remove(); } catch { }
         return;
       }
 
       const success = gameState.playCard(player.id, card.id);
       if (!success) {
-        try { cloneNode.remove(); } catch (_) { }
+        try { cloneNode.remove(); } catch { }
         return;
       }
+
+      cloneNode.src = img.dataset.faceSrc;
+      cloneNode.dataset.faceUp = 'true';
 
       cardsOnTable.set(String(card.id), cloneNode);
 
@@ -381,7 +420,12 @@ bootstrapGame();
  */
 window.__PIGUGNO_TEST_API__ = {
   getGameState: () => gameState,
-  render: () => renderBoard(gameState),
+  rerender: () => renderBoard(gameState),
   syncBuscheTrackerFromState,
+  getDebugShowCpuCards: () => DEBUG_SHOW_CPU_CARDS,
+  toggleDebugShowCpuCards: () => {
+    DEBUG_SHOW_CPU_CARDS = !DEBUG_SHOW_CPU_CARDS;
+    renderBoard(gameState);
+    return DEBUG_SHOW_CPU_CARDS;
+  },
 };
-

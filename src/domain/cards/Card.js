@@ -21,6 +21,7 @@ export class Card {
         this.value = value;
         this.id = Card.nextId++;
         this.imagePath = this.getImagePath();
+        this.imageBackPath = this.getBackImagePath();
     }
 
     /**
@@ -82,6 +83,11 @@ export class Card {
      */
     getImagePath() {
         const imageFile = `${this.suit}_${this.getImageName()}.jpg`;
+        return new URL(`../../assets/img/carte_piacentine/${imageFile}`, import.meta.url).href;
+    }
+
+    getBackImagePath() {
+        const imageFile = "retro.png";
         return new URL(`../../assets/img/carte_piacentine/${imageFile}`, import.meta.url).href;
     }
 }

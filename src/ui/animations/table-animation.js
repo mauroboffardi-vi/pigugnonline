@@ -1,12 +1,69 @@
 /**
- * Animazioni per la gestione del tavolo, carte giocate, buttate 
+ * Animazioni per la gestione del tavolo, carte giocate, buttate
  *
  * Funzioni esportate:
  * - animateThrow: Anima il lancio di una carta dal suo punto di partenza verso un elemento di destinazione.
  * - animatePlayCard: API di alto livello per giocare una carta con l'animazione.
  * - animateTrickResolution: Anima le carte vinte verso il giocatore vincitore.
-
  */
+
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function rand(min, max) {
+    return Math.round(Math.random() * (max - min) + min);
+}
+
+function getArcHeight(direction, absDx, absDy) {
+    if (direction === 'top' || direction === 'you' || direction === 'bottom') {
+        return Math.max(60, Math.min(180, absDy * 0.22));
+    }
+
+    return Math.max(35, Math.min(120, absDx * 0.16));
+}
+
+async function revealCardInFlight(cardImg, revealSrc) {
+    if (!revealSrc) return;
+
+    cardImg.style.transformOrigin = 'center center';
+
+    const shrink = cardImg.animate(
+        [
+            { transform: 'rotateY(0deg) scaleX(1)' },
+            { transform: 'rotateY(90deg) scaleX(0.08)' }
+        ],
+        {
+            duration: 120,
+            easing: 'ease-in',
+            fill: 'forwards'
+        }
+    );
+
+    await shrink.finished;
+
+    cardImg.src = revealSrc;
+    cardImg.dataset.faceSrc = revealSrc;
+    cardImg.dataset.faceUp = 'true';
+
+    const expand = cardImg.animate(
+        [
+            { transform: 'rotateY(-90deg) scaleX(0.08)' },
+            { transform: 'rotateY(0deg) scaleX(1)' }
+        ],
+        {
+            duration: 140,
+            easing: 'ease-out',
+            fill: 'forwards'
+        }
+    );
+
+    await expand.finished;
+
+    cardImg.style.transform = 'none';
+    cardImg.style.backfaceVisibility = 'visible';
+    cardImg.style.transformStyle = 'flat';
+}
 
 export async function animateThrow(
     img,
@@ -15,24 +72,35 @@ export async function animateThrow(
     direction,
     zIndex,
     startRect = null,
-    onPlayed = () => { }
+    onPlayed = () => { },
+    options = {}
 ) {
+    const { revealSrc = null } = options;
+
     const rect = startRect || img.getBoundingClientRect();
     const centerRect = centerElem.getBoundingClientRect();
 
+    const wrapper = document.createElement('div');
+    wrapper.className = 'flying-card';
+    wrapper.style.position = 'fixed';
+    wrapper.style.left = `${rect.left}px`;
+    wrapper.style.top = `${rect.top}px`;
+    wrapper.style.width = `${rect.width}px`;
+    wrapper.style.height = `${rect.height}px`;
+    wrapper.style.margin = '0';
+    wrapper.style.pointerEvents = 'none';
+    wrapper.style.zIndex = String(zIndex);
+    wrapper.style.transformOrigin = 'center center';
+
     const clone = img.cloneNode(true);
-    clone.classList.add('flying-card');
-    clone.style.position = 'fixed';
-    clone.style.left = `${rect.left}px`;
-    clone.style.top = `${rect.top}px`;
-    clone.style.width = `${rect.width}px`;
-    clone.style.height = `${rect.height}px`;
+    clone.style.display = 'block';
+    clone.style.width = '100%';
+    clone.style.height = '100%';
     clone.style.margin = '0';
-    clone.style.pointerEvents = 'none';
-    clone.style.zIndex = String(zIndex);
     clone.style.transformOrigin = 'center center';
 
-    document.body.appendChild(clone);
+    wrapper.appendChild(clone);
+    document.body.appendChild(wrapper);
 
     const previousVisibility = img.style.visibility;
     img.style.visibility = 'hidden';
@@ -96,7 +164,7 @@ export async function animateThrow(
     const duration = rand(800, 1100);
 
     try {
-        const animation = clone.animate(
+        const flight = wrapper.animate(
             [
                 {
                     transform: `translate(0px, 0px) rotate(${tiltStart}deg)`,
@@ -118,35 +186,35 @@ export async function animateThrow(
             }
         );
 
-        await animation.finished;
+        if (revealSrc) {
+            await wait(duration * 0.18);
+            revealCardInFlight(clone, revealSrc);
+        }
 
-        clone.style.transform = `translate(${dx}px, ${dy}px) rotate(${tiltEnd}deg)`;
+        await flight.finished;
 
-        onPlayed(clone);
-        return clone;
+        wrapper.style.transform = `translate(${dx}px, ${dy}px) rotate(${tiltEnd}deg)`;
+        clone.src = clone.dataset.faceSrc || revealSrc || clone.src;
+        clone.dataset.faceUp = 'true';
+
+        onPlayed(wrapper);
+        return wrapper;
     } catch (e) {
         img.style.visibility = previousVisibility;
-        clone.remove();
+        wrapper.remove();
         throw e;
     }
-}
-
-function rand(min, max) {
-    return Math.round(Math.random() * (max - min) + min);
-}
-
-function getArcHeight(direction, absDx, absDy) {
-    if (direction === 'top' || direction === 'you' || direction === 'bottom') {
-        return Math.max(60, Math.min(180, absDy * 0.22));
-    }
-    return Math.max(35, Math.min(120, absDx * 0.16));
 }
 
 /**
  * High-level API: play a card.
  */
 export async function animatePlayCard(img, container, centerElem, opts = {}) {
-    const { onPlayed = () => { }, zIndex = 1000 } = opts;
+    const {
+        onPlayed = () => { },
+        zIndex = 1000,
+        revealSrc = null
+    } = opts;
 
     let direction;
     if (container.classList.contains('top')) direction = 'top';
@@ -165,7 +233,8 @@ export async function animatePlayCard(img, container, centerElem, opts = {}) {
         direction,
         zIndex,
         startRect,
-        onPlayed
+        onPlayed,
+        { revealSrc }
     );
 
     return clone;
@@ -182,46 +251,50 @@ export async function animateTrickResolution(centerElem, trickEntries, winnerId,
     let targetY = 0;
 
     switch (winnerId) {
-        case 0: // you
+        case 0:
             targetX = centerRect.left + centerRect.width / 2;
             targetY = window.innerHeight + margin;
             break;
-        case 1: // left
+        case 1:
             targetX = -window.innerWidth - margin;
             targetY = centerRect.top + centerRect.height / 2;
             break;
-        case 2: // top
+        case 2:
             targetX = centerRect.left + centerRect.width / 2;
             targetY = -window.innerHeight - margin;
             break;
-        case 3: // right
+        case 3:
             targetX = window.innerWidth + margin;
             targetY = centerRect.top + centerRect.height / 2;
             break;
+        default:
+            break;
     }
 
-    const animations = trickEntries.map(({ card }, index) => {
-        const clone = cardsOnTable.get(String(card.id));
-        if (!clone) return null;
+    const animations = trickEntries
+        .map(({ card }, index) => {
+            const clone = cardsOnTable.get(String(card.id));
+            if (!clone) return null;
 
-        const rect = clone.getBoundingClientRect();
-        const dx = targetX - (rect.left + rect.width / 2);
-        const dy = targetY - (rect.top + rect.height / 2);
+            const rect = clone.getBoundingClientRect();
+            const dx = targetX - (rect.left + rect.width / 2);
+            const dy = targetY - (rect.top + rect.height / 2);
 
-        const anim = clone.animate(
-            [
-                { transform: clone.style.transform || 'translate(0px, 0px)', opacity: 1 },
-                { transform: `${clone.style.transform || 'translate(0px, 0px)'} translate(${dx}px, ${dy}px)`, opacity: 0.2 }
-            ],
-            {
-                duration: 700 + index * 80,
-                easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-                fill: 'forwards'
-            }
-        );
+            const anim = clone.animate(
+                [
+                    { transform: clone.style.transform || 'translate(0px, 0px)', opacity: 1 },
+                    { transform: `${clone.style.transform || 'translate(0px, 0px)'} translate(${dx}px, ${dy}px)`, opacity: 0.2 }
+                ],
+                {
+                    duration: 700 + index * 80,
+                    easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                    fill: 'forwards'
+                }
+            );
 
-        return anim.finished.then(() => clone.remove());
-    }).filter(Boolean);
+            return anim.finished.then(() => clone.remove());
+        })
+        .filter(Boolean);
 
     await Promise.all(animations);
 }

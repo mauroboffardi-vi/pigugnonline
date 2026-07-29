@@ -2,6 +2,14 @@ function getApi() {
     return window.__PIGUGNO_TEST_API__ || null;
 }
 
+function updateDebugButtonState(button, enabled) {
+    if (!button) return;
+    button.dataset.debugEnabled = enabled ? 'true' : 'false';
+    button.textContent = enabled
+        ? 'Debug carte CPU: ON'
+        : 'Debug carte CPU: OFF';
+}
+
 function getGameStateOrThrow() {
     const api = getApi();
 
@@ -261,6 +269,47 @@ function wireButtons() {
         console.warn('Container test-buttons non trovato');
         return;
     }
+
+    root.addEventListener('click', async (event) => {
+        const debugBtn = event.target.closest('[data-test-toggle-debug]');
+        if (debugBtn) {
+            const api = getApi();
+
+            if (!api || typeof api.toggleDebugShowCpuCards !== 'function') {
+                console.error('Toggle debug non disponibile nella test API');
+                return;
+            }
+
+            const enabled = api.toggleDebugShowCpuCards();
+
+            if (typeof api.rerender === 'function') {
+                api.rerender();
+            }
+
+            updateDebugButtonState(debugBtn, enabled);
+            return;
+        }
+
+        const btn = event.target.closest('[data-test-preset]');
+        if (!btn) return;
+
+        const preset = btn.dataset.testPreset;
+
+        try {
+            await runPreset(preset);
+        } catch (err) {
+            console.error('Errore preset test:', err);
+        }
+    });
+
+    const debugBtn = root.querySelector('[data-test-toggle-debug]');
+    const api = getApi();
+    const enabled = api && typeof api.getDebugShowCpuCards === 'function'
+        ? api.getDebugShowCpuCards()
+        : false;
+
+    updateDebugButtonState(debugBtn, enabled);
+
 
     root.addEventListener('click', async (event) => {
         const btn = event.target.closest('[data-test-preset]');
