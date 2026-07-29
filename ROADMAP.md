@@ -12,21 +12,83 @@ Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priori
 
 ### 3a. pensare a un'indicatore del giocatore di turno
 
-### 3. AI base del computer
+### 3. AI base del computer, miglioramenti
 **Obiettivo:** introdurre una logica semplice, credibile e migliorabile.
 
-- Creare un file separato, per esempio `ComputerPlayer.js`.
-- Definire una API chiara, per esempio `chooseCard(gameState, playerId)`.
-- Partire con una strategia semplice e deterministica, non con una pseudo AI troppo ambiziosa.
-- Far rispettare sempre le regole già presenti in `GameState.canPlayCard()`.
-- Separare il motore decisionale dalla UI e dalle animazioni.
+### Altre idee possibili per strategie di mano
 
-Prima versione consigliata:
+- Conservazione delle entrate: non consumare troppo presto le poche carte che ti permettono di rientrare in presa in un seme utile.
 
-- Se il giocatore deve rispondere a seme, scegliere tra le carte valide di quel seme.
-- Se può scartare, scegliere la carta meno costosa o meno rischiosa.
-- Evitare di giocare il Pigugno quando è chiaramente sconveniente, se possibile.
-- Tenere traccia delle carte già giocate come memoria pubblica della mano.
+- Controllo del lead: distinguere quando vuoi assolutamente iniziare tu la prossima presa e quando invece vuoi evitarlo.
+
+- Seconda presa minima controllata: se devi ancora coprire o prevedi prese inevitabili, meglio una presa piccola ora che una grossa forzata dopo.
+
+- Sacrificio pianificato: accettare di perdere 1 presa “giusta” per migliorare la struttura del resto della mano.
+
+- Protezione delle uscite: tenere almeno una carta innocua per uscire da situazioni bloccate nel finale.
+
+- Gestione dei semi lunghi: non guardare solo i semi corti; un seme lungo ma medio può essere ottimo per drenare carte avversarie.
+
+- Sblocco carte alte protette: se una carta alta è coperta da 2-3 carte sotto, valutare quando liberarla senza trasformarla in presa cattiva.
+
+- Conteggio avversari vivi su un seme: stimare chi può ancora seguire un seme e chi invece potrà rifiutare. L’inferenza dalle carte viste è uno dei salti più utili in AI di trick-taking.
+
+- Pressione su giocatore scoperto: se un avversario sembra corto in un seme, guidare il gioco lì per costringerlo a rifiuti scomodi.
+
+- Preservazione dei vincenti veri: non spendere troppo presto carte che sono tra le poche prese quasi sicure della mano.
+
+- Gestione dei punti latenti: non solo punti sulla carta, ma rischio futuro che quella carta si trasformi in presa tossica.
+
+- Riconoscimento mano polarizzata: trattare diversamente mani “molto alte + molto basse” rispetto a mani tutte medie.
+
+- Riconoscimento mano compressa: se le tue carte stanno tutte in fascia media, evitare linee troppo ambiziose e preferire flessibilità.
+
+- Ducking intelligente: andare sotto apposta in un seme anche con carta quasi competitiva, per mantenere forma di mano o evitare il lead.
+
+- Squeeze / compressione finale: nel finale, scegliere linee che forzano gli altri a consumare l’unico seme che li tiene vivi. Le posizioni di squeeze sono note anche nella teoria dei trick-taking a informazione perfetta.
+
+#### Per strategia di mano, io darei priorità a queste
+
+- Conservazione delle entrate
+
+- Controllo del lead
+
+- Seconda presa minima controllata
+
+- Protezione delle uscite
+
+- Conteggio avversari vivi per seme
+
+- Pressione su giocatore corto
+
+- Preservazione dei vincenti veri
+
+- Gestione dei punti latenti
+
+- Ducking intelligente
+
+- Squeeze finale leggero
+
+####roadmap pratica
+
+- Step 1: controllo del lead + conservazione entrate.
+
+- Step 2: seconda presa minima controllata + protezione uscite.
+
+- Step 3: conteggio avversari vivi per seme.
+
+- Step 4: squeeze finale leggero.
+
+####Le più redditizie subito
+
+- Controllo del lead, perché cambia tantissime decisioni anche senza search.
+
+- Conservazione delle entrate, perché evita molti auto-sabotaggi di metà/fine mano.
+
+- Seconda presa minima controllata, perché migliora i casi in cui oggi il bot ragiona troppo “presa per presa”.
+
+- Conteggio avversari vivi per seme, perché rende molto più intelligenti rifiuti, void e decime.
+
 
 Nota progettuale:
 

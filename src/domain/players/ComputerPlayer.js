@@ -286,6 +286,7 @@ export default class ComputerPlayer {
             decimeInfo,
             shouldPull
         );
+        const tenaceSuits = this.#evaluateTenaceSuits(gameState, playerId, hand, decimeInfo, shouldPull);
         const pigugnoUrgency = this.#evaluatePigugnoUrgency(gameState, playerId, hand, hasCovered, shouldPull);
         const decimaPressure = this.#evaluateDecimaPressure(gameState, playerId, decimeInfo, shouldPull);
 
@@ -302,6 +303,7 @@ export default class ComputerPlayer {
             endgameMode,
             shortSuitPriority,
             dangerousShortSuits,
+            tenaceSuits,
             decimaPressure,
             forcedTricksEstimate,
             decimeInfo,
@@ -369,6 +371,7 @@ export default class ComputerPlayer {
         const hand = this.#getPlayerHand(gameState, playerId);
         const suitCount = this.#countSuit(hand, card.suit);
         const dangerousShortSuit = this.#isDangerousShortSuit(handPlan, card.suit);
+        const tenaceSuit = this.#isTenaceSuit(handPlan, card.suit);
 
         if (suitCount <= 2) {
             if (dangerousShortSuit) {
@@ -384,6 +387,12 @@ export default class ComputerPlayer {
                 this.#log(player.name, `seme corto ${card.suit}: possibile preparare rifiuto più avanti`);
                 this.#log(player.name, `apro in seme corto ${card.suit} per provare a svuotarlo`);
             }
+        }
+
+        if (tenaceSuit) {
+            const malus = Math.floor(this.#getTenaceTension(handPlan, card.suit) / 2);
+            score -= malus;
+            this.#log(player.name, `evito di aprire il seme tenace ${card.suit}: malus ${malus}`);
         }
 
         if (handPlan.protectLastTrick && this.#getCardPoints(card) === 0) {
@@ -422,6 +431,8 @@ export default class ComputerPlayer {
         const canWin = this.#canCardWinCurrentTrick(gameState, card);
         const trickPoints = this.#estimateCurrentTrickPoints(gameState);
         const currentWinner = this.#getCurrentWinningEntry(gameState)?.card || null;
+        const dangerousShortSuit = this.#isDangerousShortSuit(handPlan, card.suit);
+        const tenaceSuit = this.#isTenaceSuit(handPlan, card.suit);
 
         this.#log(
             player.name,
@@ -471,7 +482,19 @@ export default class ComputerPlayer {
                 score -= 20;
                 score -= this.#getCardPoints(card) * 4;
                 score -= this.#cardPower(card);
-                if (this.#isDangerousShortSuit(handPlan, card.suit)) {
+
+                if (tenaceSuit) {
+                    const malus = this.#isTenaceLowCard(handPlan, card)
+                        ? Math.floor(this.#getTenaceTension(handPlan, card.suit) / 2)
+                        : Math.floor(this.#getTenaceTension(handPlan, card.suit) / 3);
+                    score -= malus;
+                    this.#log(
+                        player.name,
+                        `non copro e consumo una carta del seme tenace ${card.suit}: malus ${malus}`
+                    );
+                }
+
+                if (dangerousShortSuit) {
                     const malus = Math.floor(this.#getShortSuitDangerScore(handPlan, card.suit) / 3);
                     score -= malus;
                     this.#log(
@@ -479,6 +502,7 @@ export default class ComputerPlayer {
                         `non copro e questa appartiene a un seme corto tossico (${card.suit}): malus ${malus}`
                     );
                 }
+
                 this.#log(player.name, `non copro ancora, ma questa non riesce a prendere`);
             }
             return score;
@@ -514,7 +538,18 @@ export default class ComputerPlayer {
                     score += 8;
                 }
 
-                if (this.#isDangerousShortSuit(handPlan, card.suit)) {
+                if (tenaceSuit) {
+                    const malus = this.#isTenaceLowCard(handPlan, card)
+                        ? Math.floor(this.#getTenaceTension(handPlan, card.suit) / 2)
+                        : Math.floor(this.#getTenaceTension(handPlan, card.suit) / 3);
+                    score -= malus;
+                    this.#log(
+                        player.name,
+                        `vado sotto ma sto consumando il seme tenace ${card.suit}: malus ${malus}`
+                    );
+                }
+
+                if (dangerousShortSuit) {
                     const malus = Math.floor(this.#getShortSuitDangerScore(handPlan, card.suit) / 4);
                     score -= malus;
                     this.#log(
@@ -557,6 +592,7 @@ export default class ComputerPlayer {
         const player = gameState.getPlayerById(playerId);
         const points = this.#getCardPoints(card);
         const dangerousShortSuit = this.#isDangerousShortSuit(handPlan, card.suit);
+        const tenaceSuit = this.#isTenaceSuit(handPlan, card.suit);
 
         this.#log(player.name, `valuto rifiuto con ${this.#cardLabel(card)}`);
 
@@ -593,6 +629,14 @@ export default class ComputerPlayer {
                 score += suitInfo.urgency;
                 this.#log(player.name, `rifiuto su seme corto ${card.suit}: provo a svuotarlo`);
             }
+        }
+
+        if (tenaceSuit) {
+            const malus = this.#isTenaceLowCard(handPlan, card)
+                ? Math.floor(this.#getTenaceTension(handPlan, card.suit) / 2)
+                : Math.floor(this.#getTenaceTension(handPlan, card.suit) / 3);
+            score -= malus;
+            this.#log(player.name, `rifiuto sul seme tenace ${card.suit}: malus ${malus}`);
         }
 
         if (handPlan.endgameMode.isEndgame) {
@@ -863,6 +907,61 @@ export default class ComputerPlayer {
 
         this.#log(player.name, `semi corti pericolosi: ${JSON.stringify(result)}`);
         return result;
+    }
+
+    #evaluateTenaceSuits(gameState, playerId, hand, decimeInfo, shouldPull) {
+        const player = gameState.getPlayerById(playerId);
+        const suits = ["denari", "coppe", "spade", "bastoni"];
+        const result = {};
+
+        for (const suit of suits) {
+            const suitCards = this.#getSuitCards(hand, suit);
+            const seenCount = decimeInfo?.[suit]?.seenCount || 0;
+            const sortedSuitCards = [...suitCards].sort((a, b) => CardSorter.compare(a, b));
+            const lowCard = sortedSuitCards[0] || null;
+            const highCard = sortedSuitCards[sortedSuitCards.length - 1] || null;
+
+            let tension = 0;
+            let isTenace = false;
+            let reason = "none";
+
+            if (suitCards.length === 2 && seenCount >= 8) {
+                tension += 30;
+                if (lowCard && this.#cardPower(lowCard) <= 3) tension += 15;
+                if (highCard && this.#cardPower(highCard) <= 5) tension += 20;
+                if (!shouldPull) tension += 20;
+
+                isTenace = tension >= 45;
+                reason = isTenace ? "late-two-card-suit" : "two-card-suit";
+            }
+
+            result[suit] = {
+                isTenace,
+                tension,
+                seenCount,
+                handCount: suitCards.length,
+                lowCard: lowCard ? { suit: lowCard.suit, value: lowCard.value } : null,
+                highCard: highCard ? { suit: highCard.suit, value: highCard.value } : null,
+                reason,
+            };
+        }
+
+        this.#log(player.name, `semi tenaci: ${JSON.stringify(result)}`);
+        return result;
+    }
+
+    #isTenaceSuit(handPlan, suit) {
+        return !!handPlan.tenaceSuits?.[suit]?.isTenace;
+    }
+
+    #getTenaceTension(handPlan, suit) {
+        return handPlan.tenaceSuits?.[suit]?.tension || 0;
+    }
+
+    #isTenaceLowCard(handPlan, card) {
+        const info = handPlan.tenaceSuits?.[card.suit];
+        if (!info?.isTenace || !info.lowCard) return false;
+        return info.lowCard.value === card.value;
     }
 
     #isDangerousShortSuit(handPlan, suit) {
