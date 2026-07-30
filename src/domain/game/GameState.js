@@ -159,7 +159,7 @@ export class GameState {
      * @param {number} playerId - L'ID del giocatore che sta giocando la carta.
      * @returns {boolean}
      */
-    canPlayCard(card, playerId, { verbose = true } = {}) {
+    canPlayCard(card, playerId, { verbose = false } = {}) {
         if (this.phase !== 'playing') return false;
 
         const player = this.players.find(p => p.id === playerId);

@@ -2,6 +2,10 @@ function getApi() {
     return window.__PIGUGNO_TEST_API__ || null;
 }
 
+
+
+
+
 function updateDebugButtonState(button, enabled) {
     if (!button) return;
     button.dataset.debugEnabled = enabled ? 'true' : 'false';
@@ -327,6 +331,29 @@ function wireButtons() {
     console.debug('Test buttons collegati');
 }
 
+/*
+ *. insert DEBUG buttons in the body 
+ *
+ */
+export function initDebugUI() {
+    // Crea il wrapper dei bottoni di debug
+    const debugPanel = document.createElement('div');
+    debugPanel.id = 'debug-panel';
+    debugPanel.innerHTML = `
+    <div id="test-buttons"
+        style="position:fixed;top:12px;right:12px;z-index:99999;display:flex;flex-direction:column;gap:8px;">
+        <button type="button" data-test-preset="normal">TEST normale</button>
+        <button type="button" data-test-preset="pigugno-you">TEST pigugno tu</button>
+        <button type="button" data-test-preset="no-capture-you">TEST tu senza prese</button>
+        <button type="button" data-test-preset="ten-tricks-left">TEST 10 prese sinistra</button>
+        <button type="button" data-test-preset="two-no-capture">TEST due senza prese</button>
+        <button type="button" data-test-toggle-debug> Debug carte CPU: OFF </button>
+    </div>
+  `;
 
+    // Inserisce il pannello all'inizio del <body>
+    document.body.prepend(debugPanel);
 
-wireButtons();
+    wireButtons();
+}
+

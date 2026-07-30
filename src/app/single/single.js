@@ -38,7 +38,20 @@ function createCardMarkup(card, options = {}) {
   `;
 }
 
+/* 
+ * 
+ *           INIZIALIZZAZIONE
+ * 
+ */
 
+// Controlla se nell'URL è presente ?debug=true
+const ISDEBUG = new URLSearchParams(window.location.search).get('debug') === 'true';
+let DEBUG_SHOW_CPU_CARDS = ISDEBUG;
+if (ISDEBUG) {
+  console.info('🛠️ Modalità Debug attiva');
+  const { initDebugUI } = await import('../../dev/test/test-buttons.js');
+  initDebugUI();
+}
 
 const gameState = new GameState(['Io', ...pickRandomNames(3)]);
 let playCounter = 0;
@@ -52,8 +65,6 @@ let gameFlowVersion = 0;
 const buscheTracker = new BuscheTracker(document.getElementById('busche-note'), { gameState });
 const gameOverOverlay = new GameOverOverlay();
 const computerPlayer = new ComputerPlayer();
-
-let DEBUG_SHOW_CPU_CARDS = false;
 
 function isHumanPlayer(player) {
   return player?.id === 0;
@@ -213,7 +224,7 @@ async function playComputerTurn(flowVersion) {
   const player = gameState.getCurrentPlayer();
   if (!player || !player.isComputer) return false;
 
-  const card = computerPlayer.chooseCard(gameState, player.id);
+  const card = computerPlayer.chooseCard(gameState, player.id, ISDEBUG);
   if (!card) {
     console.error(`ComputerPlayer non ha scelto alcuna carta per ${player.name}`);
     return false;

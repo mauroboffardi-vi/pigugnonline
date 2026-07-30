@@ -72,9 +72,7 @@ Per i test rapidi di scoring e fine mano viene usato un file separato `test_butt
 
 Priorità attuali:
 
-1. Riorganizzazione dei file sorgente.
-2. AI single player in modulo separato.
-3. Carte dei bot mostrate coperte, con reveal solo alla giocata.
+2. AI single player migliorata per gestione del Pigugno e strategia di Gioco (calcolata sul numero di busche dei giocatori)
 4. Suoni associati agli eventi principali.
 5. Fumetti o dialoghi contestuali dei giocatori.
 6. Valutazione seria del multiplayer e della sua architettura.[cite:280]
@@ -82,3 +80,12 @@ Priorità attuali:
 ## Note di sviluppo
 
 Il progetto è volutamente pratico: prima si fissano regole, flusso e leggibilità del codice, poi si aggiungono feature più costose come AI avanzata o multiplayer. In altre parole, niente architettura finta: le modifiche devono risolvere problemi veri o preparare i prossimi passi in modo concreto.[cite:284]
+
+### 🛠 Modalità Debug & Strategia AI
+
+Il progetto include una modalità di debug nascosta, pensata per facilitare lo sviluppo e analizzare il comportamento del gioco senza inquinare l'interfaccia di produzione. Per attivarla, è sufficiente aggiungere il parametro `?debug=true` alla fine dell'URL (ad esempio: `.../single.html?debug=true`).
+
+Una volta attivata questa modalità:
+- **Carte scoperte:** Le carte in mano al computer verranno mostrate scoperte, rimuovendo la "nebbia di guerra".
+- **Pannello di Test:** Verrà iniettato dinamicamente un menu in sovrimpressione contenente i bottoni per testare specifici scenari di gioco.
+- **I "pensieri" dell'AI:** Aprendo la *Developer Console* del browser (tasto `F12`), potrai leggere in tempo reale i log con il ragionamento e la strategia elaborata dall'intelligenza artificiale. Questo permette di capire esattamente come l'avversario virtuale valuta il tavolo e sceglie quale carta giocare.

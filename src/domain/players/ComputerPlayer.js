@@ -17,11 +17,13 @@ import { CardSorter } from "../cards/CardSorter.js";
 - rendere le carte del computer non cliccabili
  */
 export default class ComputerPlayer {
-    static DEBUG = true;
+    static ISDEBUG = false;
     static RANDOM_PLAY_PROBABILITY = 0.00; // mettere piú avanti a 0.05 ?
 
 
-    chooseCard(gameState, playerId) {
+    chooseCard(gameState, playerId, ISDEBUG) {
+        this.ISDEBUG = ISDEBUG;
+
         const currentPlayer = gameState.getCurrentPlayer();
         if (!currentPlayer || playerId !== currentPlayer.id) {
             throw new Error(
@@ -34,7 +36,6 @@ export default class ComputerPlayer {
         if (!player) {
             throw new Error(`ComputerPlayer: giocatore ${playerId} non trovato`);
         }
-
 
         const playableCards = gameState.getPlayableCards(playerId);
         if (!playableCards.length) {
@@ -129,7 +130,7 @@ export default class ComputerPlayer {
 
 
     #log(playerName, message) {
-        if (!ComputerPlayer.DEBUG) return;
+        if (!this.ISDEBUG) return;
         console.log(`${playerName}: "${message}"`);
     }
 
