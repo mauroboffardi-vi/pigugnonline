@@ -185,3 +185,4 @@ Nota importante:
 - Migliorare naming convention per Trick, TrickEntry[] e TrickEntry[][]
 - stabilire un tipo suit condiviso
 - finestra about e display del numero di versione
+- estrarre evaluate* e altri helper da ComputerPlayer
