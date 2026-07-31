@@ -26,16 +26,15 @@ export class Card {
 
     /**
      * Restituisce la carta in formato testo descrittivo
-     * @returns descrizione della carta
+     * @returns {string} descrizione della carta
      */
     toString() {
-        return value + " di " + this.suit;
+        return this.value + " di " + this.suit;
     }
 
     /**
      * Ritorna il valore della carta in punti (3 per asso, 1 per figuure, due e tre, 0 per le flinghe)
-     * @param {*} card 
-     * @returns 
+     * @returns {number}
      */
     getPoints() {
         if (this.value === 1) return 3;
@@ -45,11 +44,18 @@ export class Card {
         return 0;
     }
 
-
+    /**
+     * returns true if the card has points (not a flinga)
+     * @returns {boolean}
+     */
     isScoringCard() {
         return this.getPoints() > 0;
     }
 
+    /**
+    * returns true if the card is the Pigugno
+    * @returns {boolean}
+    */
     isPigugno() {
         return this.suit === 'spade' && this.value === 8;
     }
@@ -85,7 +91,11 @@ export class Card {
         const imageFile = `${this.suit}_${this.getImageName()}.jpg`;
         return new URL(`../../assets/img/carte_piacentine/${imageFile}`, import.meta.url).href;
     }
-
+    /**
+     * Restituisce il percorso dell'immagine del dorso della carta.
+     *
+     * @returns {string} Il percorso assoluto dell'immagine.
+     */
     getBackImagePath() {
         const imageFile = "retro.png";
         return new URL(`../../assets/img/carte_piacentine/${imageFile}`, import.meta.url).href;

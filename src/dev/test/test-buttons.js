@@ -1,11 +1,19 @@
+import { Card } from "../../domain/cards/Card.js";
+import { GameState } from "../../domain/game/GameState.js";
+/** @import {CardAllocations, RerenderFn} from '../../domain/domain-types.js' */
+/** @import {TestApi} from '../../ui/ui-types.js' */
+
+
+/** @returns {TestApi | null} */
 function getApi() {
-    return window.__PIGUGNO_TEST_API__ || null;
+    return /** @type {any} */ (window).__PIGUGNO_TEST_API__ || null;
 }
 
-
-
-
-
+/**
+ * @param {HTMLElement | null} button
+ * @param {boolean} enabled
+ * @returns {void}
+ */
 function updateDebugButtonState(button, enabled) {
     if (!button) return;
     button.dataset.debugEnabled = enabled ? 'true' : 'false';
@@ -14,6 +22,9 @@ function updateDebugButtonState(button, enabled) {
         : 'Debug carte CPU: OFF';
 }
 
+/**
+ * @returns {{ api: TestApi, gameState: GameState }}
+ */
 function getGameStateOrThrow() {
     const api = getApi();
 
@@ -30,6 +41,10 @@ function getGameStateOrThrow() {
     return { api, gameState };
 }
 
+/**
+ * @param {GameState} gameState
+ * @returns {Card[]}
+ */
 function flattenCards(gameState) {
     const cards = [];
 
@@ -49,6 +64,10 @@ function flattenCards(gameState) {
     return cards;
 }
 
+/**
+ * @param {GameState} gameState
+ * @returns {void}
+ */
 function resetHandState(gameState) {
     gameState.phase = 'playing';
     gameState.trick = [];
@@ -68,6 +87,12 @@ function resetHandState(gameState) {
     }
 }
 
+/**
+ * 
+ * @param {Card[]} cards 
+ * @param {number} playersCount 
+ * @returns {Card[][]}
+ */
 function splitIntoTricks(cards, playersCount = 4) {
     const tricks = [];
 
@@ -80,7 +105,12 @@ function splitIntoTricks(cards, playersCount = 4) {
 
     return tricks;
 }
-
+/**
+ * 
+ * @param {GameState} gameState 
+ * @param {CardAllocations} allocations
+ * @param {number} lastHandWinnerId 
+ */
 function assignCardsAndTricks(gameState, allocations, lastHandWinnerId) {
     for (const player of gameState.players) {
         player.captures = allocations[player.id] ? [...allocations[player.id]] : [];
@@ -97,11 +127,18 @@ function assignCardsAndTricks(gameState, allocations, lastHandWinnerId) {
     gameState.phase = 'hand-ended';
     gameState.lastHandWinnerId = lastHandWinnerId;
 }
-
+/**
+ * @param {Card[]} cards
+ * @param {number} playersCount
+ * @returns {CardAllocations}
+ */
 function buildBalancedAllocations(cards, playersCount = 4) {
-    const allocations = Object.fromEntries(
-        Array.from({ length: playersCount }, (_, i) => [i, []])
-    );
+    /** @type {CardAllocations} */
+    const allocations = {};
+
+    for (let i = 0; i < playersCount; i++) {
+        allocations[i] = [];
+    }
 
     const tricks = splitIntoTricks(cards, playersCount);
 
@@ -113,9 +150,15 @@ function buildBalancedAllocations(cards, playersCount = 4) {
     return allocations;
 }
 
+/**
+ * @param {CardAllocations} allocations
+ * @returns {Card | null}
+ */
 function takePigugnoFromAllocations(allocations) {
-    for (const playerId of Object.keys(allocations)) {
+    for (const playerIdKey of Object.keys(allocations)) {
+        const playerId = Number(playerIdKey);
         const index = allocations[playerId].findIndex(
+            /** @param {Card} card */
             card => card.suit === 'spade' && card.value === 8
         );
 
@@ -127,11 +170,19 @@ function takePigugnoFromAllocations(allocations) {
 
     return null;
 }
-
+/**
+ * 
+ * @param {GameState} gameState 
+ * @param {RerenderFn} rerender 
+ */
 async function finalizeForcedHand(gameState, rerender) {
     await clearHandsThenFinalize(gameState, rerender);
 }
-
+/**
+ * 
+ * @param {GameState} gameState 
+ * @param {RerenderFn} rerender 
+ */
 async function presetNormal(gameState, rerender) {
     const cards = flattenCards(gameState);
     resetHandState(gameState);
@@ -140,7 +191,11 @@ async function presetNormal(gameState, rerender) {
     assignCardsAndTricks(gameState, allocations, 0);
     await finalizeForcedHand(gameState, rerender);
 }
-
+/**
+ * 
+ * @param {GameState} gameState 
+ * @param {RerenderFn} rerender 
+ */
 async function presetPigugnoYou(gameState, rerender) {
     const cards = flattenCards(gameState);
     resetHandState(gameState);
@@ -156,10 +211,16 @@ async function presetPigugnoYou(gameState, rerender) {
     await finalizeForcedHand(gameState, rerender);
 }
 
+/**
+ * 
+ * @param {GameState} gameState 
+ * @param {RerenderFn} rerender 
+ */
 async function presetNoCaptureYou(gameState, rerender) {
     const cards = flattenCards(gameState);
     resetHandState(gameState);
 
+    /** @type {CardAllocations} */
     const allocations = {
         0: [],
         1: [],
@@ -171,6 +232,7 @@ async function presetNoCaptureYou(gameState, rerender) {
     const winnersCycle = [1, 2, 3];
 
     tricks.forEach((trick, index) => {
+
         const winnerId = winnersCycle[index % winnersCycle.length];
         allocations[winnerId].push(...trick);
     });
@@ -179,6 +241,11 @@ async function presetNoCaptureYou(gameState, rerender) {
     await finalizeForcedHand(gameState, rerender);
 }
 
+/**
+ * 
+ * @param {GameState} gameState 
+ * @param {RerenderFn} rerender 
+ */
 async function presetTenTricksLeft(gameState, rerender) {
     const cards = flattenCards(gameState);
     resetHandState(gameState);
@@ -194,9 +261,18 @@ async function presetTenTricksLeft(gameState, rerender) {
     await finalizeForcedHand(gameState, rerender);
 }
 
+/**
+ * 
+ * @param {string} preset
+ * @returns {Promise<void>} 
+ */
 async function runPreset(preset) {
     const { api, gameState } = getGameStateOrThrow();
     const rerender = api.rerender;
+    if (rerender == null) {
+        console.warn('api.renderer is null');
+        return;
+    }
 
     switch (preset) {
         case 'normal':
@@ -219,10 +295,15 @@ async function runPreset(preset) {
     }
 }
 
+/**
+ * @param {GameState} gameState 
+ * @param {RerenderFn} rerender 
+ */
 function presetTwoNoCapture(gameState, rerender) {
     const cards = flattenCards(gameState);
     resetHandState(gameState);
 
+    /** @type {CardAllocations} */
     const allocations = {
         0: [],
         1: [],
@@ -244,10 +325,18 @@ function presetTwoNoCapture(gameState, rerender) {
     assignCardsAndTricks(gameState, allocations, lastWinnerId);
     finalizeForcedHand(gameState, rerender);
 }
+
+/**
+ * @returns {Promise<void>}
+ */
 function nextFrame() {
     return new Promise(resolve => requestAnimationFrame(() => resolve()));
 }
 
+/** 
+ * @param {GameState} gameState 
+ * @param {RerenderFn| undefined} rerender 
+ */
 async function clearHandsThenFinalize(gameState, rerender) {
     for (const player of gameState.players) {
         player.hand = [];
@@ -275,8 +364,10 @@ function wireButtons() {
     }
 
     root.addEventListener('click', async (event) => {
+        if (!(event.target instanceof Element)) return;
+
         const debugBtn = event.target.closest('[data-test-toggle-debug]');
-        if (debugBtn) {
+        if (debugBtn instanceof HTMLElement) {
             const api = getApi();
 
             if (!api || typeof api.toggleDebugShowCpuCards !== 'function') {
@@ -295,9 +386,10 @@ function wireButtons() {
         }
 
         const btn = event.target.closest('[data-test-preset]');
-        if (!btn) return;
+        if (!(btn instanceof HTMLElement)) return;
 
         const preset = btn.dataset.testPreset;
+        if (!preset) return;
 
         try {
             await runPreset(preset);
@@ -312,21 +404,10 @@ function wireButtons() {
         ? api.getDebugShowCpuCards()
         : false;
 
-    updateDebugButtonState(debugBtn, enabled);
-
-
-    root.addEventListener('click', async (event) => {
-        const btn = event.target.closest('[data-test-preset]');
-        if (!btn) return;
-
-        const preset = btn.dataset.testPreset;
-
-        try {
-            await runPreset(preset);
-        } catch (err) {
-            console.error('Errore preset test:', err);
-        }
-    });
+    updateDebugButtonState(
+        debugBtn instanceof HTMLElement ? debugBtn : null,
+        enabled
+    );
 
     console.debug('Test buttons collegati');
 }

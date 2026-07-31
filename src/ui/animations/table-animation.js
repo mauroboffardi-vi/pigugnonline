@@ -1,3 +1,7 @@
+/** @import {PlayerAreaDirections} from '../ui-types.js' */
+/** @import { TrickEntry } from "../../domain/domain-types.js" */
+
+
 /**
  * Animazioni per la gestione del tavolo, carte giocate, buttate
  *
@@ -7,14 +11,32 @@
  * - animateTrickResolution: Anima le carte vinte verso il giocatore vincitore.
  */
 
+
+/**
+ * Wait for the passed milliseconds
+ * @param {number} ms 
+ * @returns {Promise<void>}
+ */
 function wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
+/**
+ * 
+ * @param {number} min 
+ * @param {number} max 
+ * @returns {number}
+ */
 function rand(min, max) {
     return Math.round(Math.random() * (max - min) + min);
 }
 
+/**
+ * 
+ * @param {string} direction 
+ * @param {number} absDx 
+ * @param {number} absDy 
+ * @returns 
+ */
 function getArcHeight(direction, absDx, absDy) {
     if (direction === 'top' || direction === 'you' || direction === 'bottom') {
         return Math.max(60, Math.min(180, absDy * 0.22));
@@ -23,6 +45,11 @@ function getArcHeight(direction, absDx, absDy) {
     return Math.max(35, Math.min(120, absDx * 0.16));
 }
 
+/**
+ * @param {HTMLImageElement} cardImg
+ * @param {string} revealSrc
+ * @returns {Promise<void>}
+ */
 async function revealCardInFlight(cardImg, revealSrc) {
     if (!revealSrc) return;
 
@@ -65,9 +92,18 @@ async function revealCardInFlight(cardImg, revealSrc) {
     cardImg.style.transformStyle = 'flat';
 }
 
+/**
+ * @param {HTMLImageElement} img
+ * @param {HTMLElement} centerElem
+ * @param {PlayerAreaDirections} direction
+ * @param {number} zIndex
+ * @param {DOMRect | null} [startRect=null]
+ * @param {(wrapper: HTMLDivElement) => void} [onPlayed=() => {}]
+ * @param {{ onPlayed?: (wrapper: HTMLDivElement) => void, zIndex?: number, revealSrc?: string | null }} [options={}]
+ * @returns {Promise<HTMLDivElement>}
+ */
 export async function animateThrow(
     img,
-    container,
     centerElem,
     direction,
     zIndex,
@@ -92,7 +128,8 @@ export async function animateThrow(
     wrapper.style.zIndex = String(zIndex);
     wrapper.style.transformOrigin = 'center center';
 
-    const clone = img.cloneNode(true);
+    /** @type {HTMLImageElement} */
+    const clone = /** @type {HTMLImageElement} */ (img.cloneNode(true));
     clone.style.display = 'block';
     clone.style.width = '100%';
     clone.style.height = '100%';
@@ -109,6 +146,7 @@ export async function animateThrow(
     const padY = Math.max(12, centerRect.height * 0.08);
     const midY = centerRect.top + centerRect.height / 2;
 
+    /** @type {{ minX: number, maxX: number, minY: number, maxY: number }} */
     let box;
 
     if (direction === 'top') {
@@ -118,7 +156,7 @@ export async function animateThrow(
             minY: centerRect.top + padY,
             maxY: midY - rect.height - padY
         };
-    } else if (direction === 'you' || direction === 'bottom') {
+    } else if (direction === 'bottom') {
         box = {
             minX: centerRect.left + padX,
             maxX: centerRect.right - rect.width - padX,
@@ -140,12 +178,7 @@ export async function animateThrow(
             maxY: centerRect.bottom - rect.height - padY
         };
     } else {
-        box = {
-            minX: centerRect.left + padX,
-            maxX: centerRect.right - rect.width - padX,
-            minY: centerRect.top + padY,
-            maxY: centerRect.bottom - rect.height - padY
-        };
+        throw new Error('animateThrow(): Container senza direzione valida');
     }
 
     box.maxX = Math.max(box.minX, box.maxX);
@@ -208,6 +241,11 @@ export async function animateThrow(
 
 /**
  * High-level API: play a card.
+ * @param {HTMLImageElement} img
+ * @param {HTMLElement} container
+ * @param {HTMLElement} centerElem
+ * @param {{ onPlayed?: (wrapper: HTMLDivElement) => void, zIndex?: number, revealSrc?: string | null }} [opts={}]
+ * @returns {Promise<HTMLDivElement>}
  */
 export async function animatePlayCard(img, container, centerElem, opts = {}) {
     const {
@@ -216,19 +254,19 @@ export async function animatePlayCard(img, container, centerElem, opts = {}) {
         revealSrc = null
     } = opts;
 
+    /** @type {PlayerAreaDirections} */
     let direction;
     if (container.classList.contains('top')) direction = 'top';
     else if (container.classList.contains('bottom')) direction = 'bottom';
-    else if (container.classList.contains('you')) direction = 'you';
     else if (container.classList.contains('left')) direction = 'left';
     else if (container.classList.contains('right')) direction = 'right';
     else throw new Error('Container senza direzione valida');
 
     const startRect = img.getBoundingClientRect();
 
-    const clone = await animateThrow(
+
+    const flyingCard = await animateThrow(
         img,
-        container,
         centerElem,
         direction,
         zIndex,
@@ -237,11 +275,18 @@ export async function animatePlayCard(img, container, centerElem, opts = {}) {
         { revealSrc }
     );
 
-    return clone;
+    return flyingCard;
 }
 
-/*
+/**
+ * 
  * Animazione per muovere le carte vinte verso il giocatore vincitore.
+ * 
+ * @param {HTMLElement} centerElem
+ * @param {TrickEntry[]} trickEntries
+ * @param {number} winnerId
+ * @param {Map<string, HTMLElement>} cardsOnTable
+ * @returns {Promise<void>}
  */
 export async function animateTrickResolution(centerElem, trickEntries, winnerId, cardsOnTable) {
     const centerRect = centerElem.getBoundingClientRect();

@@ -1,6 +1,61 @@
+import { GameState } from "../domain/game/GameState.js";
+/** @import {HandSummary, HandSummaryPlayer} from './ui-types.js' */
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+/**
+ * @typedef {'top' | 'right' | 'bottom' | 'left'} BuscheArm
+ */
 
+/**
+ * @typedef {{ label: string, busche: number }} BuschePlayerState
+ */
+
+/**
+ * @typedef {{
+ *   players: Record<BuscheArm, BuschePlayerState>
+ * }} BuscheTrackerState
+ */
+
+/**
+ * @typedef {{
+ *   playerId: number,
+ *   name?: string,
+ *   busche?: number
+ * }} BuscheTrackerPlayerLike
+ */
+
+/**
+ * @typedef {{
+ *   players?: BuscheTrackerPlayerLike[]
+ * }} BuscheTrackerGameStateLike
+ */
+
+/**
+ * @typedef {{
+ *   playerId: number,
+ *   name?: string,
+ *   buscheAfterHand?: number,
+ *   buscheEarned?: number
+ * }} BuscheSummaryPlayerLike
+ */
+
+/**
+ * @typedef {{
+ *   players?: BuscheSummaryPlayerLike[]
+ * }} BuscheSummaryLike
+ */
+
+/**
+ * @typedef {{
+ *   gameState?: BuscheTrackerGameStateLike | null
+ * }} BuscheTrackerOptions
+ */
+
+/**
+ * @param {string} key
+ * @returns {number}
+ */
 function hashSeed(key) {
     let h = 2166136261;
     for (let i = 0; i < key.length; i += 1) {
@@ -10,14 +65,23 @@ function hashSeed(key) {
     return h >>> 0;
 }
 
-
+/**
+ * @param {string} key
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
 function jitter(key, min, max) {
     const seed = hashSeed(String(key));
     const t = (seed % 10000) / 10000;
     return min + (max - min) * t;
 }
 
-
+/**
+ * @param {string} tag
+ * @param {Record<string, string | number>} [attrs={}]
+ * @returns {SVGElement}
+ */
 function createSvgEl(tag, attrs = {}) {
     const el = document.createElementNS(SVG_NS, tag);
     Object.entries(attrs).forEach(([name, value]) => {
@@ -26,7 +90,14 @@ function createSvgEl(tag, attrs = {}) {
     return el;
 }
 
-
+/**
+ * @param {number} x1
+ * @param {number} y1
+ * @param {number} x2
+ * @param {number} y2
+ * @param {Record<string, string | number>} [extra={}]
+ * @returns {SVGElement}
+ */
 function createStroke(x1, y1, x2, y2, extra = {}) {
     return createSvgEl('line', {
         x1,
@@ -37,7 +108,13 @@ function createStroke(x1, y1, x2, y2, extra = {}) {
     });
 }
 
-
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {string} text
+ * @param {Record<string, string | number>} [attrs={}]
+ * @returns {SVGElement}
+ */
 function createText(x, y, text, attrs = {}) {
     const el = createSvgEl('text', {
         x,
@@ -48,10 +125,12 @@ function createText(x, y, text, attrs = {}) {
     return el;
 }
 
-
+/**
+ * @param {SVGElement} svg
+ * @returns {void}
+ */
 function buildHandDrawnStyle(svg) {
     const defs = createSvgEl('defs');
-
 
     const filter = createSvgEl('filter', {
         id: 'busche-roughen',
@@ -61,7 +140,6 @@ function buildHandDrawnStyle(svg) {
         height: '120%',
     });
 
-
     filter.appendChild(createSvgEl('feTurbulence', {
         type: 'fractalNoise',
         baseFrequency: '0.85',
@@ -69,7 +147,6 @@ function buildHandDrawnStyle(svg) {
         seed: '7',
         result: 'noise',
     }));
-
 
     filter.appendChild(createSvgEl('feDisplacementMap', {
         in: 'SourceGraphic',
@@ -79,19 +156,28 @@ function buildHandDrawnStyle(svg) {
         yChannelSelector: 'G',
     }));
 
-
     defs.appendChild(filter);
     svg.appendChild(defs);
 }
 
-
+/**
+ * @param {BuscheArm} direction
+ * @returns {SVGElement}
+ */
 function createArmGroup(direction) {
     return createSvgEl('g', {
         'data-arm': direction,
     });
 }
 
-
+/**
+ * @param {SVGElement} group
+ * @param {number} cx
+ * @param {number} cy
+ * @param {string} seedPrefix
+ * @param {number} radius
+ * @returns {void}
+ */
 function renderBuscheDot(group, cx, cy, seedPrefix, radius) {
     const dx1 = jitter(`${seedPrefix}-dx1`, -0.55, 0.55);
     const dy1 = jitter(`${seedPrefix}-dy1`, -0.55, 0.55);
@@ -99,7 +185,6 @@ function renderBuscheDot(group, cx, cy, seedPrefix, radius) {
     const dy2 = jitter(`${seedPrefix}-dy2`, -0.55, 0.55);
     const r1 = radius + jitter(`${seedPrefix}-r1`, -0.30, 0.30);
     const r2 = radius + jitter(`${seedPrefix}-r2`, -0.42, 0.42);
-
 
     const c1 = createSvgEl('circle', {
         cx: cx + dx1,
@@ -113,7 +198,6 @@ function renderBuscheDot(group, cx, cy, seedPrefix, radius) {
         opacity: '0.95',
     });
 
-
     const c2 = createSvgEl('circle', {
         cx: cx + dx2,
         cy: cy + dy2,
@@ -126,31 +210,33 @@ function renderBuscheDot(group, cx, cy, seedPrefix, radius) {
         opacity: '0.72',
     });
 
-
     group.appendChild(c1);
     group.appendChild(c2);
 }
 
-
+/**
+ * @param {SVGElement} group
+ * @param {'up' | 'down' | 'left' | 'right'} direction
+ * @param {number} count
+ * @param {number} armLength
+ * @param {string} seedPrefix
+ * @returns {void}
+ */
 function renderBuscheMarks(group, direction, count, armLength, seedPrefix) {
     const visibleDots = Math.min(Math.max(0, count), 10);
     const gap = 8;
     const start = 10;
     const dotRadius = 2.35;
-    const separatorLength = dotRadius * 8.4;
-
 
     for (let i = 0; i < visibleDots; i += 1) {
         const step = i + 1;
         const pos = start + (i * gap);
-
 
         const mark = createSvgEl('g', {
             'data-busca-index': String(i),
             'data-busca-value': String(step),
             'data-busca-milestone': 'false',
         });
-
 
         if (direction === 'up' || direction === 'down') {
             const y = direction === 'up' ? -pos : pos;
@@ -160,31 +246,34 @@ function renderBuscheMarks(group, direction, count, armLength, seedPrefix) {
             renderBuscheDot(mark, x, 0, `${seedPrefix}-dot-${step}`, dotRadius);
         }
 
-
         group.appendChild(mark);
     }
-
 
     if (visibleDots >= 5) {
         const separatorPos = start + (5 * gap) - (gap * 0.35);
 
-
         if (direction === 'up' || direction === 'down') {
             const y = direction === 'up' ? -separatorPos : separatorPos;
-            renderBuscheSeparator(group, 0, y, 'vertical', `${seedPrefix}-sep-5`, separatorLength);
+            renderBuscheSeparator(group, 0, y, 'vertical', `${seedPrefix}-sep-5`);
         } else {
             const x = direction === 'left' ? -separatorPos : separatorPos;
-            renderBuscheSeparator(group, x, 0, 'horizontal', `${seedPrefix}-sep-5`, separatorLength);
+            renderBuscheSeparator(group, x, 0, 'horizontal', `${seedPrefix}-sep-5`);
         }
     }
 }
 
-
-function renderBuscheSeparator(group, cx, cy, orientation, seedPrefix, baseLength) {
+/**
+ * @param {SVGElement} group
+ * @param {number} cx
+ * @param {number} cy
+ * @param {'vertical' | 'horizontal'} orientation
+ * @param {string} seedPrefix
+ * @returns {void}
+ */
+function renderBuscheSeparator(group, cx, cy, orientation, seedPrefix) {
     const wobble = jitter(`${seedPrefix}-wobble`, -0.8, 0.8);
     const tilt = jitter(`${seedPrefix}-tilt`, -10, 10);
     const length = 20 + jitter(`${seedPrefix}-len`, 2, 6);
-
 
     let x1;
     let y1;
@@ -192,7 +281,6 @@ function renderBuscheSeparator(group, cx, cy, orientation, seedPrefix, baseLengt
     let y2;
     const pivotX = cx;
     const pivotY = cy;
-
 
     if (orientation === 'vertical') {
         x1 = cx - length / 2;
@@ -206,7 +294,6 @@ function renderBuscheSeparator(group, cx, cy, orientation, seedPrefix, baseLengt
         y2 = cy + length / 2;
     }
 
-
     const line = createStroke(x1, y1, x2, y2, {
         stroke: '#25334a',
         'stroke-width': '2.6',
@@ -216,33 +303,34 @@ function renderBuscheSeparator(group, cx, cy, orientation, seedPrefix, baseLengt
         'data-busche-separator': 'true',
     });
 
-
     group.appendChild(line);
 }
 
-
+/**
+ * @param {SVGElement} group
+ * @param {'up' | 'down' | 'left' | 'right'} direction
+ * @param {number} totalBusche
+ * @param {number} armLength
+ * @param {string} seedPrefix
+ * @returns {void}
+ */
 function createArmEndCross(group, direction, totalBusche, armLength, seedPrefix) {
     if (totalBusche < 10) return;
-
 
     let cx = 0;
     let cy = 0;
     const offset = armLength - 2;
-
 
     if (direction === 'up') cy = -offset;
     if (direction === 'down') cy = offset;
     if (direction === 'left') cx = -offset;
     if (direction === 'right') cx = offset;
 
-
     const size = 7.5 + jitter(`${seedPrefix}-out-size`, -1.2, 2.2);
-
 
     const g = createSvgEl('g', {
         'data-out-cross': direction,
     });
-
 
     g.appendChild(createStroke(
         cx - size,
@@ -258,7 +346,6 @@ function createArmEndCross(group, direction, totalBusche, armLength, seedPrefix)
         }
     ));
 
-
     g.appendChild(createStroke(
         cx - size,
         cy + size,
@@ -273,19 +360,23 @@ function createArmEndCross(group, direction, totalBusche, armLength, seedPrefix)
         }
     ));
 
-
     group.appendChild(g);
 }
 
-
+/**
+ * @param {SVGElement} group
+ * @param {'up' | 'down' | 'left' | 'right'} direction
+ * @param {string} label
+ * @param {number} armLength
+ * @param {string} seedPrefix
+ * @returns {void}
+ */
 function createArmLabel(group, direction, label, armLength, seedPrefix) {
     if (!label) return;
-
 
     let x = 0;
     let y = 0;
     let rotation = 0;
-
 
     if (direction === 'up') {
         y = -(armLength + 16);
@@ -304,7 +395,6 @@ function createArmLabel(group, direction, label, armLength, seedPrefix) {
         rotation = 90 + jitter(`${seedPrefix}-label-rot`, -2, 2);
     }
 
-
     const text = createText(x, y, label, {
         fill: '#25334a',
         'text-anchor': 'middle',
@@ -313,10 +403,10 @@ function createArmLabel(group, direction, label, armLength, seedPrefix) {
         'data-arm-label': direction,
     });
 
-
     group.appendChild(text);
 }
 
+/** @type {Record<number, BuscheArm>} */
 const PLAYER_ID_TO_ARM = {
     2: 'top',
     3: 'right',
@@ -324,6 +414,7 @@ const PLAYER_ID_TO_ARM = {
     1: 'left',
 };
 
+/** @type {Record<BuscheArm, number>} */
 const ARM_TO_PLAYER_ID = {
     top: 2,
     right: 3,
@@ -332,15 +423,24 @@ const ARM_TO_PLAYER_ID = {
 };
 
 export default class BuscheTracker {
-    constructor(container, options = {}) {
+    /**
+     * @param {HTMLElement} container
+     * @param {GameState} gameState
+     */
+    constructor(container, gameState) {
         if (!container) {
             throw new Error('BuscheTracker: container mancante');
         }
 
+        /** @type {HTMLElement} */
         this.container = container;
-        this.options = options;
-        this.gameState = options.gameState || null;
 
+        this.gameState = gameState;
+
+        /** @type {HTMLDivElement | null} */
+        this.svgWrap = null;
+
+        /** @type {BuscheTrackerState} */
         this.state = {
             players: {
                 top: { label: '', busche: 0 },
@@ -359,6 +459,9 @@ export default class BuscheTracker {
         }
     }
 
+    /**
+     * @returns {void}
+     */
     ensureShell() {
         this.container.classList.add('busche-note-slot');
         this.container.innerHTML = `
@@ -368,21 +471,34 @@ export default class BuscheTracker {
         </div>
       </div>
     `;
-        this.svgWrap = this.container.querySelector('.busche-note-svg-wrap');
+        this.svgWrap = /** @type {HTMLDivElement | null} */ (
+            this.container.querySelector('.busche-note-svg-wrap')
+        );
     }
 
+    /**
+     * @param {GameState} gameState
+     * @returns {void}
+     */
     setPlayersByState(gameState) {
         if (!gameState || !Array.isArray(gameState.players)) return;
+
+        console.debug('BuscheTracker players', gameState.players);
+        console.debug('top player', gameState.players?.[2]);
+        console.debug('right player', gameState.players?.[3]);
+        console.debug('bottom player', gameState.players?.[0]);
+        console.debug('left player', gameState.players?.[1]);
 
         this.gameState = gameState;
 
         Object.entries(ARM_TO_PLAYER_ID).forEach(([arm, playerId]) => {
+            const typedArm = /** @type {BuscheArm} */ (arm);
             const player = gameState.players?.[playerId];
             const busche = Math.max(0, Number(player?.busche) || 0);
             const baseName = (player?.name || '').trim();
             const label = busche >= 10 ? `${baseName} (${busche})` : baseName;
 
-            this.state.players[arm] = {
+            this.state.players[typedArm] = {
                 label,
                 busche,
             };
@@ -391,6 +507,11 @@ export default class BuscheTracker {
         this.render();
     }
 
+    /**
+     * @param {HandSummary} summary
+     * @param {GameState} [gameState]
+     * @returns {void}
+     *
     updateFromSummary(summary, gameState) {
         if (gameState) {
             this.setPlayersByState(gameState);
@@ -416,7 +537,13 @@ export default class BuscheTracker {
 
         this.render();
     }
+        */
 
+    /**
+     * @param {number} playerId
+     * @param {number} value
+     * @returns {void}
+     */
     setPlayerBusche(playerId, value) {
         const arm = PLAYER_ID_TO_ARM[playerId];
         if (!arm) return;
@@ -434,17 +561,31 @@ export default class BuscheTracker {
         this.render();
     }
 
+    /**
+     * @param {number} playerId
+     * @param {number} [amount=1]
+     * @returns {void}
+     */
     incrementPlayerBusche(playerId, amount = 1) {
         const current = this.getPlayerBusche(playerId);
         this.setPlayerBusche(playerId, current + amount);
     }
 
+    /**
+     * @param {number} playerId
+     * @returns {number}
+     */
     getPlayerBusche(playerId) {
         const arm = PLAYER_ID_TO_ARM[playerId];
         if (!arm) return 0;
-        return Math.max(0, Number(this.state.players?.[arm]?.busche) || 0);
+        return Math.max(0, Number(this.state.players[arm]?.busche) || 0);
     }
 
+    /**
+     * @param {number} playerId
+     * @param {string} label
+     * @returns {void}
+     */
     setPlayerLabel(playerId, label) {
         const arm = PLAYER_ID_TO_ARM[playerId];
         if (!arm) return;
@@ -461,10 +602,19 @@ export default class BuscheTracker {
         this.render();
     }
 
+    /**
+     * @param {string} label
+     * @returns {string}
+     */
     extractBaseLabel(label) {
         return String(label || '').replace(/\s*\(\d+\)\s*$/, '').trim();
     }
 
+    /**
+     * @param {BuscheArm} arm
+     * @param {number} buscaIndex
+     * @returns {Element | null}
+     */
     getTickElement(arm, buscaIndex) {
         if (!this.svgWrap) return null;
         return this.svgWrap.querySelector(
@@ -472,6 +622,11 @@ export default class BuscheTracker {
         );
     }
 
+    /**
+     * @param {number} playerId
+     * @param {number} value
+     * @returns {void}
+     */
     markBusca(playerId, value) {
         const arm = PLAYER_ID_TO_ARM[playerId];
         if (!arm) return;
@@ -496,6 +651,9 @@ export default class BuscheTracker {
         );
     }
 
+    /**
+     * @returns {void}
+     */
     render() {
         if (!this.svgWrap) return;
 

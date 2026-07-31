@@ -1,10 +1,14 @@
 // src/game/GameState.js
 import { Deck } from '../cards/Deck.js';
+import { Card } from '../cards/Card.js';
 import { CardSorter } from '../cards/CardSorter.js';
+/** @import {TrickEntry, PlayerHandSummary, Player, LastHandSummary} from '../domain-types.js' */
+
 
 /**
  * Rappresenta lo stato della partita singola.
  */
+
 export class GameState {
     /**
      * Crea il nuovo stato di gioco.
@@ -14,6 +18,7 @@ export class GameState {
     constructor(playerNames) {
         this.playerNames = playerNames;
 
+        /** @type {Player[]} */
         this.players = playerNames.map((name, index) => ({
             id: index,
             name,
@@ -30,12 +35,17 @@ export class GameState {
         this.deck = null;
         this.currentTurn = 0;
         this.phase = 'setup';
+        /** @type {import('../domain-types.js').TrickEntry[]} */
         this.trick = [];
         this.trumpSuit = 'spade';
+        /** @type {((winnerPlayerId: number, resolvedTrick: TrickEntry[]) => void) | null} */
         this.onTrickResolved = null;
+        /** @type {((summary: LastHandSummary) => void) | null} */
         this.onHandEnded = null;
 
         this.isFirstTrick = true;
+        /** @type {TrickEntry[][]} */
+        this.completedTricks = [];
 
         this.handNumber = 1;
         this.dealerId = null;
@@ -76,7 +86,10 @@ export class GameState {
         while (this.deck.cards.length > 0 && playersInOrder.some((player) => player.hand.length < 10)) {
             for (const player of playersInOrder) {
                 if (player.hand.length < 10 && this.deck.cards.length > 0) {
-                    player.hand.push(this.deck.cards.shift());
+                    const card = this.deck.cards.shift();
+                    if (card) {
+                        player.hand.push(card);
+                    }
                 }
             }
         }
@@ -116,6 +129,12 @@ export class GameState {
         return true;
     }
 
+    /**
+     * 
+     * @param {number} playerId 
+     * @param {number} cardId 
+     * @returns 
+     */
     playCard(playerId, cardId) {
         if (this.phase !== 'playing') return false;
         if (playerId !== this.currentTurn) {
@@ -155,8 +174,9 @@ export class GameState {
     /**
      * Controlla se una carta può essere giocata.
      *
-     * @param {object} card - La carta da controllare.
+     * @param {Card} card - La carta da controllare.
      * @param {number} playerId - L'ID del giocatore che sta giocando la carta.
+     * @param {{ verbose?: boolean }} [options]
      * @returns {boolean}
      */
     canPlayCard(card, playerId, { verbose = false } = {}) {
@@ -214,8 +234,8 @@ export class GameState {
 
     /**
      * Restutuisce le carte che il giocatore puó giocare in questo momento.
-     * @param {*} playerId 
-     * @returns {Cards[]} un array delle possibili carte giocabili
+     * @param {number} playerId 
+     * @returns {Card[]} un array delle possibili carte giocabili
      */
     getPlayableCards(playerId) {
         const player = this.getPlayerById(playerId);
@@ -240,6 +260,8 @@ export class GameState {
 
     /**
      * Restituisce le carte sul tavolo. 
+     * 
+     * @returns {TrickEntry[]}
      */
 
     getCurrentTrick() {
@@ -289,6 +311,11 @@ getHandNumber() */
     resolveTrick() {
         console.debug('Fine della mano.');
 
+        if (this.deck == null) {
+            console.warn("Deck null?");
+            return;
+        }
+
         const resolvedTrick = [...this.trick];
         const leadingSuit = resolvedTrick[0].card.suit;
         const candidates = resolvedTrick.filter(({ card }) => card.suit === leadingSuit);
@@ -304,6 +331,7 @@ getHandNumber() */
 
         console.debug(`la presa è di ${winner.player.name}`);
 
+        this.completedTricks.push(resolvedTrick);
         if (typeof this.onTrickResolved === 'function') {
             this.onTrickResolved(winner.player.id, resolvedTrick);
         }
@@ -320,6 +348,7 @@ getHandNumber() */
     }
 
     finalizeHand() {
+        /** @type {PlayerHandSummary[]} */
         const summaryPlayers = this.players.map(player => {
             const points = this.calculatePointsFromCaptures(player.captures);
             const tricks = player.capturedTricks;
@@ -346,18 +375,22 @@ getHandNumber() */
         const buscheMap = this.calculateBuscheForHand(summaryPlayers);
 
         summaryPlayers.forEach(p => {
+            /** @type {Player | undefined} */
             const player = this.players.find(x => x.id === p.playerId);
-            const earned = buscheMap.get(p.playerId) || 0;
-            const before = player.busche;
+            if (player != null) {
+                const earned = buscheMap.get(p.playerId) || 0;
+                const before = player.busche;
 
-            p.buscheBeforeHand = before;
-            p.buscheEarned = earned;
+                p.buscheBeforeHand = before;
+                p.buscheEarned = earned;
 
-            player.pointsThisHand = p.points;
-            player.buscheThisHand = earned;
-            player.busche = before + earned;
+                player.pointsThisHand = p.points;
+                player.buscheThisHand = earned;
+                player.busche = before + earned;
 
-            p.buscheAfterHand = player.busche;
+                p.buscheAfterHand = player.busche;
+            }
+
         });
 
         const pigugnoWinner = summaryPlayers.find(p => p.hasPigugno) || null;
@@ -387,11 +420,18 @@ getHandNumber() */
         }
     }
 
+    /**
+     * @param {Card[]} cards 
+     * @returns 
+     */
     calculatePointsFromCaptures(cards) {
         return cards.reduce((sum, card) => sum + card.getPoints(), 0);
     }
 
-
+    /**
+     * @param {PlayerHandSummary[]} playersSummary
+     * @returns {Map<number, number>}
+     */
     calculateBuscheForHand(playersSummary) {
         const result = new Map(playersSummary.map(p => [p.playerId, 0]));
         const noCapturePlayers = playersSummary.filter(p => p.tricks === 0);
@@ -429,6 +469,11 @@ getHandNumber() */
         return result;
     }
 
+    /**
+     * Determina il numero di busche in base al punteggio
+     * @param {number} points 
+     * @returns 
+     */
     pointsToBusche(points) {
         if (points <= 17) return 1;
         if (points >= 18 && points <= 20) return 2;
@@ -438,14 +483,30 @@ getHandNumber() */
         return 1;
     }
 
+    /**
+     * @param {number} playerId 
+     * @returns {Player}
+     */
     getPlayerById(playerId) {
-        return this.players.find(player => player.id === playerId) || null;
+        const player = this.players.find(player => player.id === playerId);
+        if (player == null) {
+            throw new Error(
+                `GameState.getPlayerById(): Player with id ${playerId} not found (??)`
+            );
+        }
+        return player;
     }
-
+    /**
+     * @param {number} playerId 
+     * @returns {number}
+     */
     getNextPlayerId(playerId) {
         return (playerId + 1) % this.players.length;
     }
 
+    /**
+     * @returns {Player}
+     */
     getCurrentPlayer() {
         return this.players[this.currentTurn];
     }
@@ -481,11 +542,11 @@ getHandNumber() */
     /**
      * Restituisce la stringa di stato per il numero di presi di un giocatore.
      *
-     * @param {Object} player - L'oggetto del giocatore.
-     * @param {null} [viewerPlayerId=null]  - l'id del giocatore dalla cui prospettiva si gioca. usato per gestire prima/terza persona
+     * @param {Player} player - L'oggetto del giocatore.
+     * @param {number} viewerPlayerId  - l'id del giocatore dalla cui prospettiva si gioca. usato per gestire prima/terza persona
      * @returns {string} La stringa di stato.
     */
-    getPlayerCaptureStatus(player, viewerPlayerId = null) {
+    getPlayerCaptureStatus(player, viewerPlayerId) {
         const capturesCount = Math.floor(player.captures.length / this.players.length);
 
         const isSelf = player.id === viewerPlayerId;
@@ -500,8 +561,8 @@ getHandNumber() */
     /**
      * Ottiene le carte catturate da un giocatore specifico.
      *
-     * @param {Object} player - L'oggetto del giocatore.
-     * @returns {Array} Un array di carte catturate.
+     * @param {Player} player - L'oggetto del giocatore.
+     * @returns {Card[]} Un array di carte catturate.
      */
     getCapturedCards(player) {
         return player.captures;
@@ -510,7 +571,7 @@ getHandNumber() */
     /**
      * Trova l'indice della carta nella mano del giocatore.
      *
-     * @param {Object} player - L'oggetto del giocatore.
+     * @param {Player} player - L'oggetto del giocatore.
      * @param {number|string} cardId - L'ID della carta da cercare.
      * @returns {number} L'indice della carta nella mano del giocatore, o -1 se non esiste.
      */
@@ -562,7 +623,6 @@ getHandNumber() */
     /**
      * controlla se la partita sia terminata
      */
-    // GameState.js
 
     computeGameOverState() {
         console.debug("computeGameOverState()");
@@ -573,6 +633,7 @@ getHandNumber() */
         const active = this.players.filter(p => p.busche < BUSCHE_LIMIT);
 
         let isGameOver = false;
+        /** @type {Player[]} */
         let winners = [];
         let isDoubleWin = false;
         let message = "";
@@ -609,6 +670,10 @@ getHandNumber() */
         return { isGameOver, winners, isDoubleWin, message };
     }
 
+    /**
+     * 
+     * @returns {boolean}
+     */
     checkGameOver() {
         console.debug('CheckGameOver()');
         const state = this.computeGameOverState();

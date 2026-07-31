@@ -3,6 +3,11 @@
 ## Obiettivo
 Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priorità non è aggiungere altro codice, ma ridurre l'accoppiamento, separare le responsabilità e preparare una base che regga AI, multiplayer e UX aggiuntiva.
 
+BUGS
+- (blocker) Visto giocare il pigno di rifiuto di prima mano, dovrebbe essere impossibile
+- (low) a volte le carte lanciate sul tavolo si sovrappongono troppo e quella sotto non si legge. Troppo complicato il drag and drop?
+
+
 ## Priorità 1, struttura del codice
 
 ### 1. Refactoring di `animation.js` - fatto
@@ -163,6 +168,7 @@ Nota importante:
 
 **Risultato atteso:** decisione realistica su fattibilità, complessità e limiti.
 
+### 9. migrare a TypeScript?
 
 ## Note strategiche
 
@@ -176,3 +182,6 @@ Nota importante:
 - Cercare funzioni o moduli che leggono o modificano stato di altri componenti direttamente.
 - Valutare introduzione di test minimi sulle regole di gioco e sul calcolo busche.
 - Documentare API interne dei moduli principali prima che il progetto cresca ancora.
+- Migliorare naming convention per Trick, TrickEntry[] e TrickEntry[][]
+- stabilire un tipo suit condiviso
+- finestra about e display del numero di versione

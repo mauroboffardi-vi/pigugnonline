@@ -2,15 +2,33 @@
  * Animazione dei punteggi fine mano e fine partita
  *  
  */
+/** @import {HandSummary, HandSummaryPlayer} from '../ui-types.js' */
+import { Card } from "../../domain/cards/Card.js";
+import { GameState } from "../../domain/game/GameState.js";
+import BuscheTracker from "../BuscheTracker.js";
 
+/**
+ * 
+ * @param {number} min 
+ * @param {number} max 
+ * @returns {number}
+ */
 function rand(min, max) {
     return Math.round(Math.random() * (max - min) + min);
 }
-
+/**
+ * 
+ * @param {number} ms 
+ * @returns {Promise<void>}
+ */
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+* @param {"top" | "left" | "right" | "you" | "bottom"} positionClass
+* @returns {DOMRect | null}
+*/
 function getPlayerAnchorRect(positionClass) {
     const byId = {
         top: 'player-top',
@@ -25,17 +43,25 @@ function getPlayerAnchorRect(positionClass) {
     return el.getBoundingClientRect();
 }
 
+/**
+ * @param {Card} card
+ * @param {string} [className]
+ * @returns {HTMLDivElement}
+ */
 function createScoreCard(card, className = '') {
     const el = document.createElement('div');
     el.className = `summary-card ${className}`.trim();
-    el.dataset.cardId = card.id;
+    el.dataset.cardId = card.id.toString();
 
-    const src = card.imagePath || card.image || '';
+    const src = card.imagePath;
     el.innerHTML = `<img src="${src}" alt="${card.value} di ${card.suit}">`;
 
     return el;
 }
-
+/**
+ * @param {number} playerId
+ * @returns {"you" | "left" | "top" | "right"}
+ */
 function getPositionClassByPlayerId(playerId) {
     switch (playerId) {
         case 0: return 'you';
@@ -46,15 +72,43 @@ function getPositionClassByPlayerId(playerId) {
     }
 }
 
+/**
+ * @param {HandSummary} summary
+ * @param {GameState} gameState
+ * @param {BuscheTracker} buscheTracker
+ * @returns {Promise<void>}
+ */
 export async function animateHandSummary(summary, gameState, buscheTracker) {
+    /** @type {HTMLDivElement} */
     const overlay = ensureSummaryLayer();
     overlay.classList.add('visible');
 
-    overlay.querySelector('.summary-cards-layer').innerHTML = '';
+    /** @type {HTMLDivElement | null} */
+    const cardsLayer = /** @type {HTMLDivElement | null} */ (
+        overlay.querySelector('.summary-cards-layer')
+    );
+    if (cardsLayer) {
+        cardsLayer.innerHTML = '';
+    }
+
     overlay.querySelectorAll('.summary-score').forEach((el) => {
         el.classList.remove('visible');
-        el.querySelector('.summary-points-value').textContent = '';
-        el.querySelector('.summary-busche').innerHTML = '';
+
+        /** @type {HTMLDivElement | null} */
+        const pointsValue = /** @type {HTMLDivElement | null} */ (
+            el.querySelector('.summary-points-value')
+        );
+        if (pointsValue) {
+            pointsValue.textContent = '';
+        }
+
+        /** @type {HTMLDivElement | null} */
+        const buscheEl = /** @type {HTMLDivElement | null} */ (
+            el.querySelector('.summary-busche')
+        );
+        if (buscheEl) {
+            buscheEl.innerHTML = '';
+        }
     });
 
     const everyoneCovered = summary.players.every(p => p.tricks > 0);
@@ -91,15 +145,24 @@ export async function animateHandSummary(summary, gameState, buscheTracker) {
     await sleep(500);
 }
 
+/**
+ * @param {HandSummaryPlayer} playerSummary
+ * @param {boolean} everyoneCovered
+ * @returns {Promise<void>}
+ */
 async function scatterScoringCardsForPlayer(playerSummary, everyoneCovered) {
     const pos = getPositionClassByPlayerId(playerSummary.playerId);
     const rect = getPlayerAnchorRect(pos);
     if (!rect) return;
 
     const cards = playerSummary.scoringCards.filter(
-        card => !(card.suit === 'spade' && card.value === 8)
+        card => !card.isPigugno()
     );
+    /** @type {HTMLDivElement | null} */
     const layer = ensureSummaryLayer().querySelector('.summary-cards-layer');
+    if (layer == null) {
+        return;
+    }
 
     for (const card of cards) {
         const node = createScoreCard(card);
@@ -109,7 +172,7 @@ async function scatterScoringCardsForPlayer(playerSummary, everyoneCovered) {
         const baseY = rect.top + rect.height / 2;
 
         const spreadX = pos === 'left' || pos === 'right' ? 50 : 140;
-        const spreadY = pos === 'top' || pos === 'you' || pos === 'bottom' ? 50 : 140;
+        const spreadY = pos === 'top' || pos === 'you' ? 50 : 140;
 
         const x = baseX + rand(-spreadX, spreadX);
         const y = baseY + rand(-spreadY, spreadY);
@@ -143,16 +206,19 @@ async function scatterScoringCardsForPlayer(playerSummary, everyoneCovered) {
 
 /**
  * Mostra il pigugno dopo il reveal delle prese, alla fine di ciascuna mano.
- * @param {*} card 
- * @param {*} playerId 
+ * @param {Card} card 
+ * @param {number} playerId 
  */
 async function showPigugnoCenter(card, playerId) {
     const pos = getPositionClassByPlayerId(playerId);
     const rect = getPlayerAnchorRect(pos);
 
+    /** @type {HTMLDivElement | null} */
     const layer = ensureSummaryLayer().querySelector('.summary-cards-layer');
     const node = createScoreCard(card, 'pigugno-center');
-    layer.appendChild(node);
+    if (layer != null) {
+        layer.appendChild(node);
+    }
 
     // Ancora sopra la zona prese del vincitore, con offset casuale minimo
     const anchorX = rect ? rect.left + rect.width / 2 + rand(-40, 40) : window.innerWidth / 2;
@@ -186,15 +252,22 @@ async function showPigugnoCenter(card, playerId) {
     await anim.finished;
 }
 
+/**
+ * @param {HandSummaryPlayer} playerSummary
+ * @returns {Promise<void>}
+ */
 async function animatePlayerPoints(playerSummary) {
     const overlay = ensureSummaryLayer();
     const pos = getPositionClassByPlayerId(playerSummary.playerId);
+    /** @type {HTMLDivElement | null} */
     const area = overlay.querySelector(`.summary-score.${pos}`);
     if (!area) return;
 
     area.classList.add('visible');
 
+    /** @type {HTMLDivElement | null} */
     const pointsEl = area.querySelector('.summary-points-value');
+    if (!pointsEl) return;
 
     // se non ha punti, non mostrare niente. Altrimenti parti da 0 e poi incerementa
     if (playerSummary.points == 0) {
@@ -206,6 +279,12 @@ async function animatePlayerPoints(playerSummary) {
     await countUp(pointsEl, playerSummary.points, 900);
 }
 
+/**
+ * @param {HandSummary} summary
+ * @param {GameState} gameState
+ * @param {BuscheTracker} buscheTracker
+ * @returns {Promise<void>}
+ */
 async function animatePlayerBusche(summary, gameState, buscheTracker) {
     if (!summary || !buscheTracker) return;
 
@@ -239,6 +318,12 @@ async function animatePlayerBusche(summary, gameState, buscheTracker) {
     }
 }
 
+/**
+ * @param {HTMLElement} el
+ * @param {number} target
+ * @param {number} [duration]
+ * @returns {Promise<void>}
+ */
 async function countUp(el, target, duration = 1000) {
     if (target <= 0) {
         el.textContent = '';
@@ -248,6 +333,9 @@ async function countUp(el, target, duration = 1000) {
     const start = performance.now();
 
     return new Promise(resolve => {
+        /**
+         * @param {number} now
+        */
         function tick(now) {
             const progress = Math.min(1, (now - start) / duration);
             const value = Math.max(0, Math.floor(progress * target));
@@ -264,6 +352,10 @@ async function countUp(el, target, duration = 1000) {
     });
 }
 
+/**
+ * @param {HandSummary} summary
+ * @returns {HandSummaryPlayer[]}
+ */
 function getOrderedPlayersFromStartingPlayer(summary) {
     const ids = summary.players.map(p => p.playerId);
     const startIndex = ids.indexOf(summary.startingPlayerId);
@@ -274,8 +366,11 @@ function getOrderedPlayersFromStartingPlayer(summary) {
         ...summary.players.slice(0, startIndex)
     ];
 }
-
+/**
+ * @returns {HTMLDivElement}
+ */
 function ensureSummaryLayer() {
+    /** @type {HTMLDivElement | null} */
     let layer = document.querySelector('.hand-summary-overlay');
     if (layer) return layer;
 
@@ -309,6 +404,9 @@ function ensureSummaryLayer() {
     return layer;
 }
 
+/**
+ * @returns {void}
+ */
 export function clearHandSummaryOverlay() {
     const layer = document.querySelector('.hand-summary-overlay');
     if (!layer) return;

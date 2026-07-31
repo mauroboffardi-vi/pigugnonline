@@ -1,4 +1,7 @@
 // src/game/single.js
+/** @import { Player, TrickEntry } from "../../domain/domain-types.js" */
+/** @import { HandSummary } from "../../ui/ui-types.js" */
+import { Card } from '../../domain/cards/Card.js';
 import { GameState } from '../../domain/game/GameState.js';
 import { pickRandomNames } from '../../domain/players/player-names.js';
 import ComputerPlayer from '../../domain/players/ComputerPlayer.js';
@@ -9,6 +12,10 @@ import { animateHandSummary, clearHandSummaryOverlay } from '../../ui/animations
 import BuscheTracker from '../../ui/BuscheTracker.js';
 
 
+/**
+ * @param {Card} card
+ * @param {{ faceUp?: boolean, extraClass?: string }} [options={}]
+ */
 function createCardMarkup(card, options = {}) {
   const {
     faceUp = true,
@@ -62,18 +69,40 @@ let isResolvingTrick = false;
 let isAdvancingGameFlow = false;
 let gameFlowVersion = 0;
 
-const buscheTracker = new BuscheTracker(document.getElementById('busche-note'), { gameState });
+const buscheNoteEl = document.getElementById('busche-note');
+if (!buscheNoteEl) {
+  throw new Error('Elemento #busche-note non trovato');
+}
+
+const buscheTracker = new BuscheTracker(buscheNoteEl, gameState);
 const gameOverOverlay = new GameOverOverlay();
 const computerPlayer = new ComputerPlayer();
 
+/**
+ * 
+ * @param {Player} player 
+ * @returns {boolean}
+ */
 function isHumanPlayer(player) {
+  // 0 corrisponde al giocatore "in basso", detto anche "you"
   return player?.id === 0;
 }
 
+/**
+ * 
+ * @param {Player} player 
+ * @returns {boolean}
+ */
 function shouldShowCardFace(player) {
   return isHumanPlayer(player) || DEBUG_SHOW_CPU_CARDS;
 }
 
+/**
+ * 
+ * @param {HTMLElement} container 
+ * @param {Player} player 
+ * @returns {void}
+ */
 function renderPlayerArea(container, player) {
   const title = player.name;
   const captureStatus = renderPlayerStatus(player);
@@ -81,7 +110,7 @@ function renderPlayerArea(container, player) {
     .map(card => createCardMarkup(card, { faceUp: shouldShowCardFace(player) }))
     .join('');
 
-  container.dataset.playerId = player.id;
+  container.dataset.playerId = player.id.toString();
   container.innerHTML = `
     <div class="player-meta">
       <span class="player-name">${title}</span>
@@ -91,6 +120,11 @@ function renderPlayerArea(container, player) {
   `;
 }
 
+/**
+ * 
+ * @param {GameState} state 
+ * @returns {void}
+ */
 function renderBoard(state) {
   state.players.forEach((player) => {
     const container = getContainerByPlayerId(player.id);
@@ -99,26 +133,40 @@ function renderBoard(state) {
     }
   });
 
+  /** @type {HTMLElement | null} */
   const center = document.getElementById('table-center');
-  let playArea = center.querySelector('.play-area');
+  if (center != null) {
+    let playArea = center.querySelector('.play-area');
 
-  if (!playArea) {
-    playArea = document.createElement('div');
-    playArea.className = 'play-area';
-    playArea.innerHTML = '&nbsp;';
-    center.appendChild(playArea);
+    if (!playArea) {
+      playArea = document.createElement('div');
+      playArea.className = 'play-area';
+      playArea.innerHTML = '&nbsp;';
+      center.appendChild(playArea);
+    }
   }
 }
 
+/**
+ * identifica il player a seconda della playerid associato alla carta cliccata
+ * @param {HTMLDivElement} container 
+ * @returns {Player | undefined}
+ */
 function getPlayerByContainer(container) {
   const pid = container?.dataset?.playerId;
   return gameState.players.find((p) => String(p.id) === String(pid));
 }
 
-/*
+/**
 * funzione che gioca una carta, animandola sullo schermo,
 * a prescindere che sia umana o bot
-*/
+ * @param {Player} player 
+ * @param {Card} card 
+ * @param {HTMLImageElement} img 
+ * @param {HTMLElement} container 
+ * @param {number} flowVersion 
+ * @returns {Promise<boolean>}
+ */
 async function playCardWithAnimation(player, card, img, container, flowVersion = getCurrentGameFlowVersion()) {
   if (!player || !card || !img || !container) return false;
   if (isStaleFlow(flowVersion)) return false;
@@ -131,30 +179,34 @@ async function playCardWithAnimation(player, card, img, container, flowVersion =
 
   let playApplied = false;
 
+  /** @type {string | null} */
   const revealSrc =
     img.dataset.faceUp === 'true'
       ? null
-      : img.dataset.faceSrc;
+      : (img.dataset.faceSrc ?? null);
 
   const clone = await animatePlayCard(img, container, center, {
     zIndex: 1000 + playCounter,
     revealSrc,
-    onPlayed: (cloneNode) => {
+    onPlayed: (playedClone) => {
       if (isStaleFlow(flowVersion)) {
-        try { cloneNode.remove(); } catch { }
+        try { playedClone.remove(); } catch { }
         return;
       }
 
       const success = gameState.playCard(player.id, card.id);
       if (!success) {
-        try { cloneNode.remove(); } catch { }
+        try { playedClone.remove(); } catch { }
         return;
       }
 
-      cloneNode.src = img.dataset.faceSrc;
-      cloneNode.dataset.faceUp = 'true';
+      const playedImg = playedClone.querySelector('img');
+      if (playedImg instanceof HTMLImageElement) {
+        playedImg.src = img.dataset.faceSrc ?? playedImg.src;
+        playedImg.dataset.faceUp = 'true';
+      }
 
-      cardsOnTable.set(String(card.id), cloneNode);
+      cardsOnTable.set(String(card.id), playedClone);
 
       const cardItem = img.closest('.card-item');
       if (cardItem) cardItem.remove();
@@ -177,24 +229,29 @@ async function playCardWithAnimation(player, card, img, container, flowVersion =
   return true;
 }
 
-/*
+/**
  * 
- *   funzione che gestisce il click di un umano su una carta.
- *   la AI usa un'altro metodo.
- *
+ * funzione che gestisce il click di un umano su una carta.
+ * la AI usa un'altro metodo.
+ * 
+ * @param {MouseEvent} e
  */
 async function handleCardClick(e) {
   if (isResolvingTrick) return;
   if (isAdvancingGameFlow) return;
   if (gameState.phase !== 'playing') return;
+  if (!(e.target instanceof Element)) return;
 
   const img = e.target.closest('.card-image');
   if (!img) return;
+  if (!(img instanceof HTMLImageElement)) return;
 
   const cardId = img.dataset.cardId;
   if (!cardId) return;
 
-  const container = img.closest('.player-area');
+  /** @type {HTMLDivElement | null} */
+  const container = /** @type {HTMLDivElement | null} */ (img.closest('.player-area'));
+  if (!container) return;
   const player = getPlayerByContainer(container);
 
   if (!player || player.isComputer) return;
@@ -213,9 +270,10 @@ async function handleCardClick(e) {
   await continueGameFlow();
 }
 
-/*
- *. funzione che gioca il turno del computer.
- *
+/** 
+ * funzione che gioca il turno del computer.
+ * @param {number} flowVersion
+ * @returns {Promise<boolean>}
  */
 async function playComputerTurn(flowVersion) {
   if (isStaleFlow(flowVersion)) return false;
@@ -230,12 +288,14 @@ async function playComputerTurn(flowVersion) {
     return false;
   }
 
+
   const container = getContainerByPlayerId(player.id);
   if (!container) {
     console.error(`Container non trovato per il player ${player.id}`);
     return false;
   }
 
+  /** @type {HTMLImageElement | null } */
   const img = container.querySelector(`[data-card-id="${card.id}"]`);
   if (!img) {
     console.error(`Immagine carta non trovata nel DOM per cardId=${card.id}`);
@@ -281,11 +341,18 @@ async function continueGameFlow() {
   }
 }
 
+/**
+ * 
+ * @param {number} winnerId 
+ * @param {TrickEntry[]} resolvedTrick 
+ */
 async function onTrickResolved(winnerId, resolvedTrick) {
   isResolvingTrick = true;
   nextGameFlowVersion();
 
-  const center = document.getElementById('table-center');
+  /** @type {HTMLDivElement | null } */
+  const center = /** @type {HTMLDivElement | null} */ (document.getElementById('table-center'));
+  if (!center) return;
   await animateTrickResolution(center, resolvedTrick, winnerId, cardsOnTable);
 
   resolvedTrick.forEach(({ card }) => {
@@ -299,12 +366,20 @@ async function onTrickResolved(winnerId, resolvedTrick) {
   await continueGameFlow();
 }
 
+/**
+ * @param {Player} player 
+ * @returns {void}
+ */
 function openCaptureOverlay(player) {
   const capturedCards = gameState.getCapturedCards(player);
   showCaptureOverlay(capturedCards);
 }
 
+/**
+ * @returns {void}
+ */
 function refreshPlayerStatuses() {
+  /** @type {Record<number, HTMLElement | null>} */
   const mapping = {
     0: document.getElementById('player-you'),
     1: document.getElementById('player-left'),
@@ -322,6 +397,11 @@ function refreshPlayerStatuses() {
   });
 }
 
+/**
+ * 
+ * @param {Player} player 
+ * @returns {string}
+ */
 function renderPlayerStatus(player) {
   const baseStatus = gameState.getPlayerCaptureStatus(player, 0);
   const capturesCount = Math.floor(player.captures.length / gameState.players.length);
@@ -332,13 +412,22 @@ function renderPlayerStatus(player) {
   return `${baseStatus} (<a href="#" class="view-captures-link">guarda</a>)`;
 }
 
-
+/**
+ * 
+ * @param {HandSummary} summary
+ * @returns {Promise<void>}
+ */
 async function syncBuscheTrackerFromState(summary) {
   if (summary) {
     buscheTracker.setPlayersByState(gameState);
   }
 }
 
+/**
+ * 
+ * @param {HandSummary} summary 
+ * @returns 
+ */
 async function handleHandEnded(summary) {
   nextGameFlowVersion();
 
@@ -375,7 +464,13 @@ async function handleHandEnded(summary) {
   await continueGameFlow();
 }
 
+/**
+ * 
+ * @param {number} playerId 
+ * @returns {HTMLElement | null}
+ */
 function getContainerByPlayerId(playerId) {
+  /** @type {Record<number, HTMLElement | null>} */
   const mapping = {
     0: document.getElementById('player-you'),
     1: document.getElementById('player-left'),
@@ -383,39 +478,43 @@ function getContainerByPlayerId(playerId) {
     3: document.getElementById('player-right'),
   };
 
-  return mapping[playerId] || null;
+  return mapping[playerId] ?? null;
 }
 
+/** * 
+ * @param {number} ms 
+ * @returns 
+ */
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * @returns {number}
+ */
 function nextGameFlowVersion() {
   gameFlowVersion += 1;
   return gameFlowVersion;
 }
 
+/**
+ * @returns {number}
+ */
 function getCurrentGameFlowVersion() {
   return gameFlowVersion;
 }
 
+/**
+ * @param {number} version
+ * @returns {boolean}
+ */
 function isStaleFlow(version) {
   return version !== gameFlowVersion;
 }
 
-gameState.onTrickResolved = onTrickResolved;
-gameState.onHandEnded = handleHandEnded;
-
-document.addEventListener('click', handleCardClick);
-
-document.addEventListener('click', (e) => {
-  const link = e.target.closest('.view-captures-link');
-  if (!link) return;
-
-  e.preventDefault();
-  openCaptureOverlay(gameState.players[0]);
-});
-
+/**
+ * @returns {Promise<void>}
+ */
 async function bootstrapGame() {
   nextGameFlowVersion();
   gameState.startGame();
@@ -423,13 +522,32 @@ async function bootstrapGame() {
   await continueGameFlow();
 }
 
-/* QUI PARTE TUTTO */
+
+
+/** 
+ *            FINE DELLE FUNZIONI! 
+ *       QUI PARTE IL CODICE CHE VIENE ESEGUITO QUANDO LO SCRIPT É CARICATO
+ */
+
+gameState.onTrickResolved = onTrickResolved;
+gameState.onHandEnded = handleHandEnded;
+document.addEventListener('click', handleCardClick);
+document.addEventListener('click', (e) => {
+  if (!(e.target instanceof Element)) return;
+
+  const link = e.target.closest('.view-captures-link');
+  if (!link) return;
+
+  e.preventDefault();
+  openCaptureOverlay(gameState.players[0]);
+});
+
 bootstrapGame();
 
 /*
  * Hook per bottoni di test
  */
-window.__PIGUGNO_TEST_API__ = {
+/** @type {any} */ (window).__PIGUGNO_TEST_API__ = {
   getGameState: () => gameState,
   rerender: () => renderBoard(gameState),
   syncBuscheTrackerFromState,

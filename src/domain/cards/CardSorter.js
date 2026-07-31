@@ -1,13 +1,17 @@
+import { Card } from "./Card.js";
+
 /**
  * Utility per ordinare le carte secondo le regole di potenza e ordine dei semi.
  */
 export class CardSorter {
     /**
      * Restituisce il valore numerico del seme per l'ordinamento.
+     * L'ordine é coppe, denari, bastoni e spade
      * @param {string} suit
      * @returns {number}
      */
     static suitOrder(suit) {
+        /** @type {Record<string, number>} */
         const order = {
             coppe: 0,
             denari: 1,
@@ -18,12 +22,13 @@ export class CardSorter {
     }
 
     /**
-     * Restituisce il valore di "potenza" di una carta dato il suo valore numerico.
+     * Restituisce il valore di "potenza" di una carta 
      * Ordine di potenza (dal più debole al più forte): 4,5,6,7,fante(8),cavallo(9),re(10),asso(1),2,3
-     * @param {number} value
+     * @param {Card} card
      * @returns {number}
      */
-    static cardPower(value) {
+    static cardPower(card) {
+        /** @type {Record<number, number>} */
         const powerMap = {
             4: 1,
             5: 2,
@@ -36,18 +41,18 @@ export class CardSorter {
             2: 9,
             3: 10,
         };
-        return powerMap[value] ?? value;
+        return powerMap[card.value] ?? card.value;
     }
 
     /**
      * Comparator per ordinare due carte: prima per seme, poi per potenza.
-     * @param {{suit:string, value:number}} a
-     * @param {{suit:string, value:number}} b
+     * @param {Card} a
+     * @param {Card} b
      * @returns {number}
      */
     static compare(a, b) {
         if (a.suit === b.suit) {
-            return CardSorter.cardPower(a.value) - CardSorter.cardPower(b.value);
+            return CardSorter.cardPower(a) - CardSorter.cardPower(b);
         }
         return CardSorter.suitOrder(a.suit) - CardSorter.suitOrder(b.suit);
     }
@@ -55,8 +60,8 @@ export class CardSorter {
     /**
      * Ordina una mano di carte in-place usando il comparatore di potenza.
      * Restituisce la stessa array per comodità.
-     * @param {Array<{suit:string,value:number}>} hand
-     * @returns {Array}
+     * @param {Card[]} hand
+     * @returns {Card[]}
      */
     static sortHand(hand) {
         if (!Array.isArray(hand)) return hand;
