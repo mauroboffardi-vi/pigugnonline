@@ -7,6 +7,7 @@ Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priori
 - (blocker) si gioca in senso antiorario!
 - (low) a volte le carte lanciate sul tavolo si sovrappongono troppo e quella sotto non si legge. Troppo complicato il drag and drop?
 - (medium) la carte giocate sono fixed, modificando la dimensione della finestra stanno li. Come risolvere?
+- (medium) vedere come usare i css per rendere il tavolo da gioco piú adattabile alla risoluzione?
 - fixed ~~(**blocker**) a volte si ferma e dice "nessuna carta giocabile" per il computer~~
 - fixed ~~(**blocker**) Visto giocare il pigno di rifiuto di prima mano, dovrebbe essere impossibile~~
 - (improve) preload delle immagini delle carte per animazione piú fluida nella prima partita
