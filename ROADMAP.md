@@ -3,8 +3,8 @@
 ## Obiettivo
 Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priorità non è aggiungere altro codice, ma ridurre l'accoppiamento, separare le responsabilità e preparare una base che regga AI, multiplayer e UX aggiuntiva.
 
-BUGS
-- (blocker) Visto giocare il pigno di rifiuto di prima mano, dovrebbe essere impossibile
+## BUGS
+- fixed ~~(**blocker**) Visto giocare il pigno di rifiuto di prima mano, dovrebbe essere impossibile~~
 - (low) a volte le carte lanciate sul tavolo si sovrappongono troppo e quella sotto non si legge. Troppo complicato il drag and drop?
 
 

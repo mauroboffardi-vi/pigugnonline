@@ -207,8 +207,16 @@ export class GameState {
         const hasLeadingSuit = cardsOfLeadingSuit.length > 0;
 
         // Se non hai il seme richiesto, puoi rifiutare con qualsiasi carta
-        if (!hasLeadingSuit) {
-            return true;
+        // il Pigugno non si può mai giocare nella prima presa, tranne quando si risponde a spade ed è l’unica spada
+        if (this.isFirstTrick && card.isPigugno()) {
+            if (this.trick.length === 0) return false;
+
+            if (leadingSuit !== 'spade') return false;
+
+            const otherSpades = cardsOfLeadingSuit.filter(
+                c => !(c.suit === 'spade' && c.value === 8)
+            );
+            if (otherSpades.length > 0) return false;
         }
 
         // Se hai il seme richiesto, devi rispondere a seme
