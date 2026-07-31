@@ -122,6 +122,8 @@ Nota progettuale:
 
 **Risultato atteso:** feedback più vivo, senza trasformare il gioco in una slot machine.
 
+### 5.5. Automatizzare deploy
+
 ### 6. Fumetti e commenti dinamici
 **Obiettivo:** aggiungere carattere senza interferire col flusso di gioco.
 
