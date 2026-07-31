@@ -172,16 +172,27 @@ export class GameState {
     }
 
     /**
-     * Controlla se una carta può essere giocata.
-     *
-     * @param {Card} card - La carta da controllare.
-     * @param {number} playerId - L'ID del giocatore che sta giocando la carta.
-     * @param {{ verbose?: boolean }} [options]
-     * @returns {boolean}
-     */
+    * Controlla se una carta può essere giocata in questo momento.
+    *
+    * Regole implementate:
+    * - Se la presa è vuota, in generale si può aprire con qualsiasi carta.
+    * - Eccezione: nella prima presa il Pigugno non può mai essere giocato in apertura.
+    * - Se la presa è già aperta e il giocatore ha il seme di uscita, deve rispondere a seme.
+    * - Se non ha il seme di uscita, può rifiutare con qualsiasi carta.
+    * - Eccezione sul Pigugno nella prima presa:
+    *   - non si può giocare di rifiuto su un seme diverso da spade;
+    *   - si può giocare rispondendo a spade solo se è l’unica spada in mano.
+    *
+    * @param {Card} card - La carta che il giocatore vuole giocare.
+    * @param {number} playerId - ID del giocatore.
+    * @param {{ verbose?: boolean }} [options]
+    * @returns {boolean}
+    */
     canPlayCard(card, playerId, { verbose = false } = {}) {
+        // La funzione ha senso solo durante la fase di gioco.
         if (this.phase !== 'playing') return false;
 
+        // Recupero il giocatore che sta tentando la giocata.
         const player = this.players.find(p => p.id === playerId);
         if (!player) return false;
 
@@ -191,52 +202,114 @@ export class GameState {
             );
         }
 
-        // Apertura della presa
+        // -------------------------------------------------------------------------
+        // 1. CASO: apertura della presa
+        // -------------------------------------------------------------------------
+        // Se la presa è ancora vuota, normalmente qualunque carta è lecita.
+        // L'unica eccezione è il Pigugno nella prima presa della mano:
+        // in quel caso non può mai essere usato per aprire.
         if (this.trick.length === 0) {
             if (this.isFirstTrick && card.isPigugno()) {
                 if (verbose) {
-                    console.debug('click ignorato: il Pigugno non può essere giocato in apertura della prima mano');
+                    console.debug(
+                        'click ignorato: il Pigugno non può essere giocato in apertura della prima presa'
+                    );
                 }
                 return false;
             }
+
             return true;
         }
 
+        // Da qui in poi siamo nel caso in cui qualcuno ha già aperto la presa.
         const leadingSuit = this.trick[0].card.suit;
+
+        // Tutte le carte del seme di uscita che il giocatore ha attualmente in mano.
         const cardsOfLeadingSuit = player.hand.filter(c => c.suit === leadingSuit);
+
+        // Se true, il giocatore è obbligato a rispondere a seme.
         const hasLeadingSuit = cardsOfLeadingSuit.length > 0;
 
-        // Se non hai il seme richiesto, puoi rifiutare con qualsiasi carta
-        // il Pigugno non si può mai giocare nella prima presa, tranne quando si risponde a spade ed è l’unica spada
+        // -------------------------------------------------------------------------
+        // 2. REGOLA SPECIALE: Pigugno nella prima presa
+        // -------------------------------------------------------------------------
+        // Questa è l’unica parte veramente speciale.
+        //
+        // Nella prima presa:
+        // - il Pigugno NON si può giocare di rifiuto su coppe / denari / bastoni;
+        // - il Pigugno si può giocare solo su uscita a spade;
+        // - ma anche su uscita a spade è lecito solo se è l’unica spada in mano.
+        //
+        // Qui concentriamo tutta la logica speciale in un solo blocco,
+        // così evitiamo duplicazioni e incoerenze più sotto.
         if (this.isFirstTrick && card.isPigugno()) {
-            if (this.trick.length === 0) return false;
+            // Se il seme di uscita non è spade, il Pigugno è sempre vietato.
+            // Questo copre sia il caso di rifiuto sia il caso impossibile in cui
+            // qualcuno pensi di "rispondere" col Pigugno a un seme diverso.
+            if (leadingSuit !== 'spade') {
+                if (verbose) {
+                    console.debug(
+                        'click ignorato: nella prima presa il Pigugno può essere giocato solo su uscita a spade'
+                    );
+                }
+                return false;
+            }
 
-            if (leadingSuit !== 'spade') return false;
-
+            // Se l’uscita è a spade, allora il Pigugno è ammesso solo se è l’unica
+            // spada che il giocatore possiede.
+            //
+            // cardsOfLeadingSuit qui contiene tutte le spade del giocatore.
+            // Se dentro ci sono altre spade oltre al Pigugno, il giocatore deve
+            // rispondere con un’altra spada e non può usare il Pigugno.
             const otherSpades = cardsOfLeadingSuit.filter(
-                c => !(c.suit === 'spade' && c.value === 8)
-            );
-            if (otherSpades.length > 0) return false;
-        }
-
-        // Se hai il seme richiesto, devi rispondere a seme
-        if (card.suit !== leadingSuit) {
-            return false;
-        }
-
-        if (this.isFirstTrick && card.isPigugno() && leadingSuit === 'spade') {
-            const otherSpades = cardsOfLeadingSuit.filter(
-                c => !(c.suit === 'spade' && c.value === 8)
+                c => !c.isPigugno()
             );
 
             if (otherSpades.length > 0) {
                 if (verbose) {
-                    console.debug('click ignorato: nella prima mano il Pigugno su spade si può giocare solo se è l’unica spada');
+                    console.debug(
+                        'click ignorato: nella prima presa il Pigugno su spade si può giocare solo se è l’unica spada'
+                    );
                 }
                 return false;
             }
+
+            // Se siamo arrivati qui:
+            // - siamo nella prima presa;
+            // - l’uscita è spade;
+            // - il Pigugno è l’unica spada del giocatore.
+            //
+            // In questo caso la giocata è consentita.
+            return true;
         }
 
+        // -------------------------------------------------------------------------
+        // 3. REGOLA GENERALE: obbligo di risposta a seme
+        // -------------------------------------------------------------------------
+        // Se il giocatore possiede almeno una carta del seme di uscita,
+        // deve obbligatoriamente giocare quel seme.
+        if (hasLeadingSuit) {
+            if (card.suit !== leadingSuit) {
+                if (verbose) {
+                    console.debug(
+                        `click ignorato: ${player.name} ha ${leadingSuit} in mano e deve rispondere a seme`
+                    );
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        // -------------------------------------------------------------------------
+        // 4. REGOLA GENERALE: rifiuto
+        // -------------------------------------------------------------------------
+        // Se il giocatore NON ha il seme di uscita, può rifiutare liberamente
+        // con qualsiasi carta.
+        //
+        // Nota importante:
+        // l’eventuale eccezione del Pigugno nella prima presa è già stata gestita
+        // completamente sopra, quindi qui non dobbiamo più fare controlli speciali.
         return true;
     }
 
