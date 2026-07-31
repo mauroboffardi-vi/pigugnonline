@@ -8,7 +8,7 @@ Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priori
 - (medium) la carte giocate sono fixed, modificando la dimensione della finestra stanno li. Come risolvere?
 - fixed ~~(**blocker**) a volte si ferma e dice "nessuna carta giocabile" per il computer~~
 - fixed ~~(**blocker**) Visto giocare il pigno di rifiuto di prima mano, dovrebbe essere impossibile~~
-
+- (improve) preload delle immagini delle carte per animazione piú fluida nella prima partita
 
 ## Priorità 1, struttura del codice
 
