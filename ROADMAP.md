@@ -4,6 +4,7 @@
 Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priorità non è aggiungere altro codice, ma ridurre l'accoppiamento, separare le responsabilità e preparare una base che regga AI, multiplayer e UX aggiuntiva.
 
 ## BUGS
+- (blocker) si gioca in senso antiorario!
 - (low) a volte le carte lanciate sul tavolo si sovrappongono troppo e quella sotto non si legge. Troppo complicato il drag and drop?
 - (medium) la carte giocate sono fixed, modificando la dimensione della finestra stanno li. Come risolvere?
 - fixed ~~(**blocker**) a volte si ferma e dice "nessuna carta giocabile" per il computer~~
