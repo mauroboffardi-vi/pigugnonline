@@ -12,12 +12,6 @@ export interface HandSummaryPlayer {
     buscheEarned?: number;
 }
 
-export interface HandSummary {
-    players: HandSummaryPlayer[];
-    pigugnoWinnerId: number | null;
-    startingPlayerId: number;
-    lastTrickWinnerId: number;
-}
 
 export type PlayerAreaDirections = "bottom" | "left" | "top" | "right";
 

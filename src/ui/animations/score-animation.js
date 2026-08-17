@@ -2,7 +2,7 @@
  * Animazione dei punteggi fine mano e fine partita
  *  
  */
-/** @typedef {import('../ui-types').HandSummary} HandSummary */
+/** @typedef {import('../../domain/domain-types').LastHandSummary} LastHandSummary */
 /** @typedef {import('../ui-types').HandSummaryPlayer} HandSummaryPlayer */
 /** @typedef {import('../../domain/cards/Card').Card} Card */
 
@@ -75,7 +75,7 @@ function getPositionClassByPlayerId(playerId) {
 }
 
 /**
- * @param {HandSummary} summary
+ * @param {LastHandSummary} summary
  * @param {GameState} gameState
  * @param {BuscheTracker} buscheTracker
  * @param {{ playerOrder?: number[] }} [options]
@@ -311,7 +311,7 @@ async function animatePlayerPoints(playerSummary) {
 /**
  * Anima l'assegnazione delle busche nell'ordine di gioco ricevuto.
  *
- * @param {HandSummary} summary
+ * @param {LastHandSummary} summary
  * @param {GameState} gameState
  * @param {BuscheTracker} buscheTracker
  * @param {{ orderedPlayers?: HandSummaryPlayer[] }} [options]
@@ -405,7 +405,7 @@ async function countUp(el, target, duration = 1000) {
 }
 
 /**
- * @param {HandSummary} summary
+ * @param {LastHandSummary} summary
  * @returns {HandSummaryPlayer[]}
  */
 function getOrderedPlayersFromStartingPlayer(summary) {

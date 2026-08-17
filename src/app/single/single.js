@@ -2,8 +2,8 @@
 // src/game/single.js
 /** @typedef {import('../../domain/domain-types').Player} Player */
 /** @typedef {import('../../domain/domain-types').Player} TrickEntry */
+/** @typedef {import('../../domain/domain-types').LastHandSummary} LastHandSummary */
 
-/** @typedef {import('../../ui/ui-types').HandSummary} HandSummary */
 
 /** @typedef {import('../../domain/cards/Card').Card} Card */
 
@@ -421,7 +421,7 @@ function renderPlayerStatus(player) {
 
 /**
  * 
- * @param {HandSummary} summary
+ * @param {LastHandSummary} summary
  * @returns {Promise<void>}
  */
 async function syncBuscheTrackerFromState(summary) {
@@ -431,51 +431,51 @@ async function syncBuscheTrackerFromState(summary) {
 }
 
 /**
- * 
- * @param {HandSummary} summary 
- * @returns 
+ * @param {import('../../domain/domain-types').LastHandSummary} summary
  */
-async function handleHandEnded(summary) {
-  nextGameFlowVersion();
+function handleHandEnded(summary) {
+  (async () => {
+    nextGameFlowVersion();
 
-  const playerOrder = gameState
-    .getPlayersInTurnOrder(summary.lastTrickWinnerId)
-    .map((player) => player.id);
+    const playerOrder = gameState
+      .getPlayersInTurnOrder(summary.lastTrickWinnerId ?? undefined)
+      .map((player) => player.id);
 
-  await animateHandSummary(summary, gameState, buscheTracker, {
-    playerOrder,
-  });
-
-  clearHandSummaryOverlay();
-
-  refreshPlayerStatuses();
-
-  const gameOverState = gameState.computeGameOverState();
-
-  if (gameOverState.isGameOver) {
-    gameState.gameOverState = gameOverState;
-    gameOverOverlay.show(gameOverState, () => {
-      window.location.href = '../../index.html';
+    await animateHandSummary(summary, gameState, buscheTracker, {
+      playerOrder,
     });
-    return;
-  }
 
-  const ok = gameState.startNextHand();
-  if (!ok) return;
+    clearHandSummaryOverlay();
 
-  cardsOnTable.forEach((clone) => {
-    try { clone.remove(); } catch (_) { }
-  });
-  cardsOnTable.clear();
+    refreshPlayerStatuses();
 
-  closeCaptureOverlay();
-  playCounter = 0;
-  isResolvingTrick = false;
+    const gameOverState = gameState.computeGameOverState();
 
-  renderBoard(gameState);
+    if (gameOverState.isGameOver) {
+      gameState.gameOverState = gameOverState;
+      gameOverOverlay.show(gameOverState, () => {
+        window.location.href = '../../index.html';
+      });
+      return;
+    }
 
-  nextGameFlowVersion();
-  await continueGameFlow();
+    const ok = gameState.startNextHand();
+    if (!ok) return;
+
+    cardsOnTable.forEach((clone) => {
+      try { clone.remove(); } catch (_) { }
+    });
+    cardsOnTable.clear();
+
+    closeCaptureOverlay();
+    playCounter = 0;
+    isResolvingTrick = false;
+
+    renderBoard(gameState);
+
+    nextGameFlowVersion();
+    await continueGameFlow();
+  })();
 }
 
 /**

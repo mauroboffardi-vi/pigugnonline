@@ -1,5 +1,5 @@
 import { GameState } from "../domain/game/GameState.js";
-/** @typedef {import('../ui-types').HandSummary} HandSummary */
+/** @typedef {import('../../domain/domain-types').LastHandSummary} LastHandSummary */
 /** @typedef {import('../ui-types').HandSummaryPlayer} HandSummaryPlayer */
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -507,38 +507,6 @@ export default class BuscheTracker {
 
         this.render();
     }
-
-    /**
-     * @param {HandSummary} summary
-     * @param {GameState} [gameState]
-     * @returns {void}
-     *
-    updateFromSummary(summary, gameState) {
-        if (gameState) {
-            this.setPlayersByState(gameState);
-            return;
-        }
-
-        if (!summary || !Array.isArray(summary.players)) return;
-
-        summary.players.forEach((playerSummary) => {
-            const playerId = playerSummary.playerId;
-            const arm = PLAYER_ID_TO_ARM[playerId];
-            if (!arm) return;
-
-            const busche = Math.max(0, Number(playerSummary.buscheAfterHand ?? playerSummary.buscheEarned ?? 0) || 0);
-            const baseName = (playerSummary.name || '').trim();
-            const label = busche >= 10 ? `${baseName} (${busche})` : baseName;
-
-            this.state.players[arm] = {
-                label,
-                busche,
-            };
-        });
-
-        this.render();
-    }
-        */
 
     /**
      * @param {number} playerId
