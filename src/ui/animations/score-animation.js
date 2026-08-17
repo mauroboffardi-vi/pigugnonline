@@ -2,7 +2,8 @@
  * Animazione dei punteggi fine mano e fine partita
  *  
  */
-/** @import {HandSummary, HandSummaryPlayer} from '../ui-types.js' */
+/** @typedef {import('../ui-types').HandSummary} HandSummary */
+/** @typedef {import('../ui-types').HandSummaryPlayer} HandSummaryPlayer */
 import { Card } from "../../domain/cards/Card.js";
 import { GameState } from "../../domain/game/GameState.js";
 import BuscheTracker from "../BuscheTracker.js";

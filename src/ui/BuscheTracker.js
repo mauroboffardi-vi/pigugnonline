@@ -1,5 +1,6 @@
 import { GameState } from "../domain/game/GameState.js";
-/** @import {HandSummary, HandSummaryPlayer} from './ui-types.js' */
+/** @typedef {import('../ui-types').HandSummary} HandSummary */
+/** @typedef {import('../ui-types').HandSummaryPlayer} HandSummaryPlayer */
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 

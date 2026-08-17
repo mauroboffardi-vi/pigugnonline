@@ -1,4 +1,4 @@
-/** @import {PlayerAreaDirections} from '../ui-types.js' */
+/** @typedef {import('../ui-types').PlayerAreaDirections} PlayerAreaDirections */
 /** @import { TrickEntry } from "../../domain/domain-types.js" */
 
 

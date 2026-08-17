@@ -89,3 +89,104 @@ Una volta attivata questa modalità:
 - **Carte scoperte:** Le carte in mano al computer verranno mostrate scoperte, rimuovendo la "nebbia di guerra".
 - **Pannello di Test:** Verrà iniettato dinamicamente un menu in sovrimpressione contenente i bottoni per testare specifici scenari di gioco.
 - **I "pensieri" dell'AI:** Aprendo la *Developer Console* del browser (tasto `F12`), potrai leggere in tempo reale i log con il ragionamento e la strategia elaborata dall'intelligenza artificiale. Questo permette di capire esattamente come l'avversario virtuale valuta il tavolo e sceglie quale carta giocare.
+
+
+## Build e deploy
+
+### Requisiti
+
+- Node.js 18+ (consigliato 20+)
+- npm
+
+### Installazione delle dipendenze
+
+```bash
+npm install
+```
+
+Dipendenze di sviluppo richieste:
+
+- `typescript`
+- `esbuild`
+
+Se mancano, installale con:
+
+```bash
+npm install --save-dev typescript esbuild
+```
+
+### Struttura del progetto (rilevante per la build)
+
+- `src/` – codice sorgente
+  - `index.html`
+  - `app/single.html`, `app/network.html`
+  - `app/single/single.js` (entry point principale)
+  - `assets/` – fonts, immagini, CSS
+- `scripts/build.js` – script di build (Node ESM)
+- `tsconfig.json` – configurazione TypeScript (usata per i file `.ts` e per il type-checking)
+
+### Comandi disponibili
+
+```bash
+# Controlla i tipi (TypeScript) senza generare output
+npm run typecheck
+
+# Build completa: pulisce dist, copia HTML e assets, crea i bundle JS
+npm run build
+
+# Build in watch mode (solo TypeScript, per sviluppo su file .ts)
+npm run build:watch
+
+# Bundle singolo (solo single.js, senza copia HTML/assets)
+npm run bundle:single
+```
+
+### Cosa fa `npm run build`
+
+Lo script `scripts/build.js`:
+
+1. Elimina e ricrea la cartella `dist/`.
+2. Copia:
+   - `src/index.html` → `dist/index.html`
+   - `src/app/single.html` → `dist/app/single.html`
+   - `src/app/network.html` → `dist/app/network.html`
+   - `src/assets/` → `dist/assets/` (ricorsivamente)
+3. Crea i bundle JS con esbuild:
+   - `src/app/single/single.js` → `dist/app/single/single.js` (bundle ES module)
+
+Il risultato è una cartella `dist/` pronta per il deploy.
+
+### Contenuto di `dist/` (da deployare)
+
+Dopo `npm run build`, la cartella `dist/` contiene:
+
+- `index.html`
+- `app/single.html`
+- `app/network.html`
+- `app/single/single.js` (bundle JS per la pagina single)
+- `assets/` (fonts, immagini, CSS)
+
+Tutto il necessario per servire l’applicazione è dentro `dist/`.  
+Per il deploy, copia il contenuto di `dist/` sul tuo server statico o hosting.
+
+### Sviluppo locale
+
+Per testare in locale:
+
+```bash
+npx serve dist
+# oppure
+npx http-server dist -p 3000
+```
+
+e apri nel browser:
+
+- `http://localhost:3000/`
+- `http://localhost:3000/app/single.html`
+- `http://localhost:3000/app/network.html`
+
+### Note su TypeScript
+
+- I file `.ts` (es. definizioni di tipi in `src/ui/ui-types.ts`) sono compilati e usati da esbuild nel bundle.
+- I file `.js` esistenti rimangono JavaScript; il type-checking su di essi è disabilitato (`checkJs: false`).
+- Per aggiungere nuovi file TypeScript, creali con estensione `.ts` e importali normalmente; esbuild li gestirà nel bundle.

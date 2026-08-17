@@ -1,0 +1,32 @@
+{
+  "name": "pigugnonline",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Implementazione in JavaScript del gioco di carte Pigugno, con focus su regole di partita, animazioni di tavolo e interfaccia leggera lato client. Il progetto è in costruzione, ma la base attuale copre già flusso di mano, conteggio punti, calcolo busche, reveal del Pigugno e schermata di fine mano.[cite:280][cite:289]",
+  "main": "index.html",
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "typecheck": "tsc --noEmit",
+    "build": "node scripts/build.js",
+    "build:watch": "tsc --watch",
+    "bundle:single": "esbuild src/app/single/single.js --bundle --outfile=dist/app/single/single.js --format=esm"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mauroboffardi-vi/pigugnonline.git"
+  },
+  "keywords": [],
+  "author": "Mauro Boffardi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mauroboffardi-vi/pigugnonline/issues"
+  },
+  "homepage": "https://github.com/mauroboffardi-vi/pigugnonline#readme",
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
+  }
+}

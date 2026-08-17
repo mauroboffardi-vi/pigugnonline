@@ -151,7 +151,6 @@ Da chiarire prima di scrivere codice:
 
 Da fare:
 
-- Separare il più possibile stato di dominio e side effect UI.
 - Ridurre dipendenze dal DOM dentro la logica di partita.
 - Valutare un event log o action log come fonte di verità della partita.
 

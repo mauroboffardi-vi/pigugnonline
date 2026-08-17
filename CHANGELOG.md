@@ -1,1 +1,2 @@
 - 17 Aug: cambiato il senso di gioco da orario ad antiorario, centralizzata la logica dell'ordine dentro GameState
+- 17 Aug: conversione del progetto da js puro a Typescript

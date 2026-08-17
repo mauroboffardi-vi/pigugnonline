@@ -1,3 +1,4 @@
+// @ts-check
 // src/game/single.js
 /** @import { Player, TrickEntry } from "../../domain/domain-types.js" */
 /** @import { HandSummary } from "../../ui/ui-types.js" */
