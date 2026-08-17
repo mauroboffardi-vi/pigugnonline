@@ -1,8 +1,8 @@
 // handPlanHelpers.js
 /** @typedef {import('../domain-types').CardRef} CardRef */
 /** @typedef {import('../domain-types').HandPlan} HandPlan */
+/** @typedef {import('../../domain/cards/Card').Card} Card */
 
-import { Card } from '../../cards/Card.js';
 
 /**
  * @param {HandPlan} handPlan 

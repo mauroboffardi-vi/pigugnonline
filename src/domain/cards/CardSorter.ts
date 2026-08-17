@@ -1,4 +1,4 @@
-import { Card } from "./Card.js";
+import { Card } from './Card';
 
 /**
  * Utility per ordinare le carte secondo le regole di potenza e ordine dei semi.
@@ -10,9 +10,8 @@ export class CardSorter {
      * @param {string} suit
      * @returns {number}
      */
-    static suitOrder(suit) {
-        /** @type {Record<string, number>} */
-        const order = {
+    static suitOrder(suit: string): number {
+        const order: Record<string, number> = {
             coppe: 0,
             denari: 1,
             bastoni: 2,
@@ -27,9 +26,8 @@ export class CardSorter {
      * @param {Card} card
      * @returns {number}
      */
-    static cardPower(card) {
-        /** @type {Record<number, number>} */
-        const powerMap = {
+    static cardPower(card: Card): number {
+        const powerMap: Record<number, number> = {
             4: 1,
             5: 2,
             6: 3,
@@ -50,7 +48,7 @@ export class CardSorter {
      * @param {Card} b
      * @returns {number}
      */
-    static compare(a, b) {
+    static compare(a: Card, b: Card): number {
         if (a.suit === b.suit) {
             return CardSorter.cardPower(a) - CardSorter.cardPower(b);
         }
@@ -63,7 +61,7 @@ export class CardSorter {
      * @param {Card[]} hand
      * @returns {Card[]}
      */
-    static sortHand(hand) {
+    static sortHand(hand: Card[]): Card[] {
         if (!Array.isArray(hand)) return hand;
         hand.sort(CardSorter.compare);
         return hand;

@@ -1,9 +1,11 @@
-import { Card } from "../../domain/cards/Card.js";
 import { GameState } from "../../domain/game/GameState.js";
 /**
  * @typedef {import('../../domain-types').CardAllocations} CardAllocations
  * @typedef {import('../../domain-types').RerenderFn} RerenderFn
  * @typedef {import('../../ui/ui-types').TestApi} TestApi
+ * @typedef {import('../../domain/cards/Card').Card} Card 
+ * */
+
 
 
 /** @returns {TestApi | null} */

@@ -1,9 +1,14 @@
 /**
  * Rappresenta un mazzo di carte da 40 carte per il gioco del Pigugno.
  */
-import { Card } from './Card.js';
+
+import { Card } from './Card'
 
 export class Deck {
+
+    public cards: Card[];
+    public remaining: number;
+
     /**
      * Crea un nuovo mazzo inizializzato con tutte le carte del gioco.
      */
@@ -17,10 +22,10 @@ export class Deck {
      *
      * @returns {Card[]} Elenco delle carte create.
      */
-    createDeck() {
-        const suits = ['coppe', 'denari', 'bastoni', 'spade'];
+    createDeck(): Card[] {
+        const suits = ['coppe', 'denari', 'bastoni', 'spade'] as const;
         const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        const deck = [];
+        const deck: Card[] = [];
 
         for (const suit of suits) {
             for (const value of values) {
@@ -34,7 +39,7 @@ export class Deck {
     /**
      * Mescola le carte del mazzo in modo casuale.
      */
-    shuffle() {
+    shuffle(): void {
         for (let index = this.cards.length - 1; index > 0; index -= 1) {
             const randomIndex = Math.floor(Math.random() * (index + 1));
             [this.cards[index], this.cards[randomIndex]] = [this.cards[randomIndex], this.cards[index]];
@@ -47,16 +52,16 @@ export class Deck {
      * @param {number} count - Il numero di carte da pescare.
      * @returns {Card[]} Le carte pescate.
      */
-    draw(count = 1) {
+    draw(count = 1): Card[] {
         if (!Number.isInteger(count) || count < 1) {
             throw new Error('Il numero di carte da pescare non è valido');
         }
 
-        const drawnCards = [];
+        const drawnCards: Card[] = [];
         const availableCount = Math.min(count, this.cards.length);
 
         for (let index = 0; index < availableCount; index += 1) {
-            drawnCards.push(this.cards.shift());
+            drawnCards.push(this.cards.shift() as Card);
         }
 
         this.remaining = this.cards.length;

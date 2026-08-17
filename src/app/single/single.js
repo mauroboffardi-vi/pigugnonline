@@ -5,7 +5,8 @@
 
 /** @typedef {import('../../ui/ui-types').HandSummary} HandSummary */
 
-import { Card } from '../../domain/cards/Card.js';
+/** @typedef {import('../../domain/cards/Card').Card} Card */
+
 import { GameState } from '../../domain/game/GameState.js';
 import { pickRandomNames } from '../../domain/players/player-names.js';
 import ComputerPlayer from '../../domain/players/ComputerPlayer.js';

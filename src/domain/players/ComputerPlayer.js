@@ -16,9 +16,12 @@
  * @typedef {import('../domain-types').ShortSuitPriorityInfo} ShortSuitPriorityInfo
  * @typedef {import('../domain-types').TenaceSuitInfo} TenaceSuitInfo
  * @typedef {import('../domain-types').TrickEntry} TrickEntry
+ * 
+ * @typedef {import('../../domain/cards/Card').Card} Card 
  */
-import { Card } from "../cards/Card.js";
-import { CardSorter } from "../cards/CardSorter.js";
+
+import { CardSorter } from '../../domain/cards/CardSorter'
+
 import { GameState } from "../game/GameState.js";
 import * as gh from "./computer/generic-helpers.js";
 import * as hph from "./computer/handplan-helpers.js";

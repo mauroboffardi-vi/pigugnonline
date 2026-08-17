@@ -4,7 +4,8 @@
  */
 /** @typedef {import('../ui-types').HandSummary} HandSummary */
 /** @typedef {import('../ui-types').HandSummaryPlayer} HandSummaryPlayer */
-import { Card } from "../../domain/cards/Card.js";
+/** @typedef {import('../../domain/cards/Card').Card} Card */
+
 import { GameState } from "../../domain/game/GameState.js";
 import BuscheTracker from "../BuscheTracker.js";
 

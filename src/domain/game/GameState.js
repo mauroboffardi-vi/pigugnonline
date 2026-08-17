@@ -1,16 +1,17 @@
 // src/game/GameState.js
 // @ts-check
-import { Deck } from '../cards/Deck.js';
-import { Card } from '../cards/Card.js';
-import { CardSorter } from '../cards/CardSorter.js';
 
 /**
  * @typedef {import('../domain-types').LastHandSummary} LastHandSummary
  * @typedef {import('../domain-types').PlayerHandSummary} PlayerHandSummary  
  * @typedef {import('../domain-types').Player} Player  
  * @typedef {import('../domain-types').TrickEntry} TrickEntry
- */
+ * 
+ * @typedef {import('../../domain/cards/Card').Card} Card 
+*/
 
+import { Deck } from '../../domain/cards/Deck'
+import { CardSorter } from '../../domain/cards/CardSorter'
 
 /**
  * Rappresenta lo stato della partita singola.
