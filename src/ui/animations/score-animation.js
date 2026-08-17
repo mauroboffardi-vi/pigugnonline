@@ -117,7 +117,7 @@ export async function animateHandSummary(
     const orderedPlayers = playerOrder.length > 0
         ? playerOrder
             .map((playerId) => summaryByPlayerId.get(playerId))
-            .filter(Boolean)
+            .filter(isDefined)
         : getOrderedPlayersFromStartingPlayer(summary);
 
     const everyoneCovered = summary.players.every(
@@ -158,6 +158,17 @@ export async function animateHandSummary(
     );
 
     await sleep(500);
+}
+
+/**
+ * Type guard: rimuove null e undefined preservando il tipo.
+ *
+ * @template T
+ * @param {T | null | undefined} value
+ * @returns {value is T}
+ */
+function isDefined(value) {
+    return value != null;
 }
 
 /**
@@ -294,19 +305,14 @@ async function animatePlayerPoints(playerSummary) {
     await countUp(pointsEl, playerSummary.points, 900);
 }
 
-/**
- * @param {HandSummary} summary
- * @param {GameState} gameState
- * @param {BuscheTracker} buscheTracker
- * @returns {Promise<void>}
- */
+
 /**
  * Anima l'assegnazione delle busche nell'ordine di gioco ricevuto.
  *
  * @param {HandSummary} summary
  * @param {GameState} gameState
  * @param {BuscheTracker} buscheTracker
- * @param {{ orderedPlayers?: PlayerHandSummary[] }} [options]
+ * @param {{ orderedPlayers?: HandSummaryPlayer[] }} [options]
  * @returns {Promise<void>}
  */
 async function animatePlayerBusche(
