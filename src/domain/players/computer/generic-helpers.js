@@ -1,7 +1,10 @@
 // generic-helpers.js
 import { CardSorter } from "../../cards/CardSorter.js";
 import { Card } from "../../cards/Card.js";
-/** @import {CardRef, HandPlan, ScoredCardEntry, TrickEntry} from '../../domain-types.js' */
+/** @typedef {import('../domain-types').CardRef} CardRef */
+/** @typedef {import('../domain-types').HandPlan} HandPlan */
+/** @typedef {import('../domain-types').ScoredCardEntry} ScoredCardEntry */
+/** @typedef {import('../domain-types').TrickEntry} TrickEntry */
 
 /**
  * 

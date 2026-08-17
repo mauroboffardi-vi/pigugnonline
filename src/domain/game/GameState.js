@@ -1,8 +1,15 @@
 // src/game/GameState.js
+// @ts-check
 import { Deck } from '../cards/Deck.js';
 import { Card } from '../cards/Card.js';
 import { CardSorter } from '../cards/CardSorter.js';
-/** @import {TrickEntry, PlayerHandSummary, Player, LastHandSummary} from '../domain-types.js' */
+
+/**
+ * @typedef {import('../domain-types').LastHandSummary} LastHandSummary
+ * @typedef {import('../domain-types').PlayerHandSummary} PlayerHandSummary  
+ * @typedef {import('../domain-types').Player} Player  
+ * @typedef {import('../domain-types').TrickEntry} TrickEntry
+ */
 
 
 /**
@@ -35,7 +42,7 @@ export class GameState {
         this.deck = null;
         this.currentTurn = 0;
         this.phase = 'setup';
-        /** @type {import('../domain-types.js').TrickEntry[]} */
+        /** @type {import('../domain-types').TrickEntry[]} */
         this.trick = [];
         this.trumpSuit = 'spade';
         /** @type {((winnerPlayerId: number, resolvedTrick: TrickEntry[]) => void) | null} */

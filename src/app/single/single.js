@@ -1,7 +1,10 @@
 // @ts-check
 // src/game/single.js
-/** @import { Player, TrickEntry } from "../../domain/domain-types.js" */
-/** @import { HandSummary } from "../../ui/ui-types.js" */
+/** @typedef {import('../../domain/domain-types').Player} Player */
+/** @typedef {import('../../domain/domain-types').Player} TrickEntry */
+
+/** @typedef {import('../../ui/ui-types').HandSummary} HandSummary */
+
 import { Card } from '../../domain/cards/Card.js';
 import { GameState } from '../../domain/game/GameState.js';
 import { pickRandomNames } from '../../domain/players/player-names.js';
@@ -67,7 +70,7 @@ const ISDEBUG = new URLSearchParams(window.location.search).get('debug') === 'tr
 let DEBUG_SHOW_CPU_CARDS = ISDEBUG;
 if (ISDEBUG) {
   console.info('🛠️ Modalità Debug attiva');
-  const { initDebugUI } = await import('../../dev/test/test-buttons.js');
+  const { initDebugUI } = await import('./test-buttons.js');
   initDebugUI();
 }
 
@@ -353,9 +356,8 @@ async function continueGameFlow() {
 }
 
 /**
- * 
- * @param {number} winnerId 
- * @param {TrickEntry[]} resolvedTrick 
+ * @param {number} winnerId
+ * @param {import('../../domain/domain-types').TrickEntry[]} resolvedTrick
  */
 async function onTrickResolved(winnerId, resolvedTrick) {
   isResolvingTrick = true;

@@ -1,4 +1,22 @@
-/** @import {CiapaETorna, CiapaETornaMode, DangerousShortSuitInfo, DecimaAnalysisInfo, DecimaAnalysisSuitInfo, DecimaPressureInfo, DecimaPressureSuitInfo, EntryPreservationInfo, ForcedTricksEstimate, FragileShortSuitInfo, HandPlan, LeadControl, Player, ScoredCardEntry, ShortSuitPriorityInfo, TenaceSuitInfo, TrickEntry} from '../domain-types.js' */
+/**
+ * @typedef {import('../domain-types').CiapaETorna} CiapaETorna
+ * @typedef {import('../domain-types').CiapaETornaMode} CiapaETornaMode
+ * @typedef {import('../domain-types').DangerousShortSuitInfo} DangerousShortSuitInfo
+ * @typedef {import('../domain-types').DecimaAnalysisInfo} DecimaAnalysisInfo
+ * @typedef {import('../domain-types').DecimaAnalysisSuitInfo} DecimaAnalysisSuitInfo
+ * @typedef {import('../domain-types').DecimaPressureInfo} DecimaPressureInfo
+ * @typedef {import('../domain-types').DecimaPressureSuitInfo} DecimaPressureSuitInfo
+ * @typedef {import('../domain-types').EntryPreservationInfo} EntryPreservationInfo
+ * @typedef {import('../domain-types').ForcedTricksEstimate} ForcedTricksEstimate
+ * @typedef {import('../domain-types').FragileShortSuitInfo} FragileShortSuitInfo
+ * @typedef {import('../domain-types').HandPlan} HandPlan
+ * @typedef {import('../domain-types').LeadControl} LeadControl
+ * @typedef {import('../domain-types').Player} Player
+ * @typedef {import('../domain-types').ScoredCardEntry} ScoredCardEntry
+ * @typedef {import('../domain-types').ShortSuitPriorityInfo} ShortSuitPriorityInfo
+ * @typedef {import('../domain-types').TenaceSuitInfo} TenaceSuitInfo
+ * @typedef {import('../domain-types').TrickEntry} TrickEntry
+ */
 import { Card } from "../cards/Card.js";
 import { CardSorter } from "../cards/CardSorter.js";
 import { GameState } from "../game/GameState.js";

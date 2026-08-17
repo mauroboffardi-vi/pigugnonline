@@ -37,7 +37,9 @@ async function copyHtmlAndAssets() {
 async function bundleJs() {
     await build({
         entryPoints: [
-            join(SRC, 'app/single', 'single.js'),
+            join(SRC, 'app', 'single', 'single.js'),
+            join(SRC, 'app', 'single', 'test-buttons.js'),
+
             // quando hai network.js:
             // join(SRC, 'app', 'network.js'),
         ],

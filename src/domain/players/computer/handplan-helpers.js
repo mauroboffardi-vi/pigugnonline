@@ -1,5 +1,6 @@
 // handPlanHelpers.js
-/** @import {CardRef, HandPlan} from '../../domain-types.js' */
+/** @typedef {import('../domain-types').CardRef} CardRef */
+/** @typedef {import('../domain-types').HandPlan} HandPlan */
 
 import { Card } from '../../cards/Card.js';
 

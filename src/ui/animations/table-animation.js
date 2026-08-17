@@ -1,6 +1,5 @@
 /** @typedef {import('../ui-types').PlayerAreaDirections} PlayerAreaDirections */
-/** @import { TrickEntry } from "../../domain/domain-types.js" */
-
+/** @typedef {import('../domain-types').TrickEntry} TrickEntry */
 
 /**
  * Animazioni per la gestione del tavolo, carte giocate, buttate
