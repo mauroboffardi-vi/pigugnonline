@@ -19,6 +19,7 @@ import { GameState } from "../domain/game/GameState";
  * @property {HandSummaryPlayer[]} players
  * @property {number | null} pigugnoWinnerId
  * @property {number} startingPlayerId
+ * @property {number} lastTrickWinnerId
  */
 
 /**

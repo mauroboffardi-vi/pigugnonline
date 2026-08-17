@@ -130,6 +130,25 @@ export class GameState {
     }
 
     /**
+     * Restituisce i giocatori nell'ordine di gioco,
+     * a partire dal giocatore indicato.
+     *
+     * @param {number} startPlayerId
+     * @returns {Player[]}
+     */
+    getPlayersInTurnOrder(startPlayerId = this.currentTurn) {
+        const orderedPlayers = [];
+        let playerId = startPlayerId;
+
+        for (let i = 0; i < this.players.length; i += 1) {
+            orderedPlayers.push(this.getPlayerById(playerId));
+            playerId = this.getNextPlayerId(playerId);
+        }
+
+        return orderedPlayers;
+    }
+
+    /**
      * 
      * @param {number} playerId 
      * @param {number} cardId 
@@ -161,8 +180,10 @@ export class GameState {
         player.hand.splice(cardIndex, 1);
         this.trick.push({ player, card });
 
-        this.currentTurn = (this.currentTurn + 1) % this.players.length;
-        console.debug(`Tocca al giocatore ${this.players[this.currentTurn].name}`);
+        // ordine di gioco nella mano spefica
+        this.currentTurn = this.getNextPlayerId(this.currentTurn);
+
+        console.debug(`Tocca al giocatore ${this.currentTurn}: ${this.players[this.currentTurn].name}`);
 
         if (this.trick.length === this.players.length) {
             this.resolveTrick();
@@ -363,14 +384,6 @@ export class GameState {
             ...this.trick.map(entry => entry.card),
         ];
     }
-
-    /* metodi da usare per strategia di partita
-    getPlayersPublicState()
-getBusche(playerId)
-getCapturedTricks(playerId)
-getCurrentTurnPlayerId()
-isFirstTrick()
-getHandNumber() */
 
 
     /**
@@ -578,11 +591,12 @@ getHandNumber() */
         return player;
     }
     /**
+     * Ordine di gioco dei giocatori dipendente dalla presa
      * @param {number} playerId 
      * @returns {number}
      */
     getNextPlayerId(playerId) {
-        return (playerId + 1) % this.players.length;
+        return (playerId - 1 + this.players.length) % this.players.length;
     }
 
     /**

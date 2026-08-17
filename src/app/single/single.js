@@ -11,6 +11,16 @@ import { animatePlayCard, animateTrickResolution } from '../../ui/animations/tab
 import { animateHandSummary, clearHandSummaryOverlay } from '../../ui/animations/score-animation.js';
 import BuscheTracker from '../../ui/BuscheTracker.js';
 
+/**
+ *  Questo associa il nome del container delle areee di gioco ai giocatori 0-3
+ */
+/** @type {Record<number, string} */
+const PLAYER_CONTAINER_IDS = Object.freeze({
+  0: 'player-you',
+  1: 'player-left',
+  2: 'player-top',
+  3: 'player-right',
+});
 
 /**
  * @param {Card} card
@@ -379,20 +389,13 @@ function openCaptureOverlay(player) {
  * @returns {void}
  */
 function refreshPlayerStatuses() {
-  /** @type {Record<number, HTMLElement | null>} */
-  const mapping = {
-    0: document.getElementById('player-you'),
-    1: document.getElementById('player-left'),
-    2: document.getElementById('player-top'),
-    3: document.getElementById('player-right'),
-  };
-
   gameState.players.forEach((player) => {
-    const container = mapping[player.id];
+    const container = getContainerByPlayerId(player.id);
     if (!container) return;
 
     const statusEl = container.querySelector('.player-status');
     if (!statusEl) return;
+
     statusEl.innerHTML = renderPlayerStatus(player);
   });
 }
@@ -431,7 +434,14 @@ async function syncBuscheTrackerFromState(summary) {
 async function handleHandEnded(summary) {
   nextGameFlowVersion();
 
-  await animateHandSummary(summary, gameState, buscheTracker);
+  const playerOrder = gameState
+    .getPlayersInTurnOrder(summary.lastTrickWinnerId)
+    .map((player) => player.id);
+
+  await animateHandSummary(summary, gameState, buscheTracker, {
+    playerOrder,
+  });
+
   clearHandSummaryOverlay();
 
   refreshPlayerStatuses();
@@ -465,20 +475,15 @@ async function handleHandEnded(summary) {
 }
 
 /**
- * 
- * @param {number} playerId 
+ * Restituisce il contenitore grafico assegnato al giocatore.
+ * Non determina né modifica l'ordine dei turni.
+ *
+ * @param {number} playerId
  * @returns {HTMLElement | null}
  */
 function getContainerByPlayerId(playerId) {
-  /** @type {Record<number, HTMLElement | null>} */
-  const mapping = {
-    0: document.getElementById('player-you'),
-    1: document.getElementById('player-left'),
-    2: document.getElementById('player-top'),
-    3: document.getElementById('player-right'),
-  };
-
-  return mapping[playerId] ?? null;
+  const containerId = PLAYER_CONTAINER_IDS[playerId];
+  return containerId ? document.getElementById(containerId) : null;
 }
 
 /** * 

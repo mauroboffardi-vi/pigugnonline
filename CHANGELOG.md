@@ -1,0 +1,1 @@
+- 17 Aug: cambiato il senso di gioco da orario ad antiorario, centralizzata la logica dell'ordine dentro GameState

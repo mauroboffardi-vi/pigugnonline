@@ -76,17 +76,19 @@ function getPositionClassByPlayerId(playerId) {
  * @param {HandSummary} summary
  * @param {GameState} gameState
  * @param {BuscheTracker} buscheTracker
+ * @param {{ playerOrder?: number[] }} [options]
  * @returns {Promise<void>}
  */
-export async function animateHandSummary(summary, gameState, buscheTracker) {
-    /** @type {HTMLDivElement} */
+export async function animateHandSummary(
+    summary,
+    gameState,
+    buscheTracker,
+    { playerOrder = [] } = {}
+) {
     const overlay = ensureSummaryLayer();
     overlay.classList.add('visible');
 
-    /** @type {HTMLDivElement | null} */
-    const cardsLayer = /** @type {HTMLDivElement | null} */ (
-        overlay.querySelector('.summary-cards-layer')
-    );
+    const cardsLayer = overlay.querySelector('.summary-cards-layer');
     if (cardsLayer) {
         cardsLayer.innerHTML = '';
     }
@@ -94,54 +96,67 @@ export async function animateHandSummary(summary, gameState, buscheTracker) {
     overlay.querySelectorAll('.summary-score').forEach((el) => {
         el.classList.remove('visible');
 
-        /** @type {HTMLDivElement | null} */
-        const pointsValue = /** @type {HTMLDivElement | null} */ (
-            el.querySelector('.summary-points-value')
-        );
+        const pointsValue = el.querySelector('.summary-points-value');
         if (pointsValue) {
             pointsValue.textContent = '';
         }
 
-        /** @type {HTMLDivElement | null} */
-        const buscheEl = /** @type {HTMLDivElement | null} */ (
-            el.querySelector('.summary-busche')
-        );
+        const buscheEl = el.querySelector('.summary-busche');
         if (buscheEl) {
             buscheEl.innerHTML = '';
         }
     });
 
-    const everyoneCovered = summary.players.every(p => p.tricks > 0);
+    const summaryByPlayerId = new Map(
+        summary.players.map((playerSummary) => [
+            playerSummary.playerId,
+            playerSummary,
+        ])
+    );
 
-    for (const playerSummary of summary.players) {
+    const orderedPlayers = playerOrder.length > 0
+        ? playerOrder
+            .map((playerId) => summaryByPlayerId.get(playerId))
+            .filter(Boolean)
+        : getOrderedPlayersFromStartingPlayer(summary);
+
+    const everyoneCovered = summary.players.every(
+        (playerSummary) => playerSummary.tricks > 0
+    );
+
+    for (const playerSummary of orderedPlayers) {
         await scatterScoringCardsForPlayer(playerSummary, everyoneCovered);
         await sleep(180);
     }
 
     if (everyoneCovered && summary.pigugnoWinnerId != null) {
         await sleep(rand(500, 1500));
-        const pigugnoOwner = summary.players.find(p => p.playerId === summary.pigugnoWinnerId);
-        const pigugnoCard = pigugnoOwner?.captures.find(card => card.suit === 'spade' && card.value === 8);
+
+        const pigugnoOwner = summaryByPlayerId.get(summary.pigugnoWinnerId);
+        const pigugnoCard = pigugnoOwner?.captures.find(
+            (card) => card.suit === 'spade' && card.value === 8
+        );
+
         if (pigugnoCard) {
             await showPigugnoCenter(pigugnoCard, summary.pigugnoWinnerId);
         }
     }
 
-    const orderedPlayers = getOrderedPlayersFromStartingPlayer(summary);
-
-    // Primo giro: mostra i punti per tutti, se tutti hanno coperto
     if (everyoneCovered) {
         for (const playerSummary of orderedPlayers) {
             await animatePlayerPoints(playerSummary);
         }
 
-        // Piccola pausa tra i due giri
         await sleep(400);
     }
 
+    await animatePlayerBusche(
+        summary,
+        gameState,
+        buscheTracker,
+        { orderedPlayers }
+    );
 
-    // Aggiungi i punti Busche uno alla volta
-    await animatePlayerBusche(summary, gameState, buscheTracker);
     await sleep(500);
 }
 
@@ -285,10 +300,24 @@ async function animatePlayerPoints(playerSummary) {
  * @param {BuscheTracker} buscheTracker
  * @returns {Promise<void>}
  */
-async function animatePlayerBusche(summary, gameState, buscheTracker) {
+/**
+ * Anima l'assegnazione delle busche nell'ordine di gioco ricevuto.
+ *
+ * @param {HandSummary} summary
+ * @param {GameState} gameState
+ * @param {BuscheTracker} buscheTracker
+ * @param {{ orderedPlayers?: PlayerHandSummary[] }} [options]
+ * @returns {Promise<void>}
+ */
+async function animatePlayerBusche(
+    summary,
+    gameState,
+    buscheTracker,
+    { orderedPlayers = summary.players } = {}
+) {
     if (!summary || !buscheTracker) return;
 
-    const increments = summary.players
+    const increments = orderedPlayers
         .map((playerSummary) => ({
             playerId: playerSummary.playerId,
             previous: playerSummary.buscheBeforeHand ?? 0,
@@ -298,23 +327,38 @@ async function animatePlayerBusche(summary, gameState, buscheTracker) {
         .filter((entry) => entry.gained > 0);
 
     if (!increments.length) {
-        if (gameState) buscheTracker.setPlayersByState(gameState);
+        if (gameState) {
+            buscheTracker.setPlayersByState(gameState);
+        }
         return;
     }
 
+    // Porta tutti i giocatori coinvolti al valore precedente alla mano,
+    // prima di iniziare l'animazione degli incrementi.
     for (const { playerId, previous } of increments) {
         buscheTracker.setPlayerBusche(playerId, previous);
     }
 
+    // L'ordine di `increments` coincide ora con `orderedPlayers`.
     for (const { playerId, previous, total } of increments) {
         const previousVisible = Math.min(previous, 10);
         const nextVisible = Math.min(total, 10);
 
-        for (let value = previousVisible + 1; value <= nextVisible; value += 1) {
+        for (
+            let value = previousVisible + 1;
+            value <= nextVisible;
+            value += 1
+        ) {
             buscheTracker.setPlayerBusche(playerId, value);
             buscheTracker.markBusca(playerId, value);
             await sleep(750);
         }
+    }
+
+    // Utile per riallineare eventuali giocatori senza incremento
+    // e assicurare che il tracker rifletta sempre GameState.
+    if (gameState) {
+        buscheTracker.setPlayersByState(gameState);
     }
 }
 
