@@ -36,6 +36,28 @@ export interface CardRef {
     value: number;
 }
 
+
+/**
+ * src/domain/domain-types.ts
+ * 
+ * Definisce l'oggetto costante con i semi disponibili.
+ * Usiamo "as const" per dire a TypeScript che queste stringhe sono immutabili (sola lettura).
+ */
+export const Suits = {
+    SPADE: 'spade',
+    BASTONI: 'bastoni',
+    DENARI: 'denari',
+    COPPE: 'coppe'
+} as const;
+
+/**
+ * Estraiamo il tipo TypeScript dall'oggetto costante.
+ * Questo tipo sarà equivalente a: 'spade' | 'bastoni' | 'denari' | 'coppe'
+ * e potrà essere usato per il type-checking sia in file TS che JS.
+ */
+export type Suit = typeof Suits[keyof typeof Suits];
+
+
 export interface PlayerHandSummary {
     playerId: number;
     name: string;

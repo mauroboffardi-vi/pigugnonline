@@ -188,6 +188,5 @@ Nota importante:
 - Valutare introduzione di test minimi sulle regole di gioco e sul calcolo busche.
 - Documentare API interne dei moduli principali prima che il progetto cresca ancora.
 - Migliorare naming convention per Trick, TrickEntry[] e TrickEntry[][]
-- stabilire un tipo suit condiviso
 - finestra about e display del numero di versione
 - estrarre evaluate* e altri helper da ComputerPlayer

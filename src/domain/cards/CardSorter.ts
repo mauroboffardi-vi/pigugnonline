@@ -1,4 +1,5 @@
 import { Card } from './Card';
+import { Suits, Suit } from '../domain-types';
 
 /**
  * Utility per ordinare le carte secondo le regole di potenza e ordine dei semi.
@@ -7,15 +8,15 @@ export class CardSorter {
     /**
      * Restituisce il valore numerico del seme per l'ordinamento.
      * L'ordine é coppe, denari, bastoni e spade
-     * @param {string} suit
+     * @param {Suit} suit
      * @returns {number}
      */
-    static suitOrder(suit: string): number {
-        const order: Record<string, number> = {
-            coppe: 0,
-            denari: 1,
-            bastoni: 2,
-            spade: 3,
+    static suitOrder(suit: Suit): number {
+        const order: Record<Suit, number> = {
+            [Suits.COPPE]: 0,
+            [Suits.DENARI]: 1,
+            [Suits.BASTONI]: 2,
+            [Suits.SPADE]: 3,
         };
         return order[suit] ?? 0;
     }

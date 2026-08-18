@@ -2,7 +2,10 @@
  * Rappresenta un mazzo di carte da 40 carte per il gioco del Pigugno.
  */
 
+import { Suits, Suit } from '../domain-types';
 import { Card } from './Card'
+
+
 
 export class Deck {
 
@@ -23,7 +26,7 @@ export class Deck {
      * @returns {Card[]} Elenco delle carte create.
      */
     createDeck(): Card[] {
-        const suits = ['coppe', 'denari', 'bastoni', 'spade'] as const;
+        const suits = Object.values(Suits) as Suit[];
         const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         const deck: Card[] = [];
 

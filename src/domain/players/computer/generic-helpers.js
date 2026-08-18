@@ -63,7 +63,7 @@ export function countSuit(hand, suit) {
 /**
  * 
  * @param {Card[]} hand 
- * @param {string} suit 
+ * @param {import('../../domain-types').Suit} suit 
  * @returns {Card[]}
  */
 

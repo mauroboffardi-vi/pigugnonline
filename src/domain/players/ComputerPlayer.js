@@ -21,6 +21,7 @@
  */
 
 import { CardSorter } from '../../domain/cards/CardSorter'
+import { Suits } from '../domain-types.js';
 
 import { GameState } from "../game/GameState.js";
 import * as gh from "./computer/generic-helpers.js";
@@ -802,7 +803,7 @@ export default class ComputerPlayer {
         const player = gameState.getPlayerById(playerId);
         const hand = this.#getPlayerHand(gameState, playerId);
 
-        const suits = ["denari", "coppe", "spade", "bastoni"];
+        const suits = Object.values(Suits);
         /** @type {DecimaAnalysisInfo} */
         const result = {};
 
@@ -941,8 +942,8 @@ export default class ComputerPlayer {
      * @returns {Record<string, ShortSuitPriorityInfo>}
      */
     #evaluateShortSuitPriority(hand) {
-        const suits = ["denari", "coppe", "spade", "bastoni"];
-        /** @type {Record<string, ShortSuitPriorityInfo>} */
+        const suits = Object.values(Suits);
+        /** @type {Partial<Record<import('../../domain-types').Suit, ShortSuitPriorityInfo>>} */
         const priorities = {};
 
         for (const suit of suits) {
@@ -1016,7 +1017,7 @@ export default class ComputerPlayer {
      */
     #evaluateDangerousShortSuits(gameState, playerId, hand, shortSuitPriority, decimeAnalysisInfo, shouldPull) {
         const player = gameState.getPlayerById(playerId);
-        const suits = ["denari", "coppe", "spade", "bastoni"];
+        const suits = Object.values(Suits);
         /** @type {Record<string, DangerousShortSuitInfo>} */
         const result = {};
 
@@ -1081,7 +1082,7 @@ export default class ComputerPlayer {
      */
     #evaluateTenaceSuits(gameState, playerId, hand, decimeAnalysisInfo, shouldPull) {
         const player = gameState.getPlayerById(playerId);
-        const suits = ["denari", "coppe", "spade", "bastoni"];
+        const suits = Object.values(Suits);
         /** @type {Record<string, TenaceSuitInfo>} */
         const result = {};
 
@@ -1173,7 +1174,7 @@ export default class ComputerPlayer {
     */
     #evaluateEntryPreservation(gameState, playerId, hand, shouldPull) {
         const player = gameState.getPlayerById(playerId);
-        const suits = ["denari", "coppe", "spade", "bastoni"];
+        const suits = Object.values(Suits);
 
         const entrySuits = [];
         const fragileEntries = [];
@@ -1300,7 +1301,7 @@ export default class ComputerPlayer {
      */
     #evaluateFragileShortSuits(gameState, playerId, hand, shouldPull) {
         const player = gameState.getPlayerById(playerId);
-        const suits = ["denari", "coppe", "spade", "bastoni"];
+        const suits = Object.values(Suits);
 
         /** @type {Record<string, FragileShortSuitInfo>} */
         const result = {};

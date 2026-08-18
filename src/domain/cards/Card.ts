@@ -1,12 +1,15 @@
 /**
  * Rappresenta una singola carta del mazzo.
  */
+
+import { Suits, Suit } from '../domain-types';
+
 export class Card {
 
     private static nextId = 1;
 
     public id: number;
-    public suit: 'coppe' | 'denari' | 'bastoni' | 'spade';
+    public suit: Suit;
     public value: number;
     public imagePath: string;
     public imageBackPath: string;
@@ -14,14 +17,8 @@ export class Card {
     /**
      * Crea una nuova carta.
      *
-     * @param {('coppe'|'denari'|'bastoni'|'spade')} suit - Il seme della carta.
-     * @param {number} value - Il valore della carta, compreso tra 1 e 10.
      */
-    constructor(public newsuit: 'coppe' | 'denari' | 'bastoni' | 'spade', public newvalue: number) {
-        if (!['coppe', 'denari', 'bastoni', 'spade'].includes(newsuit)) {
-            throw new Error('Seme non valido');
-        }
-
+    constructor(public newsuit: Suit, public newvalue: number) {
         if (!Number.isInteger(newvalue) || newvalue < 1 || newvalue > 10) {
             throw new Error('Valore della carta non valido');
         }
