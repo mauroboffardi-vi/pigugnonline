@@ -10,9 +10,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "typecheck": "tsc --noEmit",
+    "generate-version": "node scripts/generate-version.js",
+    "predev": "npm run generate-version",
+    "prebuild": "npm run generate-version",
     "build": "node scripts/build.js",
     "build:watch": "tsc --watch",
-    "bundle:single": "esbuild src/app/single/single.js --bundle --outfile=dist/app/single/single.js --format=esm"
+    "bundle:single": "esbuild src/app/single/single.js --bundle --outfile=dist/app/single/single.js --format=esm",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -27,6 +31,7 @@
   "homepage": "https://github.com/mauroboffardi-vi/pigugnonline#readme",
   "devDependencies": {
     "esbuild": "^0.28.2",
+    "husky": "^9.1.7",
     "typescript": "^7.0.2"
   }
 }

@@ -1,11 +1,16 @@
 // @ts-check
 // src/game/single.js
+
+
 /** @typedef {import('../../domain/domain-types').Player} Player */
 /** @typedef {import('../../domain/domain-types').Player} TrickEntry */
 /** @typedef {import('../../domain/domain-types').LastHandSummary} LastHandSummary */
 
 
 /** @typedef {import('../../domain/cards/Card').Card} Card */
+
+import { APP_VERSION } from '../../version';
+
 
 import { GameState } from '../../domain/game/GameState.js';
 import { pickRandomNames } from '../../domain/players/player-names.js';
@@ -537,6 +542,9 @@ async function bootstrapGame() {
  *            FINE DELLE FUNZIONI! 
  *       QUI PARTE IL CODICE CHE VIENE ESEGUITO QUANDO LO SCRIPT É CARICATO
  */
+
+console.log(`Versione app: ${APP_VERSION.version}`);
+console.log(`Data build: ${APP_VERSION.buildTime}`);
 
 gameState.onTrickResolved = onTrickResolved;
 gameState.onHandEnded = handleHandEnded;
