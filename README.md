@@ -190,3 +190,10 @@ e apri nel browser:
 - I file `.ts` (es. definizioni di tipi in `src/ui/ui-types.ts`) sono compilati e usati da esbuild nel bundle.
 - I file `.js` esistenti rimangono JavaScript; il type-checking su di essi è disabilitato (`checkJs: false`).
 - Per aggiungere nuovi file TypeScript, creali con estensione `.ts` e importali normalmente; esbuild li gestirà nel bundle.
+
+
+## EVENTI
+Questi sono gli eventi sollevati in diversi punti dell'applicazione e gestiti tramite l'EventBus, e i dati associati in ciascun evento.
+
+- TRICK_SWEEP, {} pubblicato da table-animation quando si raccolgono le carte alla fine di una mano
+- CARD_LAND, {Card} pubblicato da table-animation quando una carta giocata "vola" verso il tavolo. Passa l'oggeto Card che sta atterrando

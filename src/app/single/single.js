@@ -12,6 +12,7 @@
 import { APP_VERSION } from '../../version';
 
 
+import { SoundManager } from '../../ui/sound/SoundManager';
 import { GameState } from '../../domain/game/GameState.js';
 import { pickRandomNames } from '../../domain/players/player-names.js';
 import ComputerPlayer from '../../domain/players/ComputerPlayer.js';
@@ -80,6 +81,7 @@ if (ISDEBUG) {
   initDebugUI();
 }
 
+new SoundManager();
 const gameState = new GameState(['Io', ...pickRandomNames(3)]);
 let playCounter = 0;
 const cardsOnTable = new Map();
@@ -205,7 +207,7 @@ async function playCardWithAnimation(player, card, img, container, flowVersion =
       ? null
       : (img.dataset.faceSrc ?? null);
 
-  const clone = await animatePlayCard(img, container, center, {
+  const clone = await animatePlayCard(card, img, container, center, {
     zIndex: 1000 + playCounter,
     revealSrc,
     onPlayed: (playedClone) => {

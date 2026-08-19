@@ -1,5 +1,8 @@
 /** @typedef {import('../ui-types').PlayerAreaDirections} PlayerAreaDirections */
 /** @typedef {import('../domain-types').TrickEntry} TrickEntry */
+/** @typedef {import('../../domain/cards/Card').Card} Card */
+
+import { gameEvents } from '../../app/EventBus';
 
 /**
  * Animazioni per la gestione del tavolo, carte giocate, buttate
@@ -92,6 +95,7 @@ async function revealCardInFlight(cardImg, revealSrc) {
 }
 
 /**
+ * @param {Card} card
  * @param {HTMLImageElement} img
  * @param {HTMLElement} centerElem
  * @param {PlayerAreaDirections} direction
@@ -102,6 +106,7 @@ async function revealCardInFlight(cardImg, revealSrc) {
  * @returns {Promise<HTMLDivElement>}
  */
 export async function animateThrow(
+    card,
     img,
     centerElem,
     direction,
@@ -223,6 +228,7 @@ export async function animateThrow(
             revealCardInFlight(clone, revealSrc);
         }
 
+        gameEvents.emit('CARD_LAND', { card });
         await flight.finished;
 
         wrapper.style.transform = `translate(${dx}px, ${dy}px) rotate(${tiltEnd}deg)`;
@@ -230,6 +236,7 @@ export async function animateThrow(
         clone.dataset.faceUp = 'true';
 
         onPlayed(wrapper);
+
         return wrapper;
     } catch (e) {
         img.style.visibility = previousVisibility;
@@ -240,13 +247,14 @@ export async function animateThrow(
 
 /**
  * High-level API: play a card.
+ * @param {Card} card
  * @param {HTMLImageElement} img
  * @param {HTMLElement} container
  * @param {HTMLElement} centerElem
  * @param {{ onPlayed?: (wrapper: HTMLDivElement) => void, zIndex?: number, revealSrc?: string | null }} [opts={}]
  * @returns {Promise<HTMLDivElement>}
  */
-export async function animatePlayCard(img, container, centerElem, opts = {}) {
+export async function animatePlayCard(card, img, container, centerElem, opts = {}) {
     const {
         onPlayed = () => { },
         zIndex = 1000,
@@ -265,6 +273,7 @@ export async function animatePlayCard(img, container, centerElem, opts = {}) {
 
 
     const flyingCard = await animateThrow(
+        card,
         img,
         centerElem,
         direction,
@@ -315,6 +324,7 @@ export async function animateTrickResolution(centerElem, trickEntries, winnerId,
             break;
     }
 
+    gameEvents.emit('TRICK_SWEEP', {});
     const animations = trickEntries
         .map(({ card }, index) => {
             const clone = cardsOnTable.get(String(card.id));
