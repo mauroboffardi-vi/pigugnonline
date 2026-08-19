@@ -40,7 +40,7 @@ src/
   ui/
     overlays/
     animations/
-    visualizers/
+    sound/
   assets/
   styles/
   dev/
@@ -197,3 +197,6 @@ Questi sono gli eventi sollevati in diversi punti dell'applicazione e gestiti tr
 
 - TRICK_SWEEP, {} pubblicato da table-animation quando si raccolgono le carte alla fine di una mano
 - CARD_LAND, {Card} pubblicato da table-animation quando una carta giocata "vola" verso il tavolo. Passa l'oggeto Card che sta atterrando
+- BUSCA_MARKED {} pubblicato quando viene disegnata una bisca sul buschetracker
+- BUSCA_SEPARATOR_MARKED {} pubblicato quando viene disegnata una lineetta dopo la 5a busca
+- BUSCA_10_MARKED {} pubblicato quando il giocatore é marcato come "fuori" con una croce nel busca tracker, perchè ha passato i 10 punti

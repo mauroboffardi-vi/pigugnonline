@@ -8,6 +8,7 @@
 
 import { GameState } from "../../domain/game/GameState.js";
 import BuscheTracker from "../BuscheTracker.js";
+import { gameEvents } from '../../app/EventBus';
 
 /**
  * 
@@ -223,6 +224,8 @@ async function scatterScoringCardsForPlayer(playerSummary, everyoneCovered) {
             }
         );
 
+        gameEvents.emit('CARD_LAND', { card });
+
         // mostra animazione carta per carta solo se tutti hanno coperto,
         // se no vistoche non serve contare tutti "buttano" le carte senza pausa
         if (everyoneCovered) {
@@ -276,7 +279,7 @@ async function showPigugnoCenter(card, playerId) {
             fill: 'forwards',
         }
     );
-
+    gameEvents.emit('CARD_LAND', { card });
     await anim.finished;
 }
 

@@ -12,7 +12,10 @@ export class SoundManager {
     private sounds: Record<string, HTMLAudioElement> = {
         cardLand: new Audio('/assets/audio/card_land.mp3'),
         cardLandPigugno: new Audio('/assets/audio/card_land_pigugno.mp3'),
-        trickSweep: new Audio('/assets/audio/sweep.mp3')
+        trickSweep: new Audio('/assets/audio/sweep.mp3'),
+        busca: new Audio('/assets/audio/pencil_circle.mp3'),
+        strike: new Audio('/assets/audio/pencil_line.mp3'),
+        cross: new Audio('/assets/audio/pencil_cross.mp3')
     };
 
     constructor() {
@@ -21,6 +24,9 @@ export class SoundManager {
             this.playCardLand(card);
         });
         gameEvents.on('TRICK_SWEEP', () => this.playSound('trickSweep'));
+        gameEvents.on('BUSCA_MARKED', () => this.playSound('busca'));
+        gameEvents.on('BUSCA_SEPARATOR_MARKED', () => this.playSound('strike'));
+        gameEvents.on('BUSCA_10_MARKED', () => this.playSound('cross'));
     }
 
     private playCardLand(card: Card) {

@@ -2,3 +2,4 @@
 - 17 Aug: conversione del progetto da js puro a Typescript
 - 18 Aug: centralizzato il seme delle carte nell'oggetto Suit / Suits
 - 19 Aug: Creato Event Bus e sound Manager, aggiunto audio per il gioco delle carte e della presa.
+- 19 Aug: Aggiunti eventi ed audio per il segnare delle busche, e il mostrare le carte con i punti

@@ -4,20 +4,16 @@
 Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priorità non è aggiungere altro codice, ma ridurre l'accoppiamento, separare le responsabilità e preparare una base che regga AI, multiplayer e UX aggiuntiva.
 
 ## BUGS
-- (blocker) si gioca in senso antiorario!
+- fixed ~~(blocker)~~ si gioca in senso antiorario!
 - (low) a volte le carte lanciate sul tavolo si sovrappongono troppo e quella sotto non si legge. Troppo complicato il drag and drop?
 - (medium) la carte giocate sono fixed, modificando la dimensione della finestra stanno li. Come risolvere?
 - (medium) vedere come usare i css per rendere il tavolo da gioco piú adattabile alla risoluzione?
 - fixed ~~(**blocker**) a volte si ferma e dice "nessuna carta giocabile" per il computer~~
 - fixed ~~(**blocker**) Visto giocare il pigno di rifiuto di prima mano, dovrebbe essere impossibile~~
 - (improve) preload delle immagini delle carte per animazione piú fluida nella prima partita
+- (improve) migliorare l'audio per quando le carte vengono mostrate insieme durante il conteggio dei punti
+- (medium) le policy di autoplay del browser rifiutano di far partire suoni fino al primo click sulla pagina. Se la partita la inizia il computer, le carte non fanno rumore finché non si clicca. Aggiustare con un overlay "pronto a iniziare?" che richieda il primo click.
 
-## Priorità 1, struttura del codice
-
-### 1. Refactoring di `animation.js` - fatto
-### 2. Riorganizzazione delle cartelle sorgenti - fatto
-
-## Priorità 2, completare bene il single player
 
 ### 3a. pensare a un'indicatore del giocatore di turno
 
@@ -106,7 +102,6 @@ Nota progettuale:
 
 **Risultato atteso:** un avversario semplice ma sensato, senza sporcare `GameState`.
 
-### 4. Carte dei computer coperte - fatto
 
 ## Priorità 3, arricchimento dell'esperienza
 
@@ -117,8 +112,6 @@ Nota progettuale:
 ### 5. Suoni
 **Obiettivo:** dare peso alle animazioni e agli eventi importanti.
 
-- Aggiungere suoni leggeri per: lancio carta, presa, fine mano, Pigugno, eliminazione o superamento soglia busche.
-- Gestire il tutto in un modulo dedicato, per esempio `soundManager.js`.
 - Prevedere mute on/off nelle impostazioni o in un toggle semplice.
 - Evitare suoni ridondanti o troppo frequenti.
 
@@ -129,10 +122,10 @@ Nota progettuale:
 ### 6. Fumetti e commenti dinamici
 **Obiettivo:** aggiungere carattere senza interferire col flusso di gioco.
 
-- Introdurre hook o eventi semanticamente chiari nel `GameState` o in un event layer.
+- Introdurre hook o eventi semanticamente chiari nel `GameState` usando l'EventBus
 - Esempi: `onPigugnoTaken`, `onNoCapture`, `onBigBuscheSwing`, `onGameOverCandidate`.
 - Creare un sistema UI non bloccante per mostrare fumetti temporanei sopra i giocatori.
-- Tenere separata la logica di trigger dalla presentazione del fumetto.
+- Tenere separata la logica di trigger dalla presentazione del fumetto. (BanterManager)
 - Definire un tono coerente e non eccessivamente ripetitivo.
 
 **Risultato atteso:** più personalità, senza sporcare la logica principale.
@@ -178,7 +171,6 @@ Nota importante:
 ## Note strategiche
 
 - Non rendere l'AI “furba” prima di averla resa separata e testabile.
-- Non aggiungere effetti collaterali narrativi come fumetti e suoni dentro `GameState`: quello è il modo più rapido per rovinarlo.
 - Ogni nuova feature dovrebbe passare da una domanda semplice: è logica di dominio, presentazione, o orchestrazione?
 
 ## Backlog aperto

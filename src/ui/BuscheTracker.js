@@ -2,6 +2,8 @@ import { GameState } from "../domain/game/GameState.js";
 /** @typedef {import('../../domain/domain-types').LastHandSummary} LastHandSummary */
 /** @typedef {import('../ui-types').HandSummaryPlayer} HandSummaryPlayer */
 
+import { gameEvents } from '../app/EventBus';
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
@@ -180,6 +182,7 @@ function createArmGroup(direction) {
  * @returns {void}
  */
 function renderBuscheDot(group, cx, cy, seedPrefix, radius) {
+
     const dx1 = jitter(`${seedPrefix}-dx1`, -0.55, 0.55);
     const dy1 = jitter(`${seedPrefix}-dy1`, -0.55, 0.55);
     const dx2 = jitter(`${seedPrefix}-dx2`, -0.55, 0.55);
@@ -272,6 +275,7 @@ function renderBuscheMarks(group, direction, count, armLength, seedPrefix) {
  * @returns {void}
  */
 function renderBuscheSeparator(group, cx, cy, orientation, seedPrefix) {
+
     const wobble = jitter(`${seedPrefix}-wobble`, -0.8, 0.8);
     const tilt = jitter(`${seedPrefix}-tilt`, -10, 10);
     const length = 20 + jitter(`${seedPrefix}-len`, 2, 6);
@@ -592,6 +596,10 @@ export default class BuscheTracker {
     }
 
     /**
+     * 
+     * Questa é l'unica funzione che marca busche "nuove".
+     * Altrimenti setPlayerBusche() ridisegna tutto l'SVG in in colpo solo
+     * 
      * @param {number} playerId
      * @param {number} value
      * @returns {void}
@@ -605,6 +613,15 @@ export default class BuscheTracker {
 
         const mark = this.getTickElement(arm, index);
         if (!mark) return;
+
+        gameEvents.emit('BUSCA_MARKED', {});
+        if (value == 5) {
+            gameEvents.emit('BUSCA_SEPARATOR_MARKED', {});
+        }
+        if (value == 10) {
+            gameEvents.emit('BUSCA_10_MARKED', {});
+        }
+
 
         mark.animate(
             [
