@@ -86,3 +86,8 @@
         background: #f5ede2;
         color: #2c2119;
     }
+
+    .about {
+        margin: 50px 0 0 0;
+        font-size: small;
+    }

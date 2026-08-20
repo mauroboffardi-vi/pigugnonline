@@ -39,11 +39,13 @@ async function bundleJs() {
         entryPoints: [
             join(SRC, 'app', 'single', 'single.js'),
             join(SRC, 'app', 'single', 'test-buttons.js'),
+            join(SRC, 'index.js'),
 
             // quando hai network.js:
             // join(SRC, 'app', 'network.js'),
         ],
-        outdir: join(DIST, 'app/single'),
+        outdir: DIST,
+        outbase: SRC,
         bundle: true,
         format: 'esm',
         sourcemap: false, // metti true se vuoi sourcemap per debug

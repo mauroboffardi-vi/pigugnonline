@@ -1,10 +1,13 @@
 # Pigugno
 
-Implementazione in JavaScript del gioco di carte Pigugno, con focus su regole di partita, animazioni di tavolo e interfaccia leggera lato client. Il progetto è in costruzione, ma la base attuale copre già flusso di mano, conteggio punti, calcolo busche, reveal del Pigugno e schermata di fine mano.[cite:280][cite:289]
+Implementazione in JavaScript del gioco di carte Pigugno, con focus su regole di partita, animazioni di tavolo e interfaccia leggera lato client. 
+Il gioco si basa sulle [regole estratte da Wikipedia](doc/PLAY_RULES.md).
 
 ## Stato del progetto
 
-Il progetto è una versione giocabile single player locale, con logica di gioco già separata in buona parte dalla UI. Negli ultimi aggiornamenti sono stati sistemati il conteggio e la visualizzazione incrementale delle busche, la regola del sette di denari sulla prima mano, e la regola per cui nelle mani successive distribuisce chi ha preso il Pigugno e inizia il giocatore successivo.[cite:282][cite:289]
+Il progetto è in costruzione, ma giá ora é una versione giocabile single player locale, con logica di gioco già separata dalla UI. 
+La IA é decisamente giocabile, a parte qualche ottimizzazione é usabile e divertente.
+Leggi la [ROADMAP](ROADMAP.md) per vedere le implementazioni successive, ma in line di massima si tratterá di funzioni di "Banter" (fumetti delle IA con commenti al gioco), supporto al multiplayer, e miglioramenti tattici della IA.
 
 ## Funzionalità attuali
 
