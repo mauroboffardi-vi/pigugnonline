@@ -163,7 +163,6 @@ Nota importante:
 
 **Risultato atteso:** decisione realistica su fattibilità, complessità e limiti.
 
-### 9. migrare a TypeScript?
 
 ## Note strategiche
 
