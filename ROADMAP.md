@@ -4,7 +4,7 @@
 Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priorità non è aggiungere altro codice, ma ridurre l'accoppiamento, separare le responsabilità e preparare una base che regga AI, multiplayer e UX aggiuntiva.
 
 ## BUGS
-- fixed ~~(blocker)~~ si gioca in senso antiorario!
+- fixed ~~(blocker) si gioca in senso antiorario!~~
 - (low) a volte le carte lanciate sul tavolo si sovrappongono troppo e quella sotto non si legge. Troppo complicato il drag and drop?
 - (medium) la carte giocate sono fixed, modificando la dimensione della finestra stanno li. Come risolvere?
 - (medium) vedere come usare i css per rendere il tavolo da gioco piú adattabile alla risoluzione?
@@ -12,7 +12,7 @@ Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priori
 - fixed ~~(**blocker**) Visto giocare il pigno di rifiuto di prima mano, dovrebbe essere impossibile~~
 - (improve) preload delle immagini delle carte per animazione piú fluida nella prima partita
 - (improve) migliorare l'audio per quando le carte vengono mostrate insieme durante il conteggio dei punti
-- (medium) le policy di autoplay del browser rifiutano di far partire suoni fino al primo click sulla pagina. Se la partita la inizia il computer, le carte non fanno rumore finché non si clicca. Aggiustare con un overlay "pronto a iniziare?" che richieda il primo click.
+- fixed ~~(medium) le policy di autoplay del browser rifiutano di far partire suoni fino al primo click sulla pagina. Se la partita la inizia il computer, le carte non fanno rumore finché non si clicca. Aggiustare con un overlay "pronto a iniziare?" che richieda il primo click.~~
 
 
 ### 3a. pensare a un'indicatore del giocatore di turno

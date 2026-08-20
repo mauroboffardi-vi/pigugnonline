@@ -18,6 +18,7 @@ import { pickRandomNames } from '../../domain/players/player-names.js';
 import ComputerPlayer from '../../domain/players/ComputerPlayer.js';
 import { showCaptureOverlay, closeCaptureOverlay } from '../../ui/overlays/CaptureOverlay.js';
 import { GameOverOverlay } from '../../ui/overlays/GameOverOverlay.js';
+import { ClickToStartOverlay } from '../../ui/overlays/ClickToStart';
 import { animatePlayCard, animateTrickResolution } from '../../ui/animations/table-animation.js';
 import { animateHandSummary, clearHandSummaryOverlay } from '../../ui/animations/score-animation.js';
 import BuscheTracker from '../../ui/BuscheTracker.js';
@@ -97,6 +98,7 @@ if (!buscheNoteEl) {
 }
 
 const buscheTracker = new BuscheTracker(buscheNoteEl, gameState);
+const clickToStartOverlay = new ClickToStartOverlay();
 const gameOverOverlay = new GameOverOverlay();
 const computerPlayer = new ComputerPlayer();
 
@@ -532,6 +534,7 @@ function isStaleFlow(version) {
  * @returns {Promise<void>}
  */
 async function bootstrapGame() {
+  await clickToStartOverlay.show();
   nextGameFlowVersion();
   gameState.startGame();
   renderBoard(gameState);
