@@ -10,7 +10,15 @@ import { Card } from '../animations/table-animation';
 export class SoundManager {
     private isMuted: boolean = false;
     private sounds: Record<string, HTMLAudioElement> = {
-        cardLand: new Audio('/assets/audio/card_land.mp3'),
+        cardLand1: new Audio('/assets/audio/card1.mp3'),
+        cardLand2: new Audio('/assets/audio/card2.mp3'),
+        cardLand3: new Audio('/assets/audio/card3.mp3'),
+        cardLand4: new Audio('/assets/audio/card4.mp3'),
+        cardLand5: new Audio('/assets/audio/card5.mp3'),
+        cardLand6: new Audio('/assets/audio/card6.mp3'),
+        cardLand7: new Audio('/assets/audio/card7.mp3'),
+        cardLand8: new Audio('/assets/audio/card8.mp3'),
+        cardLand9: new Audio('/assets/audio/card9.mp3'),
         cardLandPigugno: new Audio('/assets/audio/card_land_pigugno.mp3'),
         trickSweep: new Audio('/assets/audio/sweep.mp3'),
         busca: new Audio('/assets/audio/pencil_circle.mp3'),
@@ -33,10 +41,9 @@ export class SoundManager {
         if (card.isPigugno()) {
             this.playSound('cardLandPigugno');
         } else {
-            this.playSound('cardLand');
+            this.playSound('cardLand' + this.rand(1, 9));
         }
     }
-
 
     private playSound(soundName: string) {
         console.debug(`🔊 ${soundName}`);
@@ -51,5 +58,9 @@ export class SoundManager {
     public toggleMute(): boolean {
         this.isMuted = !this.isMuted;
         return this.isMuted;
+    }
+
+    private rand(min: number, max: number): number {
+        return Math.round(Math.random() * (max - min) + min);
     }
 }
