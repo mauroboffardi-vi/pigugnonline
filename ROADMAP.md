@@ -10,7 +10,7 @@ Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priori
 - (medium) vedere come usare i css per rendere il tavolo da gioco piú adattabile alla risoluzione?
 - fixed ~~(**blocker**) a volte si ferma e dice "nessuna carta giocabile" per il computer~~
 - fixed ~~(**blocker**) Visto giocare il pigno di rifiuto di prima mano, dovrebbe essere impossibile~~
-- (improve) preload delle immagini delle carte per animazione piú fluida nella prima partita
+- fixed ~~(improve) preload delle immagini delle carte per animazione piú fluida nella prima partita~~
 - (improve) migliorare l'audio per quando le carte vengono mostrate insieme durante il conteggio dei punti
 - fixed ~~(medium) le policy di autoplay del browser rifiutano di far partire suoni fino al primo click sulla pagina. Se la partita la inizia il computer, le carte non fanno rumore finché non si clicca. Aggiustare con un overlay "pronto a iniziare?" che richieda il primo click.~~
 
@@ -113,11 +113,8 @@ Nota progettuale:
 **Obiettivo:** dare peso alle animazioni e agli eventi importanti.
 
 - Prevedere mute on/off nelle impostazioni o in un toggle semplice.
-- Evitare suoni ridondanti o troppo frequenti.
 
 **Risultato atteso:** feedback più vivo, senza trasformare il gioco in una slot machine.
-
-### 5.5. Automatizzare deploy
 
 ### 6. Fumetti e commenti dinamici
 **Obiettivo:** aggiungere carattere senza interferire col flusso di gioco.

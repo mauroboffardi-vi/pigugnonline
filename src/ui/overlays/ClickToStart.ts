@@ -3,7 +3,6 @@ export class ClickToStartOverlay {
     private overlayElement: HTMLElement | null = null;
 
     public show(): Promise<void> {
-        console.debug("ClickToStartOverlay.show()");
         this.close();
 
         return new Promise((resolve) => {

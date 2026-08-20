@@ -16,7 +16,9 @@
     "build": "node scripts/build.js",
     "build:watch": "tsc --watch",
     "bundle:single": "esbuild src/app/single/single.js --bundle --outfile=dist/app/single/single.js --format=esm",
-    "prepare": "husky"
+    "prepare": "husky",
+    "predeploy": "npm run build",
+    "deploy": "rsync -avz --delete ./dist/ boffardi.net:~/www/boffardi.net/public_html/pigugno/ && ssh boffardi.net \"find ~/www/boffardi.net/public_html/pigugno -type d -exec chmod 755 {} + && find ~/www/boffardi.net/public_html/pigugno -type f -exec chmod 644 {} +\""
   },
   "repository": {
     "type": "git",
