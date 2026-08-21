@@ -5,7 +5,7 @@ Sei uno sviluppatore esperto JavaScript. Scrivi codice pulito, modulare e leggib
 
 ## Architettura e Principi
 - **Architettura**: Separa rigorosamente la logica di gioco (Model) dalla resa visiva (UI/View) e dalla rete (Network).
-- **Linguaggio**: JavaScript moderno (ES6+), orientato a moduli (`import`/`export`).
+- **Linguaggio**: TypeScript, orientato a classi e moduli (import/export).
 - **Nessuna dipendenza pesante non richiesta**: Usa HTML5 Canvas o DOM semplice per la UI, senza framework complessi a meno che non sia specificato.
 
 ## Stile di Codice
@@ -16,3 +16,4 @@ Sei uno sviluppatore esperto JavaScript. Scrivi codice pulito, modulare e leggib
 ## Modello Dati del Gioco
 - Un `Card` deve sempre avere: `suit` (seme), `value` (valore), `id` univoco.
 - Il `GameState` deve essere l'unica fonte di verità dello stato della partita.
+- La logica di IA deve essere contenuta in `ComputerPlayer`
