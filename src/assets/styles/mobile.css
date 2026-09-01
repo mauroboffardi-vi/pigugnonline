@@ -1,0 +1,135 @@
+/* Applica gli stili solo su schermi piccoli/mobile in landscape o schermi fino a 950px */
+@media screen and (max-width: 950px) and (orientation: landscape),
+screen and (max-height: 500px) {
+
+    /* 1. Contenitore principale e Tavolo */
+    .table-shell {
+        padding: 0.25rem;
+        min-height: 100dvh;
+    }
+
+    .table {
+        min-height: calc(100dvh - 0.5rem);
+        padding: 0.35rem;
+        gap: 0.35rem;
+        border-width: 4px;
+        border-radius: 0.75rem;
+        /* Adatta le 3 colonne alle dimensioni ridotte */
+        grid-template-columns: minmax(65px, 1fr) 2fr minmax(65px, 1fr);
+    }
+
+    .table::before {
+        min-height: 120px;
+        border-radius: 0.5rem;
+    }
+
+    /* 2. Aree Giocatori */
+    .player-area {
+        padding: 0.25rem;
+        min-height: auto !important;
+        border-radius: 0.5rem;
+    }
+
+    .player-area.top {
+        min-height: 70px !important;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+
+    .player-area.left,
+    .player-area.right {
+        min-height: 100% !important;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+
+    /* 3. Dimensioni delle Carte (da 110px fixed a fluido) */
+    .card-image {
+        width: clamp(42px, 8vw, 65px) !important;
+        border-width: 2px !important;
+        border-radius: 3px !important;
+    }
+
+    /* 4. Segnapunti / Post-it Busche */
+    .score-note-slot {
+        transform: scale(0.65);
+        transform-origin: top left;
+    }
+
+    /* 5. Riduzione font per i nomi dei giocatori */
+    .player-name {
+        font-size: 0.75rem;
+    }
+
+    .player-status {
+        font-size: 0.65rem;
+    }
+
+    /* Carte piú piccole per il mobile */
+    img.card-image {
+        width: auto !important;
+        height: 70px;
+    }
+
+    img.card-image.is-face-down {
+        width: auto !important;
+        height: 50px;
+    }
+
+    /**
+    Cambia la disposizione delle carte coperte per player left e right, mettendole in orizzontale.
+    */
+
+    /* 1. Trasforma il contenitore delle mani laterali in riga orizzontale */
+    .player-area.left .player-hand,
+    .player-area.right .player-hand {
+        flex-direction: row !important;
+        min-width: auto !important;
+        height: auto !important;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* 2. Annulla il posizionamento assoluto verticale e applica il margine orizzontale */
+    .player-area.left .card-item,
+    .player-area.right .card-item {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        margin-left: -20px;
+        /* Sovrapposizione orizzontale tra le carte */
+    }
+
+    .player-area.left .card-item:first-child,
+    .player-area.right .card-item:first-child {
+        margin-left: 0;
+    }
+
+    /* 3. Aumenta leggermente lo spazio delle colonne laterali nella griglia se necessario */
+    .table {
+        grid-template-columns: 1.2fr 2fr 1.2fr !important;
+    }
+
+    /*. fie delle regole per disporre le carte di player left e right in orizzontale */
+
+}
+
+/* Messaggio di avviso in modalità Portrait (Verticale) */
+@media screen and (max-width: 950px) and (orientation: portrait) {
+    body::after {
+        content: "Ruota il dispositivo in orizzontale (Landscape) per giocare 🔄";
+        position: fixed;
+        inset: 0;
+        background: #1d4d2b;
+        color: #f7f0de;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+        font-size: 1.25rem;
+        font-weight: bold;
+        z-index: 99999;
+    }
+}
