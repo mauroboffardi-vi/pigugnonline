@@ -13,3 +13,4 @@
 - aggiunto "about" nella index con numero/data di versione automatico
 ## 1 Set
 - Introdotto mobile.css per gestire lo schermo anche su cellulari (landscape)
+- rimosso silenzio all'inizio dell'audio del pigugno giocato
