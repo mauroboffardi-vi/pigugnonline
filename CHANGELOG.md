@@ -11,3 +11,5 @@
 - Sostituito il rumore delle carte giocate con un suono piú discreto e scelto random fra 9
 - aggiustato il relative path degli asset per farlo funzionare sia in locale che sull'host www.boffardi.net , e creato script di deploy
 - aggiunto "about" nella index con numero/data di versione automatico
+## 1 Set
+- Introdotto mobile.css per gestire lo schermo anche su cellulari (landscape)
