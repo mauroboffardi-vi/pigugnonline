@@ -5,6 +5,8 @@ import { CardSorter } from '../../domain/cards/CardSorter';
 import { Card } from '../../domain/cards/Card';
 import { Suit, LastHandSummary, PlayerHandSummary, Player, Trick, TrickEntry, CompletedTricks, GameOverState } from '../domain-types';
 
+import { gameEvents } from '../../app/EventBus';
+
 /**
  * Rappresenta lo stato della partita singola.
  */
@@ -538,6 +540,10 @@ export class GameState {
 
         } else {
             isGameOver = false;
+        }
+
+        if (isGameOver) {
+            gameEvents.emit('GAME_OVER', {});
         }
 
         return { isGameOver, winners, isDoubleWin, message };

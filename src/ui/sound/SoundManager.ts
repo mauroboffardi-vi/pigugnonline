@@ -23,7 +23,9 @@ export class SoundManager {
         trickSweep: new Audio('../../assets/audio/sweep.mp3'),
         busca: new Audio('../../assets/audio/pencil_circle.mp3'),
         strike: new Audio('../../assets/audio/pencil_line.mp3'),
-        cross: new Audio('../../assets/audio/pencil_cross.mp3')
+        cross: new Audio('../../assets/audio/pencil_cross.mp3'),
+        fanfare: new Audio('../../assets/audio/victory_fanfare.mp3'),
+
     };
 
     constructor() {
@@ -35,6 +37,7 @@ export class SoundManager {
         gameEvents.on('BUSCA_MARKED', () => this.playSound('busca'));
         gameEvents.on('BUSCA_SEPARATOR_MARKED', () => this.playSound('strike'));
         gameEvents.on('BUSCA_10_MARKED', () => this.playSound('cross'));
+        gameEvents.on('GAME_OVER', () => this.playSound('fanfare'));
     }
 
     private playCardLand(card: Card) {

@@ -1,7 +1,7 @@
 import { GameState } from "../../domain/game/GameState.js";
 /**
- * @typedef {import('../../domain-types').CardAllocations} CardAllocations
- * @typedef {import('../../domain-types').RerenderFn} RerenderFn
+ * @typedef {import('../../domain/domain-types').CardAllocations} CardAllocations
+ * @typedef {import('../../domain/domain-types').RerenderFn} RerenderFn
  * @typedef {import('../../ui/ui-types').TestApi} TestApi
  * @typedef {import('../../domain/cards/Card').Card} Card 
  * */

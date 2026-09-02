@@ -23,10 +23,11 @@ import { animatePlayCard, animateTrickResolution } from '../../ui/animations/tab
 import { animateHandSummary, clearHandSummaryOverlay } from '../../ui/animations/score-animation.js';
 import BuscheTracker from '../../ui/BuscheTracker.js';
 
+
 /**
  *  Questo associa il nome del container delle areee di gioco ai giocatori 0-3
  */
-/** @type {Record<number, string} */
+/** @type {Record<number, string>} */
 const PLAYER_CONTAINER_IDS = Object.freeze({
   0: 'player-you',
   1: 'player-left',
