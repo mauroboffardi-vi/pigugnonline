@@ -1,6 +1,12 @@
-// src/game/CaptureOverlay.js
+// src/ui/overlays/CaptureOverlay.ts
 
-export function showCaptureOverlay(cards) {
+import { Card } from "../animations/table-animation";
+
+/*
+ *  Overlay che mostra le carte prese dal giocatore
+ *
+ */
+export function showCaptureOverlay(cards: Card[]) {
     const overlay = document.createElement('div');
     overlay.className = 'capture-overlay';
     overlay.innerHTML = `
@@ -13,9 +19,11 @@ export function showCaptureOverlay(cards) {
     document.body.appendChild(overlay);
 
     const closeButton = overlay.querySelector('.close-btn');
-    closeButton.addEventListener('click', () => {
-        closeCaptureOverlay();
-    });
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            closeCaptureOverlay();
+        });
+    }
 
     // Disable interaction while overlay is open
     document.body.style.pointerEvents = 'none';

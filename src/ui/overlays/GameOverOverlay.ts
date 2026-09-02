@@ -1,7 +1,11 @@
-// src/game/GameOverOverlay.js
+// src/ui/overlays/GameOverOverlay.ts
+
+import { GameOverState } from "../../domain/domain-types";
 
 export class GameOverOverlay {
-    show(gameOverData, onClickCallback) {
+    private overlayElement: HTMLDivElement | null = null;
+
+    show(gameOverData: GameOverState, onClickCallback?: () => void) {
         this.close();
 
         const overlay = document.createElement('div');
