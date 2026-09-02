@@ -229,3 +229,11 @@ export type Trick = TrickEntry[];
 
 // 2. Matrice delle prese completate (TrickEntry[][])
 export type CompletedTricks = Trick[];
+
+export type GameOverState = {
+    isGameOver: boolean;
+    winners: Player[];
+    isDoubleWin: boolean;
+    message: string;
+}
+
