@@ -1,4 +1,4 @@
-// src/game/PlayerNames.js
+// src/game/PlayerNames.ts
 
 const availableNames = [
     'Babi',
@@ -55,7 +55,7 @@ const availableNames = [
  * @param {number} count - Il numero di nomi da scegliere.
  * @returns {string[]} Un array contenente i nomi scelti in ordine casuale.
  */
-export function pickRandomNames(count) {
+export function pickRandomNames(count: number): string[] {
     const shuffled = [...availableNames].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, count);
 }
@@ -65,6 +65,6 @@ export function pickRandomNames(count) {
  *
  * @returns {string[]} Un array contenente tutti i nomi dei giocatori.
  */
-export function getAllPlayerNames() {
+export function getAllPlayerNames(): string[] {
     return availableNames;
 }

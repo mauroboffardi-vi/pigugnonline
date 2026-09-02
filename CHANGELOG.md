@@ -16,3 +16,4 @@
 - rimosso silenzio all'inizio dell'audio del pigugno giocato
 ## 2 Set
 - Rinominati elementi TrickEntry, TrickEntry[] e TrickEntry[][] in TrickEntry, Trick, and CompletedTricks
+- refactored ComputerPlayer externalizing methdos, convert some classes to ts. Enabled strict compile mode
