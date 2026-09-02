@@ -214,3 +214,9 @@ export interface TrickEntry {
     player: Player;
     card: Card;
 }
+
+// 1. Singola presa (TrickEntry[])
+export type Trick = TrickEntry[];
+
+// 2. Matrice delle prese completate (TrickEntry[][])
+export type CompletedTricks = Trick[];

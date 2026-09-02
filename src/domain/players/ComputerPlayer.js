@@ -1355,7 +1355,7 @@ export default class ComputerPlayer {
 
     /**
      * @param {GameState} gameState
-     * @returns {TrickEntry[] | null}
+     * @returns {import('../domain-types.js').Trick | null}
      */
     #getLastCompletedTrick(gameState) {
         const history = gameState.completedTricks || [];
@@ -1364,7 +1364,7 @@ export default class ComputerPlayer {
     }
 
     /**
-     * @param {TrickEntry[]} trick
+     * @param {Trick} trick
      * @returns {number | null}
      */
     #getWinnerOfTrick(trick) {

@@ -291,12 +291,12 @@ export async function animatePlayCard(card, img, container, centerElem, opts = {
  * Animazione per muovere le carte vinte verso il giocatore vincitore.
  * 
  * @param {HTMLElement} centerElem
- * @param {TrickEntry[]} trickEntries
+ * @param {Trick} trick
  * @param {number} winnerId
  * @param {Map<string, HTMLElement>} cardsOnTable
  * @returns {Promise<void>}
  */
-export async function animateTrickResolution(centerElem, trickEntries, winnerId, cardsOnTable) {
+export async function animateTrickResolution(centerElem, trick, winnerId, cardsOnTable) {
     const centerRect = centerElem.getBoundingClientRect();
     const margin = 40;
 
@@ -325,7 +325,7 @@ export async function animateTrickResolution(centerElem, trickEntries, winnerId,
     }
 
     gameEvents.emit('TRICK_SWEEP', {});
-    const animations = trickEntries
+    const animations = trick
         .map(({ card }, index) => {
             const clone = cardsOnTable.get(String(card.id));
             if (!clone) return null;

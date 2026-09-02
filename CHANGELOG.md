@@ -14,3 +14,5 @@
 ## 1 Set
 - Introdotto mobile.css per gestire lo schermo anche su cellulari (landscape)
 - rimosso silenzio all'inizio dell'audio del pigugno giocato
+## 2 Set
+- Rinominati elementi TrickEntry, TrickEntry[] e TrickEntry[][] in TrickEntry, Trick, and CompletedTricks

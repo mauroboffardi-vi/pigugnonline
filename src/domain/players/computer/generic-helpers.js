@@ -82,7 +82,7 @@ export function rankDistance(lowerCard, higherCard) {
 }
 /**
  * Ritorna il seme di mano
- * @param {TrickEntry[]} trick 
+ * @param {Trick} trick 
  * @returns {string}
  */
 export function getLeadingSuitFromTrick(trick) {

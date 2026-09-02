@@ -367,7 +367,7 @@ async function continueGameFlow() {
 
 /**
  * @param {number} winnerId
- * @param {import('../../domain/domain-types').TrickEntry[]} resolvedTrick
+ * @param {import('../../domain/domain-types').Trick} resolvedTrick
  */
 async function onTrickResolved(winnerId, resolvedTrick) {
   isResolvingTrick = true;

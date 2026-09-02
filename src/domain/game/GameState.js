@@ -5,8 +5,10 @@
  * @typedef {import('../domain-types').LastHandSummary} LastHandSummary
  * @typedef {import('../domain-types').PlayerHandSummary} PlayerHandSummary  
  * @typedef {import('../domain-types').Player} Player  
+ * @typedef {import('../domain-types').Trick} Trick
  * @typedef {import('../domain-types').TrickEntry} TrickEntry
- * 
+ * @typedef {import('../domain-types').CompletedTricks} CompletedTricks
+* 
  * @typedef {import('../../domain/cards/Card').Card} Card 
 */
 
@@ -43,16 +45,16 @@ export class GameState {
         this.deck = null;
         this.currentTurn = 0;
         this.phase = 'setup';
-        /** @type {import('../domain-types').TrickEntry[]} */
+        /** @type {import('../domain-types').Trick} */
         this.trick = [];
         this.trumpSuit = 'spade';
-        /** @type {((winnerPlayerId: number, resolvedTrick: TrickEntry[]) => void) | null} */
+        /** @type {((winnerPlayerId: number, resolvedTrick: import('../domain-types').Trick) => void) | null} */
         this.onTrickResolved = null;
         /** @type {((summary: LastHandSummary) => void) | null} */
         this.onHandEnded = null;
 
         this.isFirstTrick = true;
-        /** @type {TrickEntry[][]} */
+        /** @type {import('../domain-types').CompletedTricks} */
         this.completedTricks = [];
 
         this.handNumber = 1;
@@ -371,7 +373,7 @@ export class GameState {
     /**
      * Restituisce le carte sul tavolo. 
      * 
-     * @returns {TrickEntry[]}
+     * @returns {Trick}
      */
 
     getCurrentTrick() {
