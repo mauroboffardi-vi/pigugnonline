@@ -32,6 +32,7 @@ export interface Player {
  * Usata quando nelle logiche di calcolo deve essere referenziata una carta che non si sa ancora in che mano sia
  */
 export interface CardRef {
+    //@todo: Quanto tuttto in TS, sostituire con tipo Suit
     suit: string;
     value: number;
 }
@@ -166,7 +167,7 @@ export type CiapaETornaMode = "none" | "tirare" | "darla_via";
 
 export interface CiapaETorna {
     active: boolean;
-    suit: string | null;
+    suit: Suit | null;
     mode: CiapaETornaMode;
     bonus: number;
     refusalsOnSuit: number;
@@ -193,6 +194,14 @@ export interface HandPlan {
     ciapaETorna: CiapaETorna;
     forcedTricksEstimate: any;
     decimeAnalysisInfo: DecimaAnalysisInfo;
+}
+
+export interface MatchPlan {
+    player: Player;
+    preferBuscheOnAlivePlayers: boolean;
+    preferAvoidHelpingEliminatedPlayers: boolean;
+    canSetUpDoubleExit: boolean;
+    notes: string;
 }
 
 export interface EndgameMode {

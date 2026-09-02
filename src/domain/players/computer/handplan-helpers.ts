@@ -1,15 +1,14 @@
-// handPlanHelpers.js
-/** @typedef {import('../domain-types').CardRef} CardRef */
-/** @typedef {import('../domain-types').HandPlan} HandPlan */
-/** @typedef {import('../../domain/cards/Card').Card} Card */
-
+// handPlanHelpers.ts
+import { GameState } from '../../game/GameState';
+import { CardRef, HandPlan } from '../../domain-types';
+import { Card } from "../../cards/Card";
 
 /**
  * @param {HandPlan} handPlan 
  * @param {string} suit 
  * @returns {boolean}
  */
-export function isFragileShortSuit(handPlan, suit) {
+export function isFragileShortSuit(handPlan: HandPlan, suit: string): boolean {
     return !!handPlan.fragileShortSuits?.[suit]?.isFragile;
 }
 
@@ -18,7 +17,7 @@ export function isFragileShortSuit(handPlan, suit) {
  * @param {string} suit 
  * @returns {number}
  */
-export function getFragileShortSuitScore(handPlan, suit) {
+export function getFragileShortSuitScore(handPlan: HandPlan, suit: string): number {
     return handPlan.fragileShortSuits?.[suit]?.fragilityScore || 0;
 }
 
@@ -27,7 +26,7 @@ export function getFragileShortSuitScore(handPlan, suit) {
  * @param {string} suit 
  * @returns {boolean}
  */
-export function isTenaceSuit(handPlan, suit) {
+export function isTenaceSuit(handPlan: HandPlan, suit: string): boolean {
     return !!handPlan.tenaceSuits?.[suit]?.isTenace;
 }
 
@@ -36,7 +35,7 @@ export function isTenaceSuit(handPlan, suit) {
  * @param {Card} card 
  * @returns {boolean}
  */
-export function isFragileEntryCard(handPlan, card) {
+export function isFragileEntryCard(handPlan: HandPlan, card: Card): boolean {
     const entries = handPlan.entryPreservation?.fragileEntries || [];
     return entries.some(entry => entry.suit === card.suit && entry.value === card.value);
 }
@@ -46,64 +45,92 @@ export function isFragileEntryCard(handPlan, card) {
  * @param {string} suit 
  * @returns {boolean}
  */
-export function isEntrySuit(handPlan, suit) {
+export function isEntrySuit(handPlan: HandPlan, suit: string): boolean {
     return (handPlan.entryPreservation?.entrySuits || []).includes(suit);
 }
+
 /**
  * @param {HandPlan} handPlan 
  * @param {string} suit 
  * @returns {number}
  */
-export function getTenaceTension(handPlan, suit) {
+export function getTenaceTension(handPlan: HandPlan, suit: string): number {
     return handPlan.tenaceSuits?.[suit]?.tension || 0;
 }
+
 /**
  * @param {HandPlan} handPlan 
  * @param {Card} card 
  * @returns {boolean}
  */
-export function isTenaceLowCard(handPlan, card) {
+export function isTenaceLowCard(handPlan: HandPlan, card: Card): boolean {
     const info = handPlan.tenaceSuits?.[card.suit];
     if (!info?.isTenace || !info.lowCard) return false;
     return info.lowCard.value === card.value;
 }
+
 /**
  * @param {HandPlan} handPlan 
  * @param {string} suit 
  * @returns {boolean}
  */
-export function isDangerousShortSuit(handPlan, suit) {
+export function isDangerousShortSuit(handPlan: HandPlan, suit: string): boolean {
     return !!handPlan.dangerousShortSuits?.[suit]?.isDangerous;
 }
+
 /**
  * @param {HandPlan} handPlan 
  * @param {string} suit 
  * @returns {number}
  */
-export function getShortSuitDangerScore(handPlan, suit) {
+export function getShortSuitDangerScore(handPlan: HandPlan, suit: string): number {
     return handPlan.dangerousShortSuits?.[suit]?.dangerScore || 0;
 }
+
 /**
  * @param {HandPlan} handPlan 
  * @param {string} suit 
  * @returns {number}
  */
-export function getShortSuitUrgency(handPlan, suit) {
+export function getShortSuitUrgency(handPlan: HandPlan, suit: string): number {
     return handPlan.shortSuitPriority?.[suit]?.urgency || 0;
 }
+
 /**
  * @param {HandPlan} handPlan 
  * @param {string} suit 
  * @returns {boolean}
  */
-export function isKnownDecimaSuit(handPlan, suit) {
+export function isKnownDecimaSuit(handPlan: HandPlan, suit: string): boolean {
     return !!handPlan.decimaPressure?.[suit]?.knownMissing;
 }
+
 /**
  * @param {HandPlan} handPlan 
  * @param {string} suit 
  * @returns {CardRef | null}
  */
-export function getKnownMissingCardForSuit(handPlan, suit) {
+export function getKnownMissingCardForSuit(handPlan: HandPlan, suit: string): CardRef | null {
     return handPlan.decimaPressure?.[suit]?.missingCard || null;
+}
+
+/**
+ * @param {GameState} gameState
+ * @param {number} playerId
+ */
+export function isForcedToFollow(gameState: GameState, playerId: number): boolean {
+    const leadingSuit = gameState.getLeadingSuit();
+    if (!leadingSuit) return false;
+
+    const hand = gameState.getPlayerHand(playerId);
+    return hand.some((card: Card) => card.suit === leadingSuit);
+}
+
+/**
+ * @param {GameState} gameState
+ * @param {number} playerId
+ */
+export function isLastTrickLikely(gameState: GameState, playerId: number): boolean {
+    const hand = gameState.getPlayerHand(playerId);
+    return hand.length <= 1;
 }

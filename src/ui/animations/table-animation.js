@@ -1,5 +1,6 @@
 /** @typedef {import('../ui-types').PlayerAreaDirections} PlayerAreaDirections */
-/** @typedef {import('../domain-types').TrickEntry} TrickEntry */
+/** @typedef {import('../../domain/domain-types').TrickEntry} TrickEntry */
+/** @typedef {import('../../domain/domain-types').Trick} Trick */
 /** @typedef {import('../../domain/cards/Card').Card} Card */
 
 import { gameEvents } from '../../app/EventBus';

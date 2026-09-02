@@ -9,7 +9,7 @@
     ],
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": false,
+    "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
@@ -19,7 +19,7 @@
     "resolveJsonModule": true,
     // Fondamentali per migrazione graduale:
     "allowJs": true,
-    "checkJs": false,
+    "checkJs": true,
     "declaration": true
   },
   "include": [

@@ -49,7 +49,7 @@ async function bundleJs() {
         bundle: true,
         format: 'esm',
         sourcemap: false, // metti true se vuoi sourcemap per debug
-        minify: true,    // true per produzione
+        minify: false,    // true per produzione
     });
 }
 

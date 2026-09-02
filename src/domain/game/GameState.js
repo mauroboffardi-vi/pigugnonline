@@ -724,6 +724,15 @@ export class GameState {
         return this.handNumber;
     }
 
+    /**
+     * @param {number} playerId
+     * @returns {Card[]}
+     */
+    getPlayerHand(playerId) {
+        const player = this.getPlayerById(playerId);
+        return player?.hand || [];
+    }
+
 
     /**
      * controlla se la partita sia terminata
