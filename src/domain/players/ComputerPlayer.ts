@@ -1,54 +1,29 @@
-/**
- * @typedef {import('../domain-types').CiapaETorna} CiapaETorna
- * @typedef {import('../domain-types').CiapaETornaMode} CiapaETornaMode
- * @typedef {import('../domain-types').DangerousShortSuitInfo} DangerousShortSuitInfo
- * @typedef {import('../domain-types').DecimaAnalysisInfo} DecimaAnalysisInfo
- * @typedef {import('../domain-types').DecimaAnalysisSuitInfo} DecimaAnalysisSuitInfo
- * @typedef {import('../domain-types').DecimaPressureInfo} DecimaPressureInfo
- * @typedef {import('../domain-types').DecimaPressureSuitInfo} DecimaPressureSuitInfo
- * @typedef {import('../domain-types').EntryPreservationInfo} EntryPreservationInfo
- * @typedef {import('../domain-types').ForcedTricksEstimate} ForcedTricksEstimate
- * @typedef {import('../domain-types').FragileShortSuitInfo} FragileShortSuitInfo
- * @typedef {import('../domain-types').HandPlan} HandPlan
- * @typedef {import('../domain-types').MatchPlan} MatchPlan 
- * @typedef {import('../domain-types').LeadControl} LeadControl
- * @typedef {import('../domain-types').Player} Player
- * @typedef {import('../domain-types').ScoredCardEntry} ScoredCardEntry
- * @typedef {import('../domain-types').ShortSuitPriorityInfo} ShortSuitPriorityInfo
- * @typedef {import('../domain-types').TenaceSuitInfo} TenaceSuitInfo
- * @typedef {import('../domain-types').TrickEntry} TrickEntry
- * @typedef {import('../domain-types').Trick} Trick
- * 
- * @typedef {import('../../domain/cards/Card').Card} Card 
- */
+// src/domain/players/ComputerPlayer.ts
 
-import { CardSorter } from '../../domain/cards/CardSorter'
-import { Suits } from '../domain-types.js';
-
-import { GameState } from "../game/GameState.js";
-import * as gh from "./computer/generic-helpers.js";
-import * as hph from "./computer/handplan-helpers.js";
-import * as ev from './computer/strategy-evaluators.js';
-import * as scoreev from './computer/score-evaluators.js';
-
+import { CardSorter } from '../../domain/cards/CardSorter';
+import { Suits, Player, HandPlan, MatchPlan, ForcedTricksEstimate, DecimaAnalysisInfo } from '../domain-types';
+import { GameState } from '../game/GameState';
+import * as gh from './computer/generic-helpers';
+import * as hph from './computer/handplan-helpers';
+import * as ev from './computer/strategy-evaluators';
+import * as scoreev from './computer/score-evaluators';
+import { Card } from '../../domain/cards/Card';
 
 /**
  * AI base per la scelta della carta da giocare.
- *
  */
 export default class ComputerPlayer {
-    static ISDEBUG = false;
-    static RANDOM_PLAY_PROBABILITY = 0.05; // fattore aleatorio per imprevedibilità
-
+    ISDEBUG = false;
+    RANDOM_PLAY_PROBABILITY = 0.05; // fattore aleatorio per imprevedibilità
 
     /**
      * @param {GameState} gameState
      * @param {number} playerId
      * @param {boolean} ISDEBUG
      */
-    chooseCard(gameState, playerId, ISDEBUG) {
-        this.ISDEBUG = ISDEBUG;
-        if (ISDEBUG) {
+    chooseCard(gameState: GameState, playerId: number, debugActive: boolean): Card {
+        this.ISDEBUG = debugActive;
+        if (this.ISDEBUG) {
             this.RANDOM_PLAY_PROBABILITY = 0; // no randomness in debug
         }
 
@@ -59,12 +34,10 @@ export default class ComputerPlayer {
             );
         }
 
-
         const player = gameState.getPlayerById(playerId);
         if (!player) {
             throw new Error(`ComputerPlayer: giocatore ${playerId} non trovato`);
         }
-
 
         const playableCards = gameState.getPlayableCards(playerId);
         if (!playableCards.length) {
@@ -72,82 +45,67 @@ export default class ComputerPlayer {
         }
 
         // defines a function for logging to pass to evaluate methods
-        /** @param {string} msg */
-        const log = (msg) => this.#log(player.name, msg);
+        const log = (msg: string) => this.#log(player.name, msg);
 
         log("vediamo cosa giocare...");
 
-        if (Math.random() < ComputerPlayer.RANDOM_PLAY_PROBABILITY) {
+        if (Math.random() < this.RANDOM_PLAY_PROBABILITY) {
             const randomCard = playableCards[Math.floor(Math.random() * playableCards.length)];
             this.#log(player.name, `gioco a caso ${randomCard.toString()}`);
             return randomCard;
         }
 
-
         const handPlan = this.buildHandStrategy(gameState, player, log);
         const matchPlan = this.buildMatchStrategy(gameState, player, log);
-
 
         log(`strategia di mano: ${JSON.stringify(handPlan)}`);
         log(`strategia di partita: ${JSON.stringify(matchPlan)}`);
 
-        /** @type {ScoredCardEntry[]} */
-        const scoredCards = playableCards.map((card) => {
+        const scoredCards: { card: Card, score: number }[] = playableCards.map((card) => {
             const score = scoreev.scorePlayableCard(gameState, player, card, handPlan, matchPlan, log);
             log(`score ${card.toString()} = ${score}`);
             return { card, score };
         });
 
-
         scoredCards.sort((a, b) => b.score - a.score);
-
 
         const bestScore = scoredCards[0].score;
         const topCards = scoredCards.filter((entry) => entry.score === bestScore);
         const chosen = gh.breakTies(topCards).card;
 
-
         log(`scelgo ${chosen.toString()} con score ${bestScore}`);
         return chosen;
     }
 
-
     /**
-     * @param {any} playerName
-     * @param {any} message
+     * @param {string} playerName
+     * @param {string} message
      */
-    #log(playerName, message) {
+    #log(playerName: string, message: string): void {
         if (!this.ISDEBUG) return;
         console.log(`${playerName}: "${message}"`);
     }
 
-
     /**
      * @param {GameState} gameState
      * @param {number} playerId
-     * @retrun {number}
+     * @returns {number}
      */
-    #countTakenTricks(gameState, playerId) {
+    #countTakenTricks(gameState: GameState, playerId: number): number {
         const player = gameState.getPlayerById(playerId);
         return player?.captures?.length
             ? Math.floor(player.captures.length / gameState.players.length)
             : 0;
     }
 
-
     /**
-     *@param {GameState} gameState
+     * @param {GameState} gameState
      * @param {number} playerId
+     * @returns {boolean}
      */
-    #hasCovered(gameState, playerId) {
+    #hasCovered(gameState: GameState, playerId: number): boolean {
         return this.#countTakenTricks(gameState, playerId) > 0;
     }
-
-
-    /* 
-     * Valutazione e peso delle differenti stratgie
-     */
-
 
     /**
      * @param {GameState} gameState
@@ -155,7 +113,7 @@ export default class ComputerPlayer {
      * @param {(msg: string) => void} log
      * @returns {HandPlan}
      */
-    buildHandStrategy(gameState, player, log) {
+    buildHandStrategy(gameState: GameState, player: Player, log: (msg: string) => void): HandPlan {
         const playerId = player.id;
         const hand = gameState.getPlayerHand(playerId);
         const hasCovered = this.#hasCovered(gameState, playerId);
@@ -212,14 +170,13 @@ export default class ComputerPlayer {
         };
     }
 
-
     /**
      * @param {GameState} gameState
      * @param {Player} player
      * @param {(msg: string) => void} log
      * @returns {MatchPlan}
      */
-    buildMatchStrategy(gameState, player, log) {
+    buildMatchStrategy(gameState: GameState, player: Player, log: (msg: string) => void): MatchPlan {
         return {
             player,
             preferBuscheOnAlivePlayers: true,
@@ -229,30 +186,23 @@ export default class ComputerPlayer {
         };
     }
 
-
-
-
-
     /**
      * @param {GameState} gameState
      * @param {number} playerId
      * @param {(msg: string) => void} log
      * @returns {DecimaAnalysisInfo}
      */
-    analyzeDecime(gameState, playerId, log) {
+    analyzeDecime(gameState: GameState, playerId: number, log: (msg: string) => void): DecimaAnalysisInfo {
         const player = gameState.getPlayerById(playerId);
         const hand = gameState.getPlayerHand(playerId);
 
         const suits = Object.values(Suits);
-        /** @type {DecimaAnalysisInfo} */
-        const result = {};
-
+        const result: DecimaAnalysisInfo = {};
 
         for (const suit of suits) {
             const handSuitCards = gh.getSuitCards(hand, suit);
             const playedSuitCards = this.#getPlayedCardsBySuit(gameState, suit);
             const seenCount = handSuitCards.length + playedSuitCards.length;
-
 
             const missingCards = gh.getMissingSuitCards(suit, handSuitCards, playedSuitCards);
 
@@ -270,62 +220,53 @@ export default class ComputerPlayer {
             };
         }
 
-
         log(`analisi decime: ${JSON.stringify(result)}`);
         return result;
     }
-
 
     /**
      * @param {GameState} gameState
      * @param {number} playerId
      * @returns {ForcedTricksEstimate}
      */
-    estimateForcedTricks(gameState, playerId) {
+    estimateForcedTricks(gameState: GameState, playerId: number): ForcedTricksEstimate {
         const player = gameState.getPlayerById(playerId);
         const hand = gameState.getPlayerHand(playerId);
-
 
         let guaranteedHighTricks = 0;
         let dangerousHighCards = 0;
         let protectedHighCards = 0;
 
-
         for (const card of hand) {
             const power = CardSorter.cardPower(card);
             const suitCount = gh.countSuit(hand, card.suit);
-
 
             if (power >= 8) dangerousHighCards += 1;
             if (power >= 9) guaranteedHighTricks += 1;
             if (power >= 8 && suitCount >= 2) protectedHighCards += 1;
         }
 
-
         const missingTricks = Math.max(0, hand.length - guaranteedHighTricks);
 
-        /**  @type {ForcedTricksEstimate} */
-        const result = {
+        const result: ForcedTricksEstimate = {
             guaranteedHighTricks,
             dangerousHighCards,
             protectedHighCards,
             missingTricks,
         };
 
-
         this.#log(player.name, `stima prese forzate: ${JSON.stringify(result)}`);
         return result;
     }
-
 
     /**
      * @param {GameState} gameState
      * @param {string} suit
      * @returns {Card[]}
      */
-    #getPlayedCardsBySuit(gameState, suit) {
+    #getPlayedCardsBySuit(gameState: GameState, suit: string): Card[] {
         const history = gameState.completedTricks || [];
-        const cards = [];
+        const cards: Card[] = [];
 
         for (const trick of history) {
             for (const entry of trick) {
@@ -342,8 +283,6 @@ export default class ComputerPlayer {
             }
         }
 
-
         return cards;
     }
-
 }

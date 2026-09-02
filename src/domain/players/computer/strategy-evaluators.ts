@@ -2,7 +2,7 @@
 import { Card } from '../../../domain/cards/Card';
 import { GameState } from '../../game/GameState';
 import { CardSorter } from '../../../domain/cards/CardSorter';
-import { Suit, Suits } from '../../domain-types';
+import { Suit, Suits, Player } from '../../domain-types';
 import * as gh from './generic-helpers';
 import * as hph from './handplan-helpers';
 import {
@@ -18,7 +18,6 @@ import {
     FragileShortSuitInfo,
     CiapaETornaMode
 } from '../../domain-types';
-import { Player } from '../ComputerPlayer';
 
 type LogFn = (msg: string) => void;
 
