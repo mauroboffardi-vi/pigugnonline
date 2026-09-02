@@ -19,3 +19,4 @@
 - refactored ComputerPlayer externalizing methdos. Enabled strict compile mode, an converted ComputerPlayer, GameState, and some other minor JS in TS.
 - Aggiunto interruttore audio
 - Aggiunti Confetti con la libreria confetti.js (https://confettijs.org/) e audio nel GameOver
+- Cambiato packager, passato da esbuild a vite, in modo da correggere problemi di cache. Ora tutti gli asset hanno un url con hashtag
