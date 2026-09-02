@@ -82,7 +82,17 @@ if (ISDEBUG) {
   initDebugUI();
 }
 
-new SoundManager();
+const soundManager = new SoundManager();
+// Collegamento del pulsante toggle dell'audio
+const soundToggleEl = /** @type {HTMLInputElement | null} */ (document.getElementById('sound-toggle'));
+if (soundToggleEl) {
+  soundToggleEl.checked = !soundManager.getMuted();
+  soundToggleEl.addEventListener('change', (e) => {
+    const target = /** @type {HTMLInputElement} */ (e.target);
+    soundManager.setMuted(!target.checked);
+  });
+}
+
 const gameState = new GameState(['Io', ...pickRandomNames(3)]);
 let playCounter = 0;
 const cardsOnTable = new Map();

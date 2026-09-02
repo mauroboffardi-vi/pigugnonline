@@ -190,6 +190,41 @@ screen and (max-height: 500px) {
     }
 }
 
+/* ==========================================================================
+   Fix Posizionamento Switch Audio per Schermi Mobile
+   ========================================================================== */
+
+/* Forza lo slot del pannello di controllo a rimanere nella cella in alto a destra (Riga 1, Colonna 3) */
+#control-panel,
+.controlpanel-slot {
+    grid-row: 1 !important;
+    grid-column: 3 !important;
+    position: relative !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: flex-start !important;
+    z-index: 2000 !important;
+}
+
+/* Ancora il contenitore dello switch in alto a destra della cella */
+.sound-control-container {
+    position: absolute !important;
+    top: 6px !important;
+    right: 8px !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: 2000 !important;
+}
+
+/* Ridimensionamento leggero per adattarsi perfettamente agli schermi piccoli */
+@media (max-width: 768px) {
+    .sound-control-container {
+        transform: scale(0.50);
+        transform-origin: top right;
+    }
+}
+
+
 /* Avviso per modalità Portrait (Verticale) */
 @media screen and (max-width: 950px) and (orientation: portrait) {
     body::after {

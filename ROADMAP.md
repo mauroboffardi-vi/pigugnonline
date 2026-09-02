@@ -110,12 +110,6 @@ Nota progettuale:
 - distribuzione di 40 carte coperte con animazione dal lato del dealer
 - "showdown" delle carte del giocatore Io
 
-### 5. Suoni
-**Obiettivo:** dare peso alle animazioni e agli eventi importanti.
-
-- Prevedere mute on/off nelle impostazioni o in un toggle semplice.
-
-**Risultato atteso:** feedback più vivo, senza trasformare il gioco in una slot machine.
 
 ### 6. Fumetti e commenti dinamici
 **Obiettivo:** aggiungere carattere senza interferire col flusso di gioco.
@@ -176,4 +170,4 @@ Nota importante:
 - Cercare funzioni o moduli che leggono o modificano stato di altri componenti direttamente.
 - Valutare introduzione di test minimi sulle regole di gioco e sul calcolo busche.
 - Documentare API interne dei moduli principali prima che il progetto cresca ancora.
-- estrarre evaluate* e altri helper da ComputerPlayer
+

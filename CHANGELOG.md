@@ -17,3 +17,4 @@
 ## 2 Set
 - Rinominati elementi TrickEntry, TrickEntry[] e TrickEntry[][] in TrickEntry, Trick, and CompletedTricks
 - refactored ComputerPlayer externalizing methdos. Enabled strict compile mode, an converted ComputerPlayer, GameState, and some other minor JS in TS.
+- Aggiunto interruttore audio

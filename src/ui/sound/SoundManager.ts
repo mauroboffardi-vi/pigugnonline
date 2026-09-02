@@ -60,6 +60,20 @@ export class SoundManager {
         return this.isMuted;
     }
 
+    /**
+     * Imposta lo stato del silenziatore audio.
+     */
+    public setMuted(muted: boolean): void {
+        this.isMuted = muted;
+    }
+
+    /**
+     * Ritorna true se l'audio è attualmente disattivato.
+     */
+    public getMuted(): boolean {
+        return this.isMuted;
+    }
+
     private rand(min: number, max: number): number {
         return Math.round(Math.random() * (max - min) + min);
     }
