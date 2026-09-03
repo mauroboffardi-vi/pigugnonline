@@ -189,6 +189,15 @@ screen and (max-height: 500px) {
     .summary-score.right {
         right: 10px !important;
     }
+
+    /* ==========================================================================
+   CAPTURE OVERLAY
+   ========================================================================== */
+    .overlay-content img {
+        width: 65px;
+        /* Oppure dimensione fluida: clamp(45px, 10vw, 75px) */
+        height: auto;
+    }
 }
 
 /* ==========================================================================
