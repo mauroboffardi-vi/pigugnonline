@@ -294,6 +294,13 @@ async function animatePlayerPoints(playerSummary) {
     const area = overlay.querySelector(`.summary-score.${pos}`);
     if (!area) return;
 
+    // Calcola il centro dell'area del giocatore
+    const rect = getPlayerAnchorRect(pos);
+    if (rect) {
+        area.style.left = `${rect.left + rect.width / 2}px`;
+        area.style.top = `${rect.top + rect.height / 2}px`;
+    }
+
     area.classList.add('visible');
 
     /** @type {HTMLDivElement | null} */

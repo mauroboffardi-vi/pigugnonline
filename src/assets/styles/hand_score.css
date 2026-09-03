@@ -49,7 +49,7 @@
     gap: 8px;
     min-width: 120px;
     opacity: 0;
-    transform: scale(0.92);
+    transform: translate(-50%, -50%) scale(0.92);
     transition: opacity 220ms ease, transform 220ms ease;
     z-index: 4020;
     pointer-events: none;
@@ -57,47 +57,7 @@
 
 .summary-score.visible {
     opacity: 1;
-    transform: scale(1);
-}
-
-.summary-score.top {
-    top: 48px;
-    left: 50%;
-    transform: translateX(-50%) scale(0.92);
-}
-
-.summary-score.top.visible {
-    transform: translateX(-50%) scale(1);
-}
-
-.summary-score.left {
-    left: 34px;
-    top: 50%;
-    transform: translateY(-50%) scale(0.92);
-}
-
-.summary-score.left.visible {
-    transform: translateY(-50%) scale(1);
-}
-
-.summary-score.right {
-    right: 34px;
-    top: 50%;
-    transform: translateY(-50%) scale(0.92);
-}
-
-.summary-score.right.visible {
-    transform: translateY(-50%) scale(1);
-}
-
-.summary-score.you {
-    bottom: 120px;
-    left: 50%;
-    transform: translateX(-50%) scale(0.92);
-}
-
-.summary-score.you.visible {
-    transform: translateX(-50%) scale(1);
+    transform: translate(-50%, -50%) scale(1);
 }
 
 .summary-points-value {

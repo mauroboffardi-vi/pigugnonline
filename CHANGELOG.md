@@ -20,3 +20,5 @@
 - Aggiunto interruttore audio
 - Aggiunti Confetti con la libreria confetti.js (https://confettijs.org/) e audio nel GameOver
 - Cambiato packager, passato da esbuild a vite, in modo da correggere problemi di cache. Ora tutti gli asset hanno un url con hashtag
+## 3 Set
+- Corretto il bug del posizionamento dei punti durante il conteggio, ora sono esattemante centrati nelle aree di gioco 
