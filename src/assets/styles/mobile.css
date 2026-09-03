@@ -127,7 +127,8 @@ screen and (max-height: 500px) {
     }
 
     .player-area.bottom .player-hand {
-        min-height: 0 !important;
+        /* Mantiene uno spazio minimo pari all'altezza delle carte anche quando la mano è vuota */
+        min-height: calc(clamp(30px, 9.5vh, 46px) * 1.45) !important;
         margin-top: 2px;
     }
 

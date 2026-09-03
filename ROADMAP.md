@@ -9,7 +9,7 @@ Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priori
 - (medium) la carte giocate sono fixed, modificando la dimensione della finestra stanno li. Come risolvere?
 - fixed ~~(medium) su schermi grandi, il punteggio del giocatore compare troppo in basso rispetto alla player area del giocatore~~
 - (medium) su cellulare (fors js piú lento?) l'effetto delle carte giocate si vede male. La carta "vola", poi si gira, ma anche girata mostra il retro per qualche istante. Poi viene rimpiazzata dalla carta "vera".
-- (low) sul cellulare, la player area del giocatore é "elastica", cosí quando non ci sono piú carte da giocare (durante il conteggio dei punti) la player-bottom "collassa" e left e right aumentano di altezza. Fixed size su mobile?
+- fixed ~~(low) sul cellulare, la player area del giocatore é "elastica", cosí quando non ci sono piú carte da giocare (durante il conteggio dei punti) la player-bottom "collassa" e left e right aumentano di altezza. Fixed size su mobile?fixed ~~
 - fixed ~~(medium) vedere come usare i css per rendere il tavolo da gioco piú adattabile alla risoluzione?~~
 - fixed ~~(**blocker**) a volte si ferma e dice "nessuna carta giocabile" per il computer~~
 - fixed ~~(**blocker**) Visto giocare il pigno di rifiuto di prima mano, dovrebbe essere impossibile~~
