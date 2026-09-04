@@ -10,7 +10,7 @@ interface BanterTask {
 }
 
 export class BanterManager {
-    private isMuted: boolean = true;
+    private isMuted: boolean = false;
     private queue: BanterTask[] = [];
 
     // Coda indipendente per ogni giocatore (chiave: playerId)
@@ -19,8 +19,8 @@ export class BanterManager {
     private activeSpeakers: Set<number> = new Set();
 
     // 2. Coefficente di probabilità (5%)
-    // private PROBABILITY: number = 0.05;
-    private PROBABILITY: number = 1;
+    private PROBABILITY: number = 0.05;
+    // private PROBABILITY: number = 1;
 
 
 
@@ -51,7 +51,7 @@ export class BanterManager {
 
     private handleEvent(eventName: string, payload: any): void {
         // 1. Controllo se abilitato
-        if (!this.isMuted) return;
+        if (this.isMuted) return;
 
         const gameState: GameState = payload?.gameState || payload;
         console.debug(`💬 ${eventName}, ${gameState}`);
@@ -174,8 +174,7 @@ export class BanterManager {
             bubble.appendChild(tail);
 
             // Se non trova il playerId nell'array dei container (????) va di default a "top"
-            const containerId = PLAYER_CONTAINER_IDS[player.id] || PLAYER_CONTAINER_IDS[2]
-            console.debug(`💬 showBubble: containerId "${containerId}"`);
+            const containerId = PLAYER_CONTAINER_IDS[player.id] || PLAYER_CONTAINER_IDS[2];
 
             // Trova la UI del giocatore. (Aggiusta l'ID in base a come è costruito il tuo HTML)
             const playerContainer = document.getElementById(containerId) || document.body;

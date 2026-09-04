@@ -441,19 +441,10 @@ body {
 /* ==========================================================================
     #control-panel - Cell 1C)
    ========================================================================== */
-/* Contenitore principale dei controlli */
-#control-panel {
-    grid-area: 1 / 3;
-    z-index: 2000;
-    position: relative;
 
-    display: flex !important;
-    flex-direction: column !important;
-    /* FONDAMENTALE: forza l'incolonnamento */
-    align-items: flex-end !important;
-    /* Allinea entrambi gli switch a destra */
-    justify-content: flex-start !important;
-    /* Mantiene gli switch in alto */
-    gap: 8px !important;
-    /* Spazio tra il pulsante Audio e Banter */
+.control-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
 }

@@ -2,15 +2,7 @@
  *          CSS FOR AUDIO - MOSTLY THE SWITCH
  */
 
-.sound-control-container {
-    position: static !important;
-    top: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    left: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
+
 
 /* Switch ingrandito (76px x 38px) */
 .sound-switch {

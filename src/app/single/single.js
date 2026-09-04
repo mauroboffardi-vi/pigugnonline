@@ -84,25 +84,42 @@ if (ISDEBUG) {
   initDebugUI();
 }
 
+
+
 const soundManager = new SoundManager();
+// Recupera lo stato da localStorage (o usa 'true' come fallback se non esiste)
+const savedSoundState = localStorage.getItem('pigugno_sound') ?? 'true';
+console.debug(`savedSoundState = ${savedSoundState}`);
+const isSoundEnabled = JSON.parse(savedSoundState);
+soundManager.setMuted(!isSoundEnabled);
+
 // Collegamento del pulsante toggle dell'audio
 const soundToggleEl = /** @type {HTMLInputElement | null} */ (document.getElementById('sound-toggle'));
 if (soundToggleEl) {
   soundToggleEl.checked = !soundManager.getMuted();
   soundToggleEl.addEventListener('change', (e) => {
     const target = /** @type {HTMLInputElement} */ (e.target);
-    soundManager.setMuted(!target.checked);
+    const isChecked = target.checked;
+    soundManager.setMuted(!isChecked);
+    localStorage.setItem('pigugno_sound', JSON.stringify(isChecked));
   });
 }
 
 const banterManager = new BanterManager();
+const savedBanterState = localStorage.getItem('pigugno_banter') ?? 'true';
+console.debug(`savedBanterState = ${savedBanterState}`);
+const isBanterEnabled = JSON.parse(savedBanterState);
+banterManager.setMuted(!isBanterEnabled);
+
 // Collegamento del pulsante toggle dell'audio
 const banterToggleEl = /** @type {HTMLInputElement | null} */ (document.getElementById('banter-toggle'));
-if (soundToggleEl) {
-  soundToggleEl.checked = !banterManager.getMuted();
-  soundToggleEl.addEventListener('change', (e) => {
+if (banterToggleEl) {
+  banterToggleEl.checked = !banterManager.getMuted();
+  banterToggleEl.addEventListener('change', (e) => {
     const target = /** @type {HTMLInputElement} */ (e.target);
-    banterManager.setMuted(!target.checked);
+    const isChecked = target.checked;
+    banterManager.setMuted(!isChecked);
+    localStorage.setItem('pigugno_banter', JSON.stringify(isChecked));
   });
 }
 

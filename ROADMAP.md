@@ -17,9 +17,21 @@ Mettere ordine nel progetto prima di aggiungere nuove feature pesanti. La priori
 - fixed ~~(improve) migliorare l'audio per quando le carte vengono mostrate insieme durante il conteggio dei punti~~
 - fixed ~~(medium) le policy di autoplay del browser rifiutano di far partire suoni fino al primo click sulla pagina. Se la partita la inizia il computer, le carte non fanno rumore finché non si clicca. Aggiustare con un overlay "pronto a iniziare?" che richieda il primo click.~~
 
+## Pioritá 1
+### Fumetti e commenti dinamici - iniziato
+**Obiettivo:** aggiungere carattere senza interferire col flusso di gioco.
+- Introdurre nuovi hook semanticamente chiari nel `GameState` usando l'EventBus, e dividere i banter 
+- Prevedere magari una probabilitá per tipo di evento? (es. carta giocata 10%, piugno preso 60%)
+- Esempi: `onPigugnoTaken`, `onNoCapture`, `onBigBuscheSwing`, `onGameOverCandidate`.
+- Definire un tono coerente e non eccessivamente ripetitivo.
+
+**Risultato atteso:** più personalità, senza sporcare la logica principale.
+
+
 
 ### 3a. pensare a un'indicatore del giocatore di turno
 
+## Prioritá 2
 ### 3. AI base del computer, miglioramenti
 **Obiettivo:** introdurre una logica semplice, credibile e migliorabile.
 
@@ -108,25 +120,15 @@ Nota progettuale:
 
 ## Priorità 3, arricchimento dell'esperienza
 
-### 5a. pensare a un'animazione della distribuzione delle carte
+### pensare a un'animazione della distribuzione delle carte
 - distribuzione di 40 carte coperte con animazione dal lato del dealer
 - "showdown" delle carte del giocatore Io
 
 
-### 6. Fumetti e commenti dinamici
-**Obiettivo:** aggiungere carattere senza interferire col flusso di gioco.
-
-- Introdurre hook o eventi semanticamente chiari nel `GameState` usando l'EventBus
-- Esempi: `onPigugnoTaken`, `onNoCapture`, `onBigBuscheSwing`, `onGameOverCandidate`.
-- Creare un sistema UI non bloccante per mostrare fumetti temporanei sopra i giocatori.
-- Tenere separata la logica di trigger dalla presentazione del fumetto. (BanterManager)
-- Definire un tono coerente e non eccessivamente ripetitivo.
-
-**Risultato atteso:** più personalità, senza sporcare la logica principale.
 
 ## Priorità 4, preparare il salto a multiplayer
 
-### 7. Analisi architetturale per multiplayer
+### Analisi architetturale per multiplayer
 **Obiettivo:** capire cosa del single player è davvero riusabile e cosa no.
 
 Da chiarire prima di scrivere codice:
@@ -143,7 +145,7 @@ Da fare:
 
 **Risultato atteso:** il multiplayer non nasce come copia sporca del single player.
 
-### 8. Multiplayer peer-to-peer o quasi serverless
+### Multiplayer peer-to-peer o quasi serverless
 **Obiettivo:** esplorare un multiplayer con invito via URL senza backend tradizionale.
 
 Temi da studiare:
