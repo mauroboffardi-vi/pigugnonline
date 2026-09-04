@@ -9,6 +9,8 @@ import * as ev from './computer/strategy-evaluators';
 import * as scoreev from './computer/score-evaluators';
 import { Card } from '../../domain/cards/Card';
 
+import { gameEvents } from '../../app/EventBus';
+
 /**
  * AI base per la scelta della carta da giocare.
  */
@@ -74,6 +76,7 @@ export default class ComputerPlayer {
         const chosen = gh.breakTies(topCards).card;
 
         log(`scelgo ${chosen.toString()} con score ${bestScore}`);
+        gameEvents.emit('COMPUTER_CARD_CHOSEN', { gameState });
         return chosen;
     }
 

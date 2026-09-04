@@ -1,0 +1,100 @@
+/**
+ *          CSS FOR AUDIO - MOSTLY THE SWITCH
+ */
+
+.sound-control-container {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Switch ingrandito (76px x 38px) */
+.sound-switch {
+    position: relative;
+    display: inline-block;
+    width: 76px;
+    height: 38px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.sound-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.sound-switch .slider {
+    position: absolute;
+    inset: 0;
+    background-color: #ffffff !important;
+    border: 2px solid #d8a24a;
+    border-radius: 38px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Pallino ingrandito (30px x 30px) */
+.sound-switch .slider::before {
+    content: "";
+    position: absolute;
+    height: 30px;
+    width: 30px;
+    left: 3px;
+    bottom: 2px;
+    background-color: #888888;
+    border-radius: 50%;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+}
+
+/* Stato CHECKED (Audio Attivo / ON) */
+.sound-switch input:checked+.slider {
+    border-color: #d8a24a;
+}
+
+.sound-switch input:checked+.slider::before {
+    transform: translateX(38px);
+    background-color: #d8a24a;
+}
+
+/* Gestione visibilità icone emoji */
+.sound-switch .icon {
+    font-size: 16px;
+    z-index: 1;
+    line-height: 1;
+}
+
+/* Stato OFF: Mostra solo 🔇 a destra, nasconde completamente 🔊 */
+.sound-switch .icon-on {
+    display: none;
+}
+
+.sound-switch .icon-off {
+    display: block;
+    margin-left: auto;
+}
+
+/* Stato ON: Mostra solo 🔊 a sinistra, nasconde completamente 🔇 */
+.sound-switch input:checked+.slider .icon-on {
+    display: block;
+    margin-right: auto;
+}
+
+.sound-switch input:checked+.slider .icon-off {
+    display: none;
+}
+
+.sound-switch:hover .slider {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+}

@@ -1,5 +1,5 @@
 // Autogenerato da scripts/generate-version.js - NON MODIFICARE MANUALE
 export const APP_VERSION = {
-  "version": "ccc01ed-dirty",
-  "buildTime": "2026-09-03T10:15:12.940Z"
+  "version": "fb7bdf0-dirty",
+  "buildTime": "2026-09-04T10:19:18.863Z"
 } as const;

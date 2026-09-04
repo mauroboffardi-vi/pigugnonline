@@ -13,6 +13,7 @@ import { APP_VERSION } from '../../version';
 
 
 import { SoundManager } from '../../ui/sound/SoundManager';
+import { BanterManager } from '../../ui/banter/BanterManager';
 import { GameState } from '../../domain/game/GameState.js';
 import { pickRandomNames } from '../../domain/players/player-names.js';
 import ComputerPlayer from '../../domain/players/ComputerPlayer.js';
@@ -91,6 +92,17 @@ if (soundToggleEl) {
   soundToggleEl.addEventListener('change', (e) => {
     const target = /** @type {HTMLInputElement} */ (e.target);
     soundManager.setMuted(!target.checked);
+  });
+}
+
+const banterManager = new BanterManager();
+// Collegamento del pulsante toggle dell'audio
+const banterToggleEl = /** @type {HTMLInputElement | null} */ (document.getElementById('banter-toggle'));
+if (soundToggleEl) {
+  soundToggleEl.checked = !banterManager.getMuted();
+  soundToggleEl.addEventListener('change', (e) => {
+    const target = /** @type {HTMLInputElement} */ (e.target);
+    banterManager.setMuted(!target.checked);
   });
 }
 

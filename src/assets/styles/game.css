@@ -81,7 +81,7 @@ body {
     padding-bottom: 16px;
     min-height: 180px;
     box-sizing: border-box;
-    overflow: hidden;
+    /* overflow: hidden; */
     /* prevent stacked cards from escaping the top box */
 }
 
@@ -439,107 +439,21 @@ body {
 }
 
 /* ==========================================================================
-   Controllo Audio (Slot #control-panel - Cell 1C)
+    #control-panel - Cell 1C)
    ========================================================================== */
+/* Contenitore principale dei controlli */
 #control-panel {
-    position: relative;
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-start;
-    width: 100%;
-    height: 100%;
-}
-
-.sound-control-container {
-    position: absolute;
-    top: 10px;
-    right: 12px;
+    grid-area: 1 / 3;
     z-index: 2000;
-}
-
-/* Switch ingrandito (76px x 38px) */
-.sound-switch {
     position: relative;
-    display: inline-block;
-    width: 76px;
-    height: 38px;
-    cursor: pointer;
-    user-select: none;
-}
 
-.sound-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    position: absolute;
-}
-
-.sound-switch .slider {
-    position: absolute;
-    inset: 0;
-    background-color: #ffffff !important;
-    border: 2px solid #d8a24a;
-    border-radius: 38px;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    box-sizing: border-box;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-}
-
-/* Pallino ingrandito (30px x 30px) */
-.sound-switch .slider::before {
-    content: "";
-    position: absolute;
-    height: 30px;
-    width: 30px;
-    left: 3px;
-    bottom: 2px;
-    background-color: #888888;
-    border-radius: 50%;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    z-index: 2;
-}
-
-/* Stato CHECKED (Audio Attivo / ON) */
-.sound-switch input:checked+.slider {
-    border-color: #d8a24a;
-}
-
-.sound-switch input:checked+.slider::before {
-    transform: translateX(38px);
-    background-color: #d8a24a;
-}
-
-/* Gestione visibilità icone emoji */
-.sound-switch .icon {
-    font-size: 16px;
-    z-index: 1;
-    line-height: 1;
-}
-
-/* Stato OFF: Mostra solo 🔇 a destra, nasconde completamente 🔊 */
-.sound-switch .icon-on {
-    display: none;
-}
-
-.sound-switch .icon-off {
-    display: block;
-    margin-left: auto;
-}
-
-/* Stato ON: Mostra solo 🔊 a sinistra, nasconde completamente 🔇 */
-.sound-switch input:checked+.slider .icon-on {
-    display: block;
-    margin-right: auto;
-}
-
-.sound-switch input:checked+.slider .icon-off {
-    display: none;
-}
-
-.sound-switch:hover .slider {
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+    display: flex !important;
+    flex-direction: column !important;
+    /* FONDAMENTALE: forza l'incolonnamento */
+    align-items: flex-end !important;
+    /* Allinea entrambi gli switch a destra */
+    justify-content: flex-start !important;
+    /* Mantiene gli switch in alto */
+    gap: 8px !important;
+    /* Spazio tra il pulsante Audio e Banter */
 }

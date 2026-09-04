@@ -203,3 +203,5 @@ Questi sono gli eventi sollevati in diversi punti dell'applicazione e gestiti tr
 - BUSCA_MARKED {} pubblicato quando viene disegnata una bisca sul buschetracker
 - BUSCA_SEPARATOR_MARKED {} pubblicato quando viene disegnata una lineetta dopo la 5a busca
 - BUSCA_10_MARKED {} pubblicato quando il giocatore é marcato come "fuori" con una croce nel busca tracker, perchè ha passato i 10 punti
+- GAME_OVER {} Quando la decima mano é concluse e si visualizza il gameOverOverlay
+- COMPUTER_CARD_CHOSEN {GameState} Quando il computer ha scelto quale carta giocare (prima dell'animazione della carta) in ComputerPlayer

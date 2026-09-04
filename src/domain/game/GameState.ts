@@ -14,7 +14,7 @@ export class GameState {
     playerNames: string[];
     players: Player[];
     deck: Deck | null;
-    currentTurn: number;
+    currentTurn: number = 1;
     phase: 'setup' | 'playing' | 'hand-ended';
     trick: Trick;
     trumpSuit: Suit;
@@ -119,6 +119,7 @@ export class GameState {
                 this.startingPlayerForHand = sevenOfDiamondsOwner.id;
             } else {
                 this.currentTurn = 0;
+                console.debug(`CURRENTTURN = ${this.currentTurn}`);
                 this.startingPlayerForHand = 0;
             }
         } else {
@@ -451,7 +452,7 @@ export class GameState {
         const player = this.players.find(player => player.id === playerId);
         if (player == null) {
             throw new Error(
-                `GameState.getPlayerById(): Player with id ${playerId} not found (??)`
+                `GameState.getPlayerById(): Player with id ${playerId} not found(??)`
             );
         }
         return player;
@@ -523,20 +524,20 @@ export class GameState {
             isGameOver = true;
             winners = active;
             isDoubleWin = false;
-            message = `La vittoria va a ${winners[0].name} e ${winners[1].name}`;
+            message = `La vittoria va a ${winners[0].name} e ${winners[1].name} `;
 
         } else if (eliminated.length === 3) {
             isGameOver = true;
             winners = active;
             isDoubleWin = true;
-            message = `DOPPIA vittoria per ${winners[0].name}!`;
+            message = `DOPPIA vittoria per ${winners[0].name} !`;
 
         } else if (eliminated.length === 4) {
             isGameOver = true;
             isDoubleWin = false;
             const sortedByBusche = [...this.players].sort((a, b) => a.busche - b.busche);
             winners = [sortedByBusche[0], sortedByBusche[1]];
-            message = `La vittoria va a ${winners[0].name} e ${winners[1].name}`;
+            message = `La vittoria va a ${winners[0].name} e ${winners[1].name} `;
 
         } else {
             isGameOver = false;
@@ -553,7 +554,7 @@ export class GameState {
         console.debug('CheckGameOver()');
         const state: GameOverState = this.computeGameOverState();
         this.gameOverState = state;
-        console.debug(`isGameOver= ${state.isGameOver}`);
+        console.debug(`isGameOver = ${state.isGameOver} `);
         return state.isGameOver;
     }
 }

@@ -42,7 +42,10 @@ export class EventBus {
      * Lancia un evento e invoca tutti i listener registrati passando i dati forniti.
      */
     public emit<T = any>(event: string, data?: T): void {
-        console.debug(`EventBus: emit ${event} ${JSON.stringify(data)}`);
+        console.groupCollapsed(`EventBus: emit ${event}`);
+        console.debug(data);
+        console.groupEnd();
+
         const eventListeners = this.listeners.get(event);
         if (eventListeners) {
             eventListeners.forEach(callback => {

@@ -23,3 +23,5 @@
 ## 3 Set
 - Corretto il bug del posizionamento dei punti durante il conteggio, ora sono esattemante centrati nelle aree di gioco-
 - Corretto bug: sul cellulare, la player area del giocatore é "elastica", cosí quando non ci sono piú carte da giocare (durante il conteggio dei punti) la player-bottom "collassa" e left e right aumentano di altezza. Fixed size su mobile?
+## 4 Set
+- Prima implementazione del Banter. ATTENZIONE: ora produce un banter AD OGNI EVENTO, AD OGNI CARTA GIOCATA. solo per test. Inoltre, lo switch on/off é da rivedere, posizionato male e non va

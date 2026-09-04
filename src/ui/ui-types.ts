@@ -21,3 +21,14 @@ export interface TestApi {
     getDebugShowCpuCards?: () => boolean;
     rerender?: () => void;
 }
+
+
+/** 
+ *  collega il playerID al nome del container dell'area di gioco
+ */
+export const PLAYER_CONTAINER_IDS: Record<number, string> = Object.freeze({
+    0: 'player-you',
+    1: 'player-left',
+    2: 'player-top',
+    3: 'player-right',
+});
