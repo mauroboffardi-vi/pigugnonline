@@ -1,8 +1,11 @@
 import { gameEvents } from '../../app/EventBus';
 import { Player } from '../../app/single/single';
+import { Card } from '../../domain/cards/Card';
 import { GameState } from '../../domain/game/GameState';
 import { PLAYER_CONTAINER_IDS } from '../ui-types';
 import banterData from './banter-data.json';
+
+import * as bh from './banter-helpers';
 
 interface BanterTask {
     text: string;
@@ -19,16 +22,16 @@ export class BanterManager {
     private activeSpeakers: Set<number> = new Set();
 
     // 2. Coefficente di probabilità (5%)
-    private PROBABILITY: number = 0.05;
-    // private PROBABILITY: number = 1;
+    //private PROBABILITY: number = 0.05;
+    private PROBABILITY: number = 1;
 
 
 
     constructor() {
         // Intercettiamo gli eventi (predisposti come richiesto)
-        gameEvents.on('COMPUTER_CARD_CHOSEN', (gameState: GameState) => this.handleEvent('COMPUTER_CARD_CHOSEN', gameState));
-        gameEvents.on('BANTER2', (gameState: any) => this.handleEvent('BANTER2', gameState));
-        gameEvents.on('BANTER3', (gameState: any) => this.handleEvent('BANTER3', gameState));
+        gameEvents.on('COMPUTER_CARD_CHOSEN', (payload: any) => this.handleEvent('COMPUTER_CARD_CHOSEN', payload));
+        gameEvents.on('BANTER2', (payload: any) => this.handleEvent('BANTER2', payload));
+        gameEvents.on('BANTER3', (payload: any) => this.handleEvent('BANTER3', payload));
     }
 
     public toggle(state?: boolean): void {
@@ -54,7 +57,7 @@ export class BanterManager {
         if (this.isMuted) return;
 
         const gameState: GameState = payload?.gameState || payload;
-        console.debug(`💬 ${eventName}, ${gameState}`);
+        console.groupCollapsed(`💬 ${eventName}`);
 
         // 2. Coefficente di probabilità (5%)
         if (Math.random() > this.PROBABILITY) return;
@@ -70,12 +73,15 @@ export class BanterManager {
 
         // 3. Logica basata sull'evento
         switch (eventName) {
-            case 'BANTER1':
+            case 'COMPUTER_CARD_CHOSEN':
+                const chosenCard: Card = payload?.chosen;
+                text = this.computerCardChosen(gameState, chosenCard);
+                break;
             case 'BANTER2':
             case 'BANTER3':
             default:
                 // Preleva una frase random dalla lista generica BANTER
-                const list = banterData.BANTER;
+                const list = banterData.RANDOM;
                 text = list[Math.floor(Math.random() * list.length)];
 
                 // Esempio logica speciale (commentato per il futuro):
@@ -103,7 +109,75 @@ export class BanterManager {
 
             this.processPlayerQueue(playerId);
         }
+
+        console.groupEnd();
     }
+
+    private computerCardChosen(gameState: GameState, chosenCard: Card): string {
+        var group = "DEFAULT";
+        let options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('DEFAULT'))?.DEFAULT || [];
+
+        if (chosenCard) {
+            // Se sono il primo di mano
+            if (!gameState?.trick || gameState.trick.length === 0) {
+                var group = "PRIMA";
+                options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('PRIMA'))?.PRIMA || [];
+            } else {
+
+
+                // ordine di presa (per il culo): commento se ci vado sotto, commento speciale se vado sotto con un asso,
+                // commento ancora quando rifilo il pigugno in una mano a spade
+
+                if (bh.vadosotto(gameState, chosenCard)) {
+                    var group = "SOTTO";
+                    options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('SOTTO'))?.SOTTO || [];
+                    // comment
+                    if (chosenCard.getPoints() == 3) {
+                        var group = "ASSO";
+                        options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('ASSO'))?.ASSO || [];
+                    }
+                    if (chosenCard.isPigugno()) {
+                        var group = "PIGUGNOSOTTO";
+                        options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('PIGUGNOSOTTO'))?.PIGUGNOSOTTO || [];
+                    }
+                }
+
+                // se non vado sotto, testo se vado sopra (pootrei anche rifiutare)
+
+                if (bh.vadosopra(gameState, chosenCard)) {
+                    {
+                        var group = "SOPRA";
+                        options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('SOPRA'))?.SOPRA || [];
+                    }
+                }
+
+                // opzione migliore: se sto rifiutando (vadosopra e vadosotto = false) e sto giocando il pigugno,
+                // STO DANDO IL PIGUGNO DI TRAVERSO!
+
+                if (chosenCard.isPigugno()) {
+                    var group = "PIGUGNOTRAVERSO";
+                    options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('PIGUGNOTRAVERSO'))?.PIGUGNOTRAVERSO || [];
+                }
+            } // fine dell'else primacarta
+        }
+
+        // se nessuno dei casi sopra, allora pesco dal default
+        console.debug(`💬 COMPUTER_CARD_CHOSEN.${group}: ${chosenCard.toString()}`);
+        return this.pickOne(options) as string;
+    }
+
+
+
+
+
+    private pickOne(options: string[]): string {
+        if (!options || options.length === 0) {
+            throw new Error("Options array is empty or undefined");
+        }
+        const randomIndex = Math.floor(Math.random() * options.length);
+        return options[randomIndex];
+    }
+
 
     // --- LOGICA ASINCRONA DI DISPLAY ---
 

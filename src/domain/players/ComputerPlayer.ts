@@ -76,7 +76,7 @@ export default class ComputerPlayer {
         const chosen = gh.breakTies(topCards).card;
 
         log(`scelgo ${chosen.toString()} con score ${bestScore}`);
-        gameEvents.emit('COMPUTER_CARD_CHOSEN', { gameState });
+        gameEvents.emit('COMPUTER_CARD_CHOSEN', { gameState, chosen });
         return chosen;
     }
 

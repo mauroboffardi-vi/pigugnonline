@@ -26,3 +26,5 @@
 ## 4 Set
 - Prima implementazione del Banter. ATTENZIONE: ora produce un banter AD OGNI EVENTO, AD OGNI CARTA GIOCATA. solo per test. Inoltre, lo switch on/off é da rivedere, posizionato male e non va
 - Aggiustati gli switch, e impostata banter chanche at 5%. Prevedere magari una probabilitá per tipo di evento? (es. carta giocata 10%, piugno preso 60%)
+## 9 Set
+- gestione dettagliata del COMPUTER_CARD_CHOSEN banter, mancano SECCO E NONA

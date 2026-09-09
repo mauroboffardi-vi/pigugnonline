@@ -1,54 +1,255 @@
 {
-    "BANTER": [
+    "RANDOM": [
         "Calo 2",
-        "Te lo condisco",
-        "Ci vado sotto",
-        "Non prendete mai più",
-        "Non copri mai più",
-        "Non copro mai più",
-        "Brót chèrti",
         "BUUURP!",
         "BRAAP!",
-        "Konditorei!",
         "Ma chi ha sbagliato, Pagliuca?",
         "È già uscito il pigugno?",
-        "Zio porc!",
-        "Tua mamma",
-        "Che fai, tiri?",
-        "Zio can",
-        "Te la condisco",
-        "Vado sotto",
-        "Sotomajor!",
-        "Va che bella carta che ti do",
-        "Guarda che roba, guarda il guardaroba",
         "Come la rana con la biscia!",
-        "Allora?",
-        "Vamolá",
-        "Vado a decima",
-        "Sono sotto grolla",
-        "C’é da cagare sottile",
-        "Mo s’lè ignorànt",
-        "Solo te potevi fare una giocata così",
-        "Dai che devo andare a letto!",
-        "VEN-TI-DUE!",
-        "VEN-TI-TRE!",
-        "VEN-TI-QUATTRO!",
-        "VEN-TI-CINQUE!",
         "E pò t’al sè",
-        "Va mo c’aparchèda",
-        "Secco!",
-        "Spétacol",
-        "Séc rustì!",
-        "Seint’mo a’c ciòc!",
-        "Ce l’avevo secco!",
-        "Una mano da signori",
-        "Questa me la prendo io",
-        "Guarda che cosa ti dò!",
+        "Ce n'è ancora di pizza?",
+        "Oh ma chi le ha date 'ste carte?"
+    ],
+    "MANOPRESA": [
+        {
+            "DEFAULT": [
+                "Non prendete mai più",
+                "Non copri mai più",
+                "Questa me la prendo io",
+                "Mi sa che le prendo tutte io.",
+                "Taaaac!",
+                "e po' t'al se"
+            ]
+        },
+        {
+            "TANTIPUNTI": [
+                "Non prendete mai più",
+                "Non copri mai più",
+                "Zio porc!",
+                "Tua mamma",
+                "Zio can",
+                "Stavolta faccio mille.",
+                "Guarda che cosa ti dò!",
+                "Sono sotto grolla",
+                "No ma davvero?",
+                "Ma non ci credo"
+            ]
+        },
+        {
+            "POCHIPUNTI": [
+                "Zio can, pelle di biscia",
+                "faceva cosí schifo?",
+                "È come sparare sul bagnato",
+                "Chi é lo re?"
+            ]
+        },
+        {
+            "PIGUGNO": [
+                "mo va a cagher",
+                "Vacca Boia",
+                "ma Ziostrapòrc",
+                "ma che sfiga però"
+            ]
+        }
+    ],
+    "MANOPERSA": [
+        {
+            "DEFAULT": [
+                "Non prendete mai più",
+                "Non copri mai più"
+            ]
+        },
+        {
+            "NONCOPERTO": [
+                "Che fai, tiri?",
+                "Non copro mai più",
+                "C’é da cagare sottile"
+            ]
+        },
+        {
+            "TANTIPUNTI": [
+                "Una mano da signori",
+                "Si ma lasciane un po per gli altri",
+                "Li vuoi tutti tu?",
+                "Beh almeno hai coperto",
+                "C'at gniss un begh!",
+                "Gnanc Punt!",
+                "Avevi paura di non coprire?"
+            ]
+        },
+        {
+            "PIGUGNO": [
+                "Oh be, almeno hai coperto"
+            ]
+        }
+    ],
+    "COMPUTER_CARD_CHOSEN": [
+        {
+            "DEFAULT": [
+                "Va che bella carta che ti do",
+                "Guarda che roba, guarda il guardaroba",
+                "Vamolá",
+                "Guarda che cosa ti dò!",
+                "Mah!"
+            ]
+        },
+        {
+            "PRIMA": [
+                "Mah, proviamo con questa",
+                "Ora andiamo di qua",
+                "Proviamo a fare cosí",
+                "E se gioco questa cosa succede?",
+                "Vediamo che fate"
+            ]
+        },
+        {
+            "ASSO": [
+                "Konditorei!",
+                "Te la condisco",
+                "Va mo c’aparchèda",
+                "Seint’mo a’c ciòc!",
+                "Prego!",
+                "Questa ve la litigate voi"
+            ]
+        },
+        {
+            "PIGUGNOSOTTO": [
+                "prego!",
+                "Cosa c'è qua?",
+                "Questa cambia tutto",
+                "COLPO DI SCENA!",
+                "Guarda, un bel regalo",
+                "Ta-daan!"
+            ]
+        },
+        {
+            "PIGUGNOTRAVERSO": [
+                "prego!",
+                "Cosa c'è qua?",
+                "Questa cambia tutto",
+                "COLPO DI SCENA!",
+                "Guarda, un bel regalo",
+                "Bello, di traverso!",
+                "E poi ringrazia",
+                "Ta-daan!",
+                "Mi sa che non lei hai contate"
+            ]
+        },
+        {
+            "SOTTO": [
+                "Ci vado sotto",
+                "Vado sotto",
+                "Sotomajor!",
+                "FIIIUT! Veramente per i conti ci pensa mio ziu Antunello"
+            ]
+        },
+        {
+            "SOPRA": [
+                "Questa me la prendo io",
+                "Mia!",
+                "Me la ciuccio io"
+            ]
+        },
+        {
+            "SECCO_NOTIMPLEMENTED": [
+                "Secco!",
+                "Séc rustì!",
+                "Ce l’avevo secco!"
+            ]
+        },
+        {
+            "NONA_NOTIMPLEMENTED": [
+                "Vado a decima",
+                "Chi ce l'ha, la decima?"
+            ]
+        }
+    ],
+    "OTHERPLAYSCARD": [
+        {
+            "DEFAULT": [
+                "Mo s’lè ignorànt",
+                "Solo te potevi fare una giocata così",
+                "Spétacol",
+                "C'hai una testa che non se la mangia neanche un maiale",
+                "Eh lo sapevo che giocavi quella lì!"
+            ]
+        },
+        {
+            "DECIMA": [
+                "È tardi!"
+            ]
+        }
+    ],
+    "INIZIOMANO": [
+        "Brót chèrti",
+        "è già uscito il Pigugno?"
+    ],
+    "WAITING": [
+        "Allora?",
+        "Dai che devo andare a letto!",
+        "Ma, sta a me?",
         "Si, ma a chi sta?",
-        "Ah, sta a me?",
-        "Lento, lento!",
-        "Chi ce l'ha, la decima?",
-        "Stavolta faccio mille.",
-        "Mi sa che le prendo tutte io."
+        "Lento, lento!"
+    ],
+    "PUNTI": [
+        {
+            "22": [
+                "VEN-TI-DUE!",
+                "🤘VENTI 🤘 DUE"
+            ]
+        },
+        {
+            "23": [
+                "VEN-TI-TRE!",
+                "🤟VENTI 🤟 TRE"
+            ]
+        },
+        {
+            "24": [
+                "VEN-TI-QUATTRO!"
+            ]
+        },
+        {
+            "25": [
+                "VEN-TI-CINQUE!"
+            ]
+        },
+        {
+            "26": [
+                "VEN-TI-SEI!"
+            ]
+        },
+        {
+            "27": [
+                "VEN-TI-SEI!"
+            ]
+        },
+        {
+            "28": [
+                "No ma davvero?"
+            ]
+        },
+        {
+            "29": [
+                "Ma é il record?"
+            ]
+        },
+        {
+            "30": [
+                "No ma complimenti!"
+            ]
+        },
+        {
+            "31": [
+                "Stiamo facendo la storia del Pigugno!"
+            ]
+        },
+        {
+            "32": [
+                "🫣",
+                "😳",
+                "Stiamo facendo la storia del Pigugno!"
+            ]
+        }
     ]
 }
