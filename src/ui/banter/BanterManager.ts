@@ -140,6 +140,11 @@ export class BanterManager {
                         var group = "PIGUGNOSOTTO";
                         options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('PIGUGNOSOTTO'))?.PIGUGNOSOTTO || [];
                     }
+                    // Se gioco il pigugno in prima mano perchè secco
+                    if ((chosenCard.isPigugno()) && (gameState.currentTurn == 1)) {
+                        var group = "PIGUGNOSECCO";
+                        options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('PIGUGNOSECCO'))?.PIGUGNOSECCO || [];
+                    }
                 }
 
                 // se non vado sotto, testo se vado sopra (pootrei anche rifiutare)
@@ -154,7 +159,7 @@ export class BanterManager {
                 // opzione migliore: se sto rifiutando (vadosopra e vadosotto = false) e sto giocando il pigugno,
                 // STO DANDO IL PIGUGNO DI TRAVERSO!
 
-                if (chosenCard.isPigugno()) {
+                if (((chosenCard.isPigugno()) && (gameState.currentTurn > 1))) {
                     var group = "PIGUGNOTRAVERSO";
                     options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('PIGUGNOTRAVERSO'))?.PIGUGNOTRAVERSO || [];
                 }

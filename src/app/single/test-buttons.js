@@ -291,6 +291,9 @@ async function runPreset(preset) {
         case 'two-no-capture':
             await presetTwoNoCapture(gameState, rerender);
             break;
+        case 'pigugno-secco':
+            await presetPigugnoSecco(gameState, rerender);
+            break;
         case 'ten-tricks-left':
             await presetTenTricksLeft(gameState, rerender);
             break;
@@ -355,6 +358,61 @@ async function clearHandsThenFinalize(gameState, rerender) {
 
     gameState.finalizeHand();
 
+    if (typeof rerender === 'function') {
+        rerender();
+    }
+}
+
+
+
+/**
+* Genera una mano giocabile in cui tu (giocatore 0) hai il Pigugno (8 di spade)
+* ma non hai nessun'altra carta di spade (il "Pigugno secco").
+* 
+* @param {GameState} gameState 
+* @param {RerenderFn} rerender 
+*/
+async function presetPigugnoSecco(gameState, rerender) {
+    const cards = flattenCards(gameState);
+    resetHandState(gameState);
+
+    // 1. Estrae l'oggetto reale del Pigugno (8 di spade)
+    const pigugnoIndex = cards.findIndex(c => c.suit === 'spade' && c.value === 8);
+    let pigugno = null;
+    if (pigugnoIndex !== -1) {
+        [pigugno] = cards.splice(pigugnoIndex, 1);
+    }
+
+    // 2. Separa le carte rimanenti tra "non spade" e "spade"
+    const nonSpadeCards = cards.filter(c => c.suit !== 'spade');
+    const spadeCards = cards.filter(c => c.suit === 'spade');
+
+    // 3. Componi la mano del giocatore "left" (indice 1)
+    const handSize = 10;
+    const leftHand = [];
+
+    if (pigugno) {
+        leftHand.push(pigugno);
+    }
+
+    // Preleva 9 carte reali non-spade per il giocatore "left"
+    const neededNonSpades = handSize - leftHand.length;
+    leftHand.push(...nonSpadeCards.splice(0, neededNonSpades));
+
+    // Assegna la mano al giocatore "left"
+    gameState.players[1].hand = leftHand;
+
+    // 4. Riunisci le carte rimanenti e distribuiscile agli altri 3 giocatori (0, 2, 3)
+    const remainingCards = [...nonSpadeCards, ...spadeCards];
+    remainingCards.sort(() => Math.random() - 0.5); // Shuffle rapido
+
+    for (let i = 0; i < gameState.players.length; i++) {
+        if (i === 1) continue; // Salta il giocatore 1 ("left") perché ha già le carte
+
+        gameState.players[i].hand = remainingCards.splice(0, handSize);
+    }
+
+    // 6. Rerenderizza per aggiornare la UI
     if (typeof rerender === 'function') {
         rerender();
     }
@@ -433,6 +491,7 @@ export function initDebugUI() {
         <button type="button" data-test-preset="ten-tricks-left">TEST 10 prese sinistra</button>
         <button type="button" data-test-preset="two-no-capture">TEST due senza prese</button>
         <button type="button" data-test-toggle-debug> Debug carte CPU: OFF </button>
+        <button type="button" data-test-preset="pigugno-secco">Pigugno Secco</button>
     </div>
   `;
 

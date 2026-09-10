@@ -123,6 +123,15 @@
             ]
         },
         {
+            "PIGUGNOSECCO": [
+                "Secco!",
+                "Séc rustì!",
+                "Ce l’avevo secco!",
+                "Séc com'al cul d'un camel",
+                "SBOM!"
+            ]
+        },
+        {
             "PIGUGNOTRAVERSO": [
                 "prego!",
                 "Cosa c'è qua?",
@@ -148,13 +157,6 @@
                 "Questa me la prendo io",
                 "Mia!",
                 "Me la ciuccio io"
-            ]
-        },
-        {
-            "SECCO_NOTIMPLEMENTED": [
-                "Secco!",
-                "Séc rustì!",
-                "Ce l’avevo secco!"
             ]
         },
         {
