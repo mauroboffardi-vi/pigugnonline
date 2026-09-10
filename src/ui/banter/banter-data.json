@@ -204,9 +204,15 @@
             ]
         }
     ],
-    "INIZIOMANO_NOTIMPLEMENTED": [
+    "INIZIOMANO": [
         "Brót chèrti",
-        "è già uscito il Pigugno?"
+        "è già uscito il Pigugno?",
+        "Spetacol",
+        "Oh ma chi le ha date ste carte",
+        "In questa mano faccio mille",
+        "Non coprite mai piú",
+        "Com'é lo score?",
+        "Chi inizia?"
     ],
     "WAITING_NOTIMPLEMENTED": [
         "Allora?",

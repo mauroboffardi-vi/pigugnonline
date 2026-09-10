@@ -1,7 +1,7 @@
 import { gameEvents } from '../../app/EventBus';
-import { Player } from '../../app/single/single';
 import { Card } from '../../domain/cards/Card';
 import { GameState } from '../../domain/game/GameState';
+import { Player } from '../../domain/domain-types';
 import { PLAYER_CONTAINER_IDS } from '../ui-types';
 import banterData from './banter-data.json';
 
@@ -27,6 +27,7 @@ export class BanterManager {
     constructor() {
         // Intercettiamo gli eventi (predisposti come richiesto)
         gameEvents.on('COMPUTER_CARD_CHOSEN', (payload: any) => this.handleEvent('COMPUTER_CARD_CHOSEN', payload));
+        gameEvents.on('START_HAND', (payload: any) => this.handleEvent('START_HAND', payload));
         //gameEvents.on('BANTER2', (payload: any) => this.handleEvent('BANTER2', payload));
         //gameEvents.on('BANTER3', (payload: any) => this.handleEvent('BANTER3', payload));
     }
@@ -74,7 +75,11 @@ export class BanterManager {
                 const chosenCard: Card = payload?.chosen;
                 text = this.computerCardChosen(gameState, chosenCard);
                 break;
-            case 'BANTER2':
+            case 'START_HAND':
+                const options = banterData.INIZIOMANO;
+                speaker = this.randomPlayer(gameState);
+                text = this.pickOne(options);
+                break;
             case 'BANTER3':
             default:
                 // Preleva una frase random dalla lista generica BANTER
@@ -184,8 +189,12 @@ export class BanterManager {
     }
 
 
-
-
+    // restituisce uno a caso fra player 1, 2, 3 (0 è il giocatore)
+    private randomPlayer(gameState: GameState): Player {
+        const players = gameState.players;
+        const randomIndex = Math.floor(Math.random() * (players.length - 1)) + 1;
+        return players[randomIndex];
+    }
 
     private pickOne(options: string[]): string {
         if (!options || options.length === 0) {
@@ -269,10 +278,13 @@ export class BanterManager {
 
             // Trova la UI del giocatore. (Aggiusta l'ID in base a come è costruito il tuo HTML)
             const playerContainer = document.getElementById(containerId) || document.body;
+            console.debug(` Appendo la bolla al contenitore ${containerId}`);
+            if (!playerContainer) console.warn(`🚨 Contenitore ${containerId} non trovato! Fallback su body.`);
+
             playerContainer.appendChild(bubble);
 
-            // Calcolo durata: min 3s, max 6s, proporzionale alla lunghezza
-            const duration = Math.max(3000, Math.min(6000, text.length * 70));
+            // Calcolo durata: min 2s, max 4s, proporzionale alla lunghezza
+            const duration = Math.max(2000, Math.min(4000, text.length * 70));
 
             // Rimuove il fumetto e risolve la promise per passare al prossimo in coda
             setTimeout(() => {

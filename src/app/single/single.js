@@ -13,7 +13,7 @@ import '../../domain/cards/card-extensions';
 
 import { APP_VERSION } from '../../version';
 
-
+import { gameEvents } from '../EventBus';
 import { SoundManager } from '../../ui/sound/SoundManager';
 import { BanterManager } from '../../ui/banter/BanterManager';
 import { GameState } from '../../domain/game/GameState.js';
@@ -215,6 +215,8 @@ function renderBoard(state) {
       center.appendChild(playArea);
     }
   }
+
+  gameEvents.emit('START_HAND', { gameState: state });
 }
 
 /**
