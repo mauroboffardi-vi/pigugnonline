@@ -235,6 +235,13 @@ screen and (max-height: 500px) {
 }
 
 
+.banter-bubble {
+    min-width: 100px;
+    max-width: 220px;
+    min-height: 50px;
+    font-size: 0.8rem;
+}
+
 /* Avviso per modalità Portrait (Verticale) */
 @media screen and (max-width: 950px) and (orientation: portrait) {
     body::after {
