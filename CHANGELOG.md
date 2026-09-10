@@ -28,3 +28,6 @@
 - Aggiustati gli switch, e impostata banter chanche at 5%. Prevedere magari una probabilitá per tipo di evento? (es. carta giocata 10%, piugno preso 60%)
 ## 9 Set
 - gestione dettagliata del COMPUTER_CARD_CHOSEN banter, mancano SECCO E NONA
+## 10 Set
+- completata implementazione di COMPUTER_CARD_CHOSEN, banter, con gestione di nona, decima giocata coma prima di mano (!) e decima forzata
+- risolto un bug che non resettava completedTricks fra un giro e l'altro

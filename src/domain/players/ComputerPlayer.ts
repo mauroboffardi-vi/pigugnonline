@@ -49,7 +49,7 @@ export default class ComputerPlayer {
         // defines a function for logging to pass to evaluate methods
         const log = (msg: string) => this.#log(player.name, msg);
 
-        console.groupCollapsed("vediamo cosa giocare...");
+        console.groupCollapsed(`${player.name}: vediamo cosa giocare...`);
 
         if (Math.random() < this.RANDOM_PLAY_PROBABILITY) {
             const randomCard = playableCards[Math.floor(Math.random() * playableCards.length)];

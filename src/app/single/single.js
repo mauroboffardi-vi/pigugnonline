@@ -1,6 +1,8 @@
 // @ts-check
 // src/game/single.js
 
+// Importa l'estensione del prototipo Array (side-effect import)
+import '../../domain/cards/card-extensions';
 
 /** @typedef {import('../../domain/domain-types').Player} Player */
 /** @typedef {import('../../domain/domain-types').Player} TrickEntry */
@@ -106,6 +108,8 @@ if (soundToggleEl) {
 }
 
 const banterManager = new BanterManager();
+console.info('🛠️ Modalità Debug attiva, setto probabilitá BANTER al 100%');
+banterManager.PROBABILITY = 1;
 const savedBanterState = localStorage.getItem('pigugno_banter') ?? 'true';
 console.debug(`savedBanterState = ${savedBanterState}`);
 const isBanterEnabled = JSON.parse(savedBanterState);

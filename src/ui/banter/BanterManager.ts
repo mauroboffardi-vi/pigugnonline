@@ -22,16 +22,13 @@ export class BanterManager {
     private activeSpeakers: Set<number> = new Set();
 
     // 2. Coefficente di probabilità (5%)
-    //private PROBABILITY: number = 0.05;
-    private PROBABILITY: number = 1;
-
-
+    public PROBABILITY: number = 0.05;
 
     constructor() {
         // Intercettiamo gli eventi (predisposti come richiesto)
         gameEvents.on('COMPUTER_CARD_CHOSEN', (payload: any) => this.handleEvent('COMPUTER_CARD_CHOSEN', payload));
-        gameEvents.on('BANTER2', (payload: any) => this.handleEvent('BANTER2', payload));
-        gameEvents.on('BANTER3', (payload: any) => this.handleEvent('BANTER3', payload));
+        //gameEvents.on('BANTER2', (payload: any) => this.handleEvent('BANTER2', payload));
+        //gameEvents.on('BANTER3', (payload: any) => this.handleEvent('BANTER3', payload));
     }
 
     public toggle(state?: boolean): void {
@@ -118,10 +115,22 @@ export class BanterManager {
         let options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('DEFAULT'))?.DEFAULT || [];
 
         if (chosenCard) {
-            // Se sono il primo di mano
+            // Se sono il primo di mano uso "PRIMA", ma se sto giocando nona o decima ho un'eccezione
             if (!gameState?.trick || gameState.trick.length === 0) {
                 var group = "PRIMA";
+
+                console.debug(`isNona = ${bh.isNona(gameState, chosenCard)} ; isDecima=${bh.isDecima(gameState, chosenCard)}`);
+
                 options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('PRIMA'))?.PRIMA || [];
+                if (bh.isNona(gameState, chosenCard)) {
+                    group = "PRIMA_NONA";
+                    options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('PRIMA_NONA'))?.PRIMA_NONA || [];
+                }
+                if (bh.isDecima(gameState, chosenCard)) {
+                    group = "PRIMA_DECIMA";
+                    options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('PRIMA_DECIMA'))?.PRIMA_DECIMA || [];
+                }
+
             } else {
 
 
@@ -147,12 +156,15 @@ export class BanterManager {
                     }
                 }
 
-                // se non vado sotto, testo se vado sopra (pootrei anche rifiutare)
+                // se non vado sotto, testo se vado sopra (pootrei anche rifiutare).
+                // caso speciale se vado sopra a decima
 
                 if (bh.vadosopra(gameState, chosenCard)) {
-                    {
-                        var group = "SOPRA";
-                        options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('SOPRA'))?.SOPRA || [];
+                    var group = "SOPRA";
+                    options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('SOPRA'))?.SOPRA || [];
+                    if (bh.isDecima(gameState, chosenCard)) {
+                        group = "SOPRA_DECIMA";
+                        options = banterData.COMPUTER_CARD_CHOSEN.find(obj => obj.hasOwnProperty('SOPRA_DECIMA'))?.SOPRA_DECIMA || [];
                     }
                 }
 

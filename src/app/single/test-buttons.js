@@ -412,7 +412,7 @@ async function presetPigugnoSecco(gameState, rerender) {
         gameState.players[i].hand = remainingCards.splice(0, handSize);
     }
 
-    // 6. Rerenderizza per aggiornare la UI
+    // 5. Rerenderizza per aggiornare la UI
     if (typeof rerender === 'function') {
         rerender();
     }

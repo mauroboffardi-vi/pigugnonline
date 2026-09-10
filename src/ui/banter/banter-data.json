@@ -10,7 +10,7 @@
         "Ce n'è ancora di pizza?",
         "Oh ma chi le ha date 'ste carte?"
     ],
-    "MANOPRESA": [
+    "MANOPRESA_NOTIMPLEMENTED": [
         {
             "DEFAULT": [
                 "Non prendete mai più",
@@ -52,7 +52,7 @@
             ]
         }
     ],
-    "MANOPERSA": [
+    "MANOPERSA_NOTIMPLEMENTED": [
         {
             "DEFAULT": [
                 "Non prendete mai più",
@@ -149,7 +149,12 @@
                 "Ci vado sotto",
                 "Vado sotto",
                 "Sotomajor!",
-                "FIIIUT! Veramente per i conti ci pensa mio ziu Antunello"
+                "FIIIUT! Pe i conti ci pensa mio ziu Antunello",
+                "no grazie",
+                "la prende qualcun'altro",
+                "ve la lascio",
+                "a t'al lás",
+                "Ma sai no?"
             ]
         },
         {
@@ -160,13 +165,30 @@
             ]
         },
         {
-            "NONA_NOTIMPLEMENTED": [
+            "SOPRA_DECIMA": [
+                "Ma proprio a me sei venuto a cercare?",
+                "sei un cecchino",
+                "Ma guarda se mi deve andare a decima"
+            ]
+        },
+        {
+            "PRIMA_NONA": [
                 "Vado a decima",
-                "Chi ce l'ha, la decima?"
+                "Chi ce l'ha, la decima?",
+                "E adesso chi ce l'ha questa?",
+                "cucù?!"
+            ]
+        },
+        {
+            "PRIMA_DECIMA": [
+                "Ho una brutta sensazione",
+                "Ce ne sono ancora di queste, vero?",
+                "Mi sa che é mia...",
+                "Mi sa che prendo tutto io"
             ]
         }
     ],
-    "OTHERPLAYSCARD": [
+    "OTHERPLAYSCARD_NOTIMPLEMENTED": [
         {
             "DEFAULT": [
                 "Mo s’lè ignorànt",
@@ -182,18 +204,18 @@
             ]
         }
     ],
-    "INIZIOMANO": [
+    "INIZIOMANO_NOTIMPLEMENTED": [
         "Brót chèrti",
         "è già uscito il Pigugno?"
     ],
-    "WAITING": [
+    "WAITING_NOTIMPLEMENTED": [
         "Allora?",
         "Dai che devo andare a letto!",
         "Ma, sta a me?",
         "Si, ma a chi sta?",
         "Lento, lento!"
     ],
-    "PUNTI": [
+    "PUNTI_NOTIMPLEMENTED": [
         {
             "22": [
                 "VEN-TI-DUE!",

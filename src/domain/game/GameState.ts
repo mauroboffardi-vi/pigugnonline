@@ -70,7 +70,7 @@ export class GameState {
         this.players.forEach((player) => {
             player.busche = 0;
         });
-
+        this.completedTricks = [];
         this.startHand({ firstHand: true });
     }
 
@@ -91,6 +91,7 @@ export class GameState {
             player.buscheThisHand = 0;
             player.pointsThisHand = 0;
         });
+        this.completedTricks = [];
 
         const playersInOrder = [...this.players];
 
@@ -314,6 +315,7 @@ export class GameState {
         console.debug(`la presa è di ${winner.player.name}`);
 
         this.completedTricks.push(resolvedTrick);
+        console.debug(`GameState.resolveTrick(): Prese completate: ${this.completedTricks.length}`);
         if (typeof this.onTrickResolved === 'function') {
             this.onTrickResolved(winner.player.id, resolvedTrick);
         }
