@@ -195,7 +195,8 @@
                 "Solo te potevi fare una giocata così",
                 "Spétacol",
                 "C'hai una testa che non se la mangia neanche un maiale",
-                "Eh lo sapevo che giocavi quella lì!"
+                "Eh lo sapevo che giocavi quella lì!",
+                "ma sei sicuro?"
             ]
         },
         {
@@ -214,12 +215,27 @@
         "Com'é lo score?",
         "Chi inizia?"
     ],
-    "WAITING_NOTIMPLEMENTED": [
+    "WAITING_FOR_PLAYER": [
         "Allora?",
         "Dai che devo andare a letto!",
         "Ma, sta a me?",
         "Si, ma a chi sta?",
-        "Lento, lento!"
+        "Lento, lento!",
+        "oh, ma ti muovi?",
+        "ti sei addormentato?",
+        "oh, va che tocca a te!",
+        "be mo alóra?",
+        "Daimo, su!",
+        "Basta che ti muovi",
+        "Te la scelgo io?",
+        "Zzzzz....",
+        "*rutto*",
+        "*loffa*",
+        "Ma zio cán...",
+        "Mo che sega...",
+        "Oh, du maroun!",
+        "la vin nôt!",
+        "Dai che domattina devo andare a lavorare"
     ],
     "PUNTI_NOTIMPLEMENTED": [
         {

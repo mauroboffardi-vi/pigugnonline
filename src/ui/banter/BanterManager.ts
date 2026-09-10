@@ -16,6 +16,11 @@ export class BanterManager {
     private isMuted: boolean = false;
     private queue: BanterTask[] = [];
 
+    // Contiene l'ultimo game state passato da uno degli eventi, da tenere pronto
+    // per eventi a cui serve il gameState per i giocatori ma a cui non serve l'ultimissima versione
+    // con le carte giocate.
+    private latestGameState: GameState | null = null;
+
     // Coda indipendente per ogni giocatore (chiave: playerId)
     private playerQueues: Map<number, BanterTask[]> = new Map();
     // Set che traccia quali giocatori hanno un fumetto attivo a schermo
@@ -28,8 +33,7 @@ export class BanterManager {
         // Intercettiamo gli eventi (predisposti come richiesto)
         gameEvents.on('COMPUTER_CARD_CHOSEN', (payload: any) => this.handleEvent('COMPUTER_CARD_CHOSEN', payload));
         gameEvents.on('START_HAND', (payload: any) => this.handleEvent('START_HAND', payload));
-        //gameEvents.on('BANTER2', (payload: any) => this.handleEvent('BANTER2', payload));
-        //gameEvents.on('BANTER3', (payload: any) => this.handleEvent('BANTER3', payload));
+        gameEvents.on('WAITING_FOR_PLAYER', (payload: any) => this.handleEvent('WAITING_FOR_PLAYER', payload));
     }
 
     public toggle(state?: boolean): void {
@@ -54,47 +58,54 @@ export class BanterManager {
         // 1. Controllo se abilitato
         if (this.isMuted) return;
 
-        const gameState: GameState = payload?.gameState || payload;
+        // 1. Recupera lo stato valido (da payload o dalla cache)
+        const gameState: GameState | undefined = payload?.gameState || (payload?.players ? payload : undefined);
+        if (gameState) {
+            this.latestGameState = gameState;
+        }
+        const activeState = gameState || this.latestGameState;
+
+        // Se non abbiamo alcuno stato di gioco disponibile, non possiamo determinare lo speaker
+        if (!activeState) {
+            console.debug(`💬 gameState non passato, e la cache é vuota, non posso fare nulla`);
+            return;
+        }
+
+
         console.groupCollapsed(`💬 ${eventName}`);
 
-        // 2. Coefficente di probabilità (5%)
+        // 2. Coefficente di probabilità
         if (Math.random() > this.PROBABILITY) return;
 
-
+        let speaker: Player | null = null;
         let text = '';
-
-        // NON POSSO USARE METODI DI GAMESTATE, visto che viene passato non come oggetto, 
-        // ma come snapshot dati statico, questo pereché deve passare per il bus.
-        //let speaker: Player = gameState?.getCurrentPlayer();
-
-        let speaker: Player = gameState.players[gameState.currentTurn];
 
         // 3. Logica basata sull'evento
         switch (eventName) {
             case 'COMPUTER_CARD_CHOSEN':
                 const chosenCard: Card = payload?.chosen;
-                text = this.computerCardChosen(gameState, chosenCard);
+                speaker = activeState.players[activeState.currentTurn];
+                text = this.computerCardChosen(activeState, chosenCard);
                 break;
             case 'START_HAND':
-                const options = banterData.INIZIOMANO;
-                speaker = this.randomPlayer(gameState);
-                text = this.pickOne(options);
+                const options_inizio = banterData.INIZIOMANO;
+                speaker = this.randomPlayer(activeState);
+                text = this.pickOne(options_inizio);
                 break;
-            case 'BANTER3':
+            case 'WAITING_FOR_PLAYER':
+                const options_waiting = banterData.WAITING_FOR_PLAYER;
+                speaker = this.randomPlayer(activeState);
+                text = this.pickOne(options_waiting);
+                break;
             default:
                 // Preleva una frase random dalla lista generica BANTER
+                speaker = this.randomPlayer(activeState);
                 const list = banterData.RANDOM;
                 text = list[Math.floor(Math.random() * list.length)];
-
-                // Esempio logica speciale (commentato per il futuro):
-                // if (gameState.points > 10 && eventName === 'BANTER2') { 
-                //     text = "Guarda che roba!";
-                //     speakerId = this.getRandomOpponent(gameState);
-                // }
                 break;
         }
 
-        if (text) {
+        if (text && speaker) {
             const playerId = speaker.id;
 
             // Inizializza la coda per il giocatore se non esiste

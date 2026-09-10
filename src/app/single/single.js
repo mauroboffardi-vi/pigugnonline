@@ -16,6 +16,7 @@ import { APP_VERSION } from '../../version';
 import { gameEvents } from '../EventBus';
 import { SoundManager } from '../../ui/sound/SoundManager';
 import { BanterManager } from '../../ui/banter/BanterManager';
+import { waitingTimer } from '../../domain/players/WaitingTimer';
 import { GameState } from '../../domain/game/GameState.js';
 import { pickRandomNames } from '../../domain/players/player-names.js';
 import ComputerPlayer from '../../domain/players/ComputerPlayer.js';
@@ -314,6 +315,9 @@ async function handleCardClick(e) {
   if (gameState.phase !== 'playing') return;
   if (!(e.target instanceof Element)) return;
 
+  // resetta il timer che parte quando tocca al giocatore umano. Se scade solleva l'evento WAITING_FOR_PLAYER 
+  waitingTimer.clear();
+
   const img = e.target.closest('.card-image');
   if (!img) return;
   if (!(img instanceof HTMLImageElement)) return;
@@ -391,7 +395,14 @@ async function continueGameFlow() {
       if (isResolvingTrick) return;
 
       const currentPlayer = gameState.getCurrentPlayer();
-      if (!currentPlayer || !currentPlayer.isComputer) return;
+      // Se non c'è un giocatore o se il giocatore è UMANO, usciamo dal loop e avviamo il timer
+      if (!currentPlayer || !currentPlayer.isComputer) {
+        waitingTimer.start();
+        return;
+      }
+
+      // Se tocca al computer, assicuriamoci che il timer sia spento
+      waitingTimer.clear();
 
       await sleep(500);
 
