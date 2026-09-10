@@ -21,8 +21,8 @@ export class BanterManager {
     // Set che traccia quali giocatori hanno un fumetto attivo a schermo
     private activeSpeakers: Set<number> = new Set();
 
-    // 2. Coefficente di probabilità (5%)
-    public PROBABILITY: number = 0.05;
+    // 2. Coefficente di probabilità (10%)
+    public PROBABILITY: number = 0.1;
 
     constructor() {
         // Intercettiamo gli eventi (predisposti come richiesto)

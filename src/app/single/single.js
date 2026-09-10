@@ -108,8 +108,10 @@ if (soundToggleEl) {
 }
 
 const banterManager = new BanterManager();
-console.info('🛠️ Modalità Debug attiva, setto probabilitá BANTER al 100%');
-banterManager.PROBABILITY = 1;
+if (ISDEBUG) {
+  console.info('🛠️ Modalità Debug attiva, setto probabilitá BANTER al 100%');
+  banterManager.PROBABILITY = 1;
+}
 const savedBanterState = localStorage.getItem('pigugno_banter') ?? 'true';
 console.debug(`savedBanterState = ${savedBanterState}`);
 const isBanterEnabled = JSON.parse(savedBanterState);
