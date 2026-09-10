@@ -49,7 +49,7 @@ export default class ComputerPlayer {
         // defines a function for logging to pass to evaluate methods
         const log = (msg: string) => this.#log(player.name, msg);
 
-        log("vediamo cosa giocare...");
+        console.groupCollapsed("vediamo cosa giocare...");
 
         if (Math.random() < this.RANDOM_PLAY_PROBABILITY) {
             const randomCard = playableCards[Math.floor(Math.random() * playableCards.length)];
@@ -76,6 +76,7 @@ export default class ComputerPlayer {
         const chosen = gh.breakTies(topCards).card;
 
         log(`scelgo ${chosen.toString()} con score ${bestScore}`);
+        console.groupEnd();
         gameEvents.emit('COMPUTER_CARD_CHOSEN', { gameState, chosen });
         return chosen;
     }
