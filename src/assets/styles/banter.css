@@ -1,9 +1,25 @@
 /* Fumetto Base */
+/* 1. Trasforma .player-meta nel blocco di riferimento per position: absolute */
+.player-meta {
+    position: relative !important;
+}
+
+/* 2. Centra il fumetto dentro .player-meta e azzera margini di disturbo */
 .banter-bubble {
-    position: absolute;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    z-index: 100;
+    pointer-events: none;
+
     background-color: white;
     color: black;
     border-radius: 50% / 50%;
+    border: black 2px;
     padding: 15px 30px;
     width: max-content;
     min-width: 120px;
@@ -20,11 +36,51 @@
 
     z-index: 5000;
     /* Aumentato per stare sopra alle carte */
-    filter: drop-shadow(2px 4px 5px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(2px 4px 5px rgba(0, 0, 0, 0.6));
 
     /* Usiamo la proprietà `scale` isolata per non sovrascrivere il `transform` del posizionamento */
-    animation: popInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+
 }
+
+/* Giocatore a SINISTRA: fumetto allineato a DESTRA (verso il centro del tavolo) */
+.player-area.left .banter-bubble {
+    top: 50% !important;
+    right: 10px !important;
+    /* Allineato a destra con 10px di margine dal bordo */
+    left: auto !important;
+    transform: translateY(-50%) !important;
+    /* Centra sull'asse Y */
+}
+
+/* Giocatore a DESTRA: fumetto allineato a SINISTRA (verso il centro del tavolo) */
+.player-area.right .banter-bubble {
+    top: 50% !important;
+    left: 10px !important;
+    /* Allineato a sinistra con 10px di margine */
+    right: auto !important;
+    transform: translateY(-50%) !important;
+    /* Centra sull'asse Y */
+}
+
+/* Giocatore in ALTO: fumetto allineato in BASSO (verso il centro del tavolo) */
+.player-area.top .banter-bubble {
+    bottom: 10px !important;
+    /* Allineato in basso con 10px di margine */
+    top: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    /* Centra sull'asse X */
+}
+
+/* (Opzionale) Giocatore in BASSO (Tu): fumetto allineato in ALTO */
+.player-area.bottom .banter-bubble {
+    top: 10px !important;
+    bottom: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+}
+
+
 
 /* Gestione testo interno: occupa lo spazio flessibile senza subire interferenze */
 .banter-text {
@@ -48,34 +104,7 @@
     }
 }
 
-/* Posizionamenti */
-.banter-bubble.pos-bottom {
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-bottom: 20px;
-}
 
-.banter-bubble.pos-top {
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-top: 20px;
-}
-
-.banter-bubble.pos-left {
-    left: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    margin-left: 20px;
-}
-
-.banter-bubble.pos-right {
-    right: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    margin-right: 20px;
-}
 
 /* LA CODA: Forzata fuori dal flusso Flexbox */
 .banter-tail {

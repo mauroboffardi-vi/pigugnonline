@@ -32,3 +32,4 @@
 - completata implementazione di COMPUTER_CARD_CHOSEN, banter, con gestione di nona, decima giocata coma prima di mano (!) e decima forzata
 - risolto un bug che non resettava completedTricks fra un giro e l'altro
 - aggiunti fumetti a evento INIZIOMANO
+- Rivista posizione delle bolle del fumetto, per apparire dentro la player area e non sovrapporsi alle carte giocate.

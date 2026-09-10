@@ -236,8 +236,6 @@ export class BanterManager {
         return new Promise((resolve) => {
             console.debug(`💬 showBubble: ${player.name} says "${text}"`);
 
-
-
             // Crea il container ellittico
             const bubble = document.createElement('div');
 
@@ -275,14 +273,14 @@ export class BanterManager {
 
             // Se non trova il playerId nell'array dei container (????) va di default a "top"
             const containerId = PLAYER_CONTAINER_IDS[player.id] || PLAYER_CONTAINER_IDS[2];
-
-            // Trova la UI del giocatore. (Aggiusta l'ID in base a come è costruito il tuo HTML)
-            const playerContainer = document.getElementById(containerId) || document.body;
-            console.debug(` Appendo la bolla al contenitore ${containerId}`);
-            if (!playerContainer) console.warn(`🚨 Contenitore ${containerId} non trovato! Fallback su body.`);
-
-            playerContainer.appendChild(bubble);
-
+            // Seleziona il div .player-meta all'interno di quel container
+            const metaContainer = document.querySelector(`#${containerId}`);
+            console.debug(` Appendo la bolla al contenitore #${containerId} .player-meta`);
+            if (!metaContainer) {
+                console.warn(`🚨 Contenitore ${containerId} non trovato!`);
+            } else {
+                metaContainer.appendChild(bubble);
+            }
             // Calcolo durata: min 2s, max 4s, proporzionale alla lunghezza
             const duration = Math.max(2000, Math.min(4000, text.length * 70));
 
